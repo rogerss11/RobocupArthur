@@ -1,0 +1,3 @@
+% Pose and velocity (log_20250205_091718.158/log_t0_encoder_velocity.txt) for Teensy 0
+% 1 	Time (sec)
+% 2-3 	Velocity motor 1..2 (rad/s) before any gear, but including scale from robot.ini

@@ -1,0 +1,100 @@
+% Starting
+% Command line argument '--silent'=False
+% Connected to MQTT Broker 10.197.217.224 on 1883
+% ConnectedOut to MQTT Broker 10.197.217.224 on 1883
+% GPIO all ok
+% Robot (srobot.py) got no HBT data after 31 loops (continues).
+% IR sensor (sir.py):: missing data updates after 21 wait loops (continues).
+% Pose:: missing data updates after 21 wait loops (continues).
+% Pose:: got wheelVelocityCnt=0.
+% Pose:: got motorVelocityCnt=0 (expected 0).
+% Pose:: got wheelVelocityCnt=0.
+% IMU (simu.py):: no data updates after 21 wait loops (continues).
+% Edge (sedge.py):: turns on line sensor
+% Camera available: size (616x820, 3 channels)
+% Edge (sedge.py):: got no data after 31 (continues edge_n_wUpdCnt=0, edgeUpdCnt=0, edge_nUpdCnt=0)
+% (uservice.py) Setup finished with connected=True
+% Starting
+% State change from -1 to 12
+% State change from 12 to 14
+% --- state 14, h = 0.0000, t=0.374
+% I am now accepted as master of robot unknown
+% --- state 14, h = 0.0000, t=0.777
+% --- state 14, h = 0.0000, t=1.181
+% --- state 14, h = 0.0000, t=1.585
+% --- state 14, h = 0.0000, t=1.978
+% --- state 14, h = 0.0000, t=2.381
+% --- state 14, h = 0.0000, t=2.775
+% --- state 14, h = 0.0000, t=3.179
+% --- state 14, h = 0.0000, t=3.582
+% --- state 14, h = 0.0000, t=3.974
+% --- state 14, h = 0.0000, t=4.377
+% --- state 14, h = 0.0000, t=4.783
+% --- state 14, h = 0.0000, t=5.176
+% --- state 14, h = 0.0000, t=5.579
+% --- state 14, h = 0.0000, t=5.972
+% --- state 14, h = 0.0000, t=6.375
+% --- state 14, h = 0.0000, t=6.778
+% --- state 14, h = 0.0000, t=7.181
+% --- state 14, h = 0.0000, t=7.583
+% --- state 14, h = 0.0000, t=7.976
+% --- state 14, h = 0.0000, t=8.379
+% --- state 14, h = 0.0000, t=8.783
+% --- state 14, h = 0.0000, t=9.175
+% --- state 14, h = 0.0000, t=9.581
+% --- state 14, h = 0.0000, t=9.975
+% --- state 14, h = 0.0000, t=10.378
+% --- state 14, h = 0.0000, t=10.781
+% --- state 14, h = 0.0000, t=11.183
+% --- state 14, h = 0.0000, t=11.577
+% --- state 14, h = 0.0000, t=11.980
+% --- state 14, h = 0.0000, t=12.372
+% --- state 14, h = 0.0000, t=12.775
+% --- state 14, h = 0.0000, t=13.179
+% --- state 14, h = 0.0000, t=13.582
+% --- state 14, h = 0.0000, t=13.976
+% --- state 14, h = 0.0000, t=14.379
+% --- state 14, h = 0.0000, t=14.781
+% --- state 14, h = 0.0000, t=15.175
+% --- state 14, h = 0.0000, t=15.578
+% --- state 14, h = 0.0000, t=15.982
+% --- state 14, h = 0.0000, t=16.374
+% --- state 14, h = 0.0000, t=16.777
+% --- state 14, h = 0.0000, t=17.180
+% --- state 14, h = 0.0000, t=17.573
+% --- state 14, h = 0.0000, t=17.976
+% --- state 14, h = 0.0000, t=18.379
+% --- state 14, h = 0.0000, t=18.772
+% --- state 14, h = 0.0000, t=19.175
+% --- state 14, h = 0.0000, t=19.578
+% --- state 14, h = 0.0000, t=19.971
+% --- state 14, h = 0.0000, t=20.375
+% --- state 14, h = 0.0000, t=20.778
+% --- state 14, h = 0.0000, t=21.182
+% --- state 14, h = 0.0000, t=21.575
+% --- state 14, h = 0.0000, t=21.973
+% --- state 14, h = 0.0000, t=22.376
+% --- state 14, h = 0.0000, t=22.779
+% --- state 14, h = 0.0000, t=23.172
+% --- state 14, h = 0.0000, t=23.575
+% --- state 14, h = 0.0000, t=23.978
+% --- state 14, h = 0.0000, t=24.371
+% --- state 14, h = 0.0000, t=24.773
+% --- state 20, h = 0.0000, t=25.177
+% State change from 14 to 20
+% State change from 20 to 99
+% Mission finished/aborted; state=99
+% shutting down
+% Service - thread stopped
+% Camera thread stopped
+% Service - thread stopped
+% Pose terminated
+% Robot terminated
+% Pose terminated
+% IR terminated
+% Edge (sedge.py):: turn off line sensor
+% Edge (sedge.py):: terminated
+% Camera terminated
+% GPIO terminated
+% logfile closed
+% Main Terminated

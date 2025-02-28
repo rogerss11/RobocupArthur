@@ -1,0 +1,598 @@
+% mqtt logfile, enabled=true
+% broker=tcp://localhost:1883
+% context=drive
+% client id=tif_in
+% system=robobot/ (top level ID)
+% function=drive/ (next level name)
+% 1 	Time (sec)
+% 2 	Quality of service 0=max once, 1=at least once, 2=once, S=subscribe
+% 3 	'Topic'
+% 4 	Message / payload
+1738943231.5137 0 drive robobot/cmd/ti/log 1
+1738943231.9870 0 drive robobot/cmd/T0/enc0  
+1738943231.9871 0 drive robobot/cmd/T0/confw 0.075 0.075 19 68 0.23
+1738943231.9872 0 drive robobot/cmd/T0/encrev 1
+1738943231.9873 0 drive robobot/cmd/T0/confi  
+1738943232.2508 0 drive robobot/cmd/T0/lip 1
+1738943232.2710 0 drive robobot/cmd/T0/liwi  
+1738943232.2912 0 drive robobot/cmd/T0/leds 16 0 0 30
+1738943232.2912 0 drive robobot/cmd/ti/rc 0.0 0.0
+1738943232.2951 0 drive robobot/cmd/ti/rc 0.250 0.000 1738943232.2950077
+1738943232.3054 0 drive robobot/cmd/ti/rc 0.250 0.000 1738943232.3051546
+1738943232.3151 0 drive robobot/cmd/ti/rc 0.250 0.000 1738943232.3149211
+1738943232.3249 0 drive robobot/cmd/ti/rc 0.250 0.000 1738943232.3248117
+1738943232.3349 0 drive robobot/cmd/ti/rc 0.250 0.000 1738943232.3347635
+1738943232.3447 0 drive robobot/cmd/ti/rc 0.250 0.000 1738943232.344615
+1738943232.3557 0 drive robobot/cmd/ti/rc 0.250 0.000 1738943232.355547
+1738943232.3657 0 drive robobot/cmd/ti/rc 0.250 0.000 1738943232.365487
+1738943232.3755 0 drive robobot/cmd/ti/rc 0.250 0.000 1738943232.3753564
+1738943232.3854 0 drive robobot/cmd/ti/rc 0.250 0.000 1738943232.385255
+1738943232.3953 0 drive robobot/cmd/ti/rc 0.250 0.000 1738943232.3951292
+1738943232.4052 0 drive robobot/cmd/ti/rc 0.250 0.000 1738943232.405021
+1738943232.4110 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943232.4112 0 drive robobot/cmd/ti/rc 0.1 0.5
+1738943232.5115 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943232.6119 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943232.7124 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943232.8127 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943232.9130 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943233.0132 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943233.1136 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943233.2139 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943233.3141 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943233.4145 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943233.5149 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943233.6152 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943233.7154 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943233.8157 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943233.9161 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943234.0164 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943234.1166 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943234.2170 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943234.3188 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943234.4185 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943234.5191 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943234.6194 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943234.7199 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943234.8200 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943234.9203 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943235.0207 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943235.1210 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943235.2212 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943235.3215 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943235.4218 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943235.4219 0 drive robobot/cmd/ti/rc 0 0
+1738943235.5222 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943235.5223 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943235.6226 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943235.6228 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943235.7231 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943235.7234 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943235.8238 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943235.8239 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943235.9240 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943235.9242 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943236.0243 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943236.0246 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943236.1248 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943236.1250 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943236.2254 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943236.2254 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943236.3255 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943236.3257 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943236.4258 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943236.4261 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943236.5263 0 drive robobot/cmd/ti/alive 2025-02-07 16:47:11.509731
+1738943236.5266 0 drive robobot/cmd/T0/leds 16 0 0 0
+1738943236.5268 0 drive robobot/cmd/ti/rc 0 0
+1738943236.5769 0 drive robobot/cmd/T0/stop  
+1738943236.5771 0 drive robobot/cmd/T0/leds 14 0 0 0
+1738943236.5873 0 drive robobot/cmd/T0/leds 15 0 0 0
+1738943236.5874 0 drive robobot/cmd/T0/leds 16 0 0 0
+1738943382.4724 0 drive robobot/cmd/ti/log 1
+1738943383.6875 0 drive robobot/cmd/T0/enc0  
+1738943383.6876 0 drive robobot/cmd/T0/confw 0.075 0.075 19 68 0.23
+1738943383.6877 0 drive robobot/cmd/T0/encrev 1
+1738943383.6877 0 drive robobot/cmd/T0/confi  
+1738943384.3221 0 drive robobot/cmd/T0/lip 1
+1738943384.3424 0 drive robobot/cmd/T0/liwi  
+1738943384.3625 0 drive robobot/cmd/T0/liwi  
+1738943384.3828 0 drive robobot/cmd/T0/liwi  
+1738943384.4031 0 drive robobot/cmd/T0/liwi  
+1738943384.4234 0 drive robobot/cmd/T0/liwi  
+1738943384.4436 0 drive robobot/cmd/T0/liwi  
+1738943384.4639 0 drive robobot/cmd/T0/liwi  
+1738943384.4841 0 drive robobot/cmd/T0/liwi  
+1738943384.5044 0 drive robobot/cmd/T0/liwi  
+1738943384.5247 0 drive robobot/cmd/T0/liwi  
+1738943384.5450 0 drive robobot/cmd/T0/liwi  
+1738943384.5652 0 drive robobot/cmd/T0/liwi  
+1738943384.5855 0 drive robobot/cmd/T0/liwi  
+1738943384.6058 0 drive robobot/cmd/T0/liwi  
+1738943384.6259 0 drive robobot/cmd/T0/liwi  
+1738943384.6462 0 drive robobot/cmd/T0/liwi  
+1738943384.6665 0 drive robobot/cmd/T0/liwi  
+1738943384.6868 0 drive robobot/cmd/T0/liwi  
+1738943384.7069 0 drive robobot/cmd/T0/liwi  
+1738943384.7272 0 drive robobot/cmd/T0/liwi  
+1738943384.7475 0 drive robobot/cmd/T0/liwi  
+1738943384.7677 0 drive robobot/cmd/T0/liwi  
+1738943384.7881 0 drive robobot/cmd/T0/liwi  
+1738943384.8083 0 drive robobot/cmd/T0/liwi  
+1738943384.8286 0 drive robobot/cmd/T0/liwi  
+1738943384.8489 0 drive robobot/cmd/T0/liwi  
+1738943384.8692 0 drive robobot/cmd/T0/liwi  
+1738943384.8894 0 drive robobot/cmd/T0/liwi  
+1738943384.9096 0 drive robobot/cmd/T0/liwi  
+1738943384.9301 0 drive robobot/cmd/T0/liwi  
+1738943384.9503 0 drive robobot/cmd/T0/liwi  
+1738943384.9505 0 drive robobot/cmd/T0/leds 16 0 0 30
+1738943384.9506 0 drive robobot/cmd/ti/rc 0.0 0.0
+1738943385.0694 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943385.0696 0 drive robobot/cmd/ti/rc 0.1 0.5
+1738943385.1699 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943385.2706 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943385.3710 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943385.4713 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943385.5717 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943385.6721 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943385.7725 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943385.8732 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943385.9735 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943386.0739 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943386.1742 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943386.2749 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943386.3754 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943386.4761 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943386.5765 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943386.6768 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943386.7772 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943386.8776 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943386.9779 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943387.0784 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943387.1788 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943387.2792 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943387.3799 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943387.4803 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943387.5808 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943387.6817 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943387.7820 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943387.8825 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943387.9828 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943388.0832 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943388.1835 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943388.2838 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943388.3843 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943388.4848 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943388.5854 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943388.6857 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943388.7859 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943388.8863 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943388.9867 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943389.0871 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943389.1875 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943389.2879 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943389.3882 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943389.4887 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943389.5893 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943389.6897 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943389.7904 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943389.8906 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943389.9910 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943390.0916 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943390.1921 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943390.2926 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943390.3932 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943390.4942 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943390.5944 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943390.6949 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943390.7954 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943390.8959 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943390.9965 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943391.0970 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943391.1975 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943391.2980 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943391.3985 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943391.4989 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943391.5993 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943391.6997 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943391.8001 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943391.9004 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943392.0009 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943392.1014 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943392.2018 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943392.3022 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943392.4026 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943392.5029 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943392.6034 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943392.7038 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943392.8042 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943392.9046 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943393.0049 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943393.1053 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943393.2059 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943393.3063 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943393.4066 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943393.5070 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943393.6074 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943393.7078 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943393.8083 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943393.9087 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943394.0093 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943394.1100 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943394.2104 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943394.3108 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943394.4110 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943394.5113 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943394.6118 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943394.7125 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943394.8130 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943394.9134 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943395.0136 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943395.1140 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943395.1144 0 drive robobot/cmd/ti/rc 0 0
+1738943395.2150 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943395.2153 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943395.3157 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943395.3161 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943395.4168 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943395.4169 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943395.5174 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943395.5176 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943395.6177 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943395.6180 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943395.7186 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943395.7187 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943395.8193 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943395.8195 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943395.9200 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943395.9204 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943396.0210 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943396.0211 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943396.1215 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943396.1215 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943396.2220 0 drive robobot/cmd/ti/alive 2025-02-07 16:49:42.468643
+1738943396.2221 0 drive robobot/cmd/T0/leds 16 0 0 0
+1738943396.2221 0 drive robobot/cmd/ti/rc 0 0
+1738943396.2723 0 drive robobot/cmd/T0/stop  
+1738943396.2724 0 drive robobot/cmd/T0/leds 14 0 0 0
+1738943396.2824 0 drive robobot/cmd/T0/leds 15 0 0 0
+1738943396.2826 0 drive robobot/cmd/T0/leds 16 0 0 0
+1738943519.7443 0 drive robobot/cmd/ti/log 1
+1738943520.9596 0 drive robobot/cmd/T0/enc0  
+1738943520.9596 0 drive robobot/cmd/T0/confw 0.075 0.075 19 68 0.23
+1738943520.9598 0 drive robobot/cmd/T0/encrev 1
+1738943520.9598 0 drive robobot/cmd/T0/confi  
+1738943521.5934 0 drive robobot/cmd/T0/lip 1
+1738943521.6137 0 drive robobot/cmd/T0/liwi  
+1738943521.6341 0 drive robobot/cmd/T0/liwi  
+1738943521.6545 0 drive robobot/cmd/T0/liwi  
+1738943521.6747 0 drive robobot/cmd/T0/liwi  
+1738943521.6949 0 drive robobot/cmd/T0/liwi  
+1738943521.7151 0 drive robobot/cmd/T0/liwi  
+1738943521.7354 0 drive robobot/cmd/T0/liwi  
+1738943521.7556 0 drive robobot/cmd/T0/liwi  
+1738943521.7758 0 drive robobot/cmd/T0/liwi  
+1738943521.7959 0 drive robobot/cmd/T0/liwi  
+1738943521.8161 0 drive robobot/cmd/T0/liwi  
+1738943521.8363 0 drive robobot/cmd/T0/liwi  
+1738943521.8565 0 drive robobot/cmd/T0/liwi  
+1738943521.8766 0 drive robobot/cmd/T0/liwi  
+1738943521.8968 0 drive robobot/cmd/T0/liwi  
+1738943521.9171 0 drive robobot/cmd/T0/liwi  
+1738943521.9377 0 drive robobot/cmd/T0/liwi  
+1738943521.9579 0 drive robobot/cmd/T0/liwi  
+1738943521.9781 0 drive robobot/cmd/T0/liwi  
+1738943521.9983 0 drive robobot/cmd/T0/liwi  
+1738943522.0185 0 drive robobot/cmd/T0/liwi  
+1738943522.0390 0 drive robobot/cmd/T0/liwi  
+1738943522.0592 0 drive robobot/cmd/T0/liwi  
+1738943522.0793 0 drive robobot/cmd/T0/liwi  
+1738943522.0995 0 drive robobot/cmd/T0/liwi  
+1738943522.1198 0 drive robobot/cmd/T0/liwi  
+1738943522.1400 0 drive robobot/cmd/T0/liwi  
+1738943522.1603 0 drive robobot/cmd/T0/liwi  
+1738943522.1805 0 drive robobot/cmd/T0/liwi  
+1738943522.2007 0 drive robobot/cmd/T0/liwi  
+1738943522.2209 0 drive robobot/cmd/T0/liwi  
+1738943522.2211 0 drive robobot/cmd/T0/leds 16 0 0 30
+1738943522.2212 0 drive robobot/cmd/ti/rc 0.0 0.0
+1738943522.3405 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943522.3405 0 drive robobot/cmd/ti/rc 0.1 0.5
+1738943522.4407 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943522.5410 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943522.6414 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943522.7418 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943522.8422 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943522.9426 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943523.0430 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943523.1434 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943523.2437 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943523.3446 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943523.4451 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943523.5455 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943523.6458 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943523.7463 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943523.8467 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943523.9471 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943524.0475 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943524.1479 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943524.2483 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943524.3487 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943524.4493 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943524.5500 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943524.6504 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943524.7508 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943524.8512 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943524.9515 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943525.0521 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943525.1525 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943525.2529 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943525.3533 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943525.4538 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943525.5543 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943525.6548 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943525.7560 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943525.8565 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943525.9570 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943526.0574 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943526.1578 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943526.2583 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943526.3587 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943526.4591 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943526.5602 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943526.6604 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943526.7607 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943526.8613 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943526.9616 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943527.0620 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943527.1624 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943527.2628 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943527.3629 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943527.4635 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943527.5637 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943527.6644 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943527.7649 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943527.8655 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943527.9665 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943528.0669 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943528.1677 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943528.2680 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943528.3682 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943528.4686 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943528.5691 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943528.6695 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943528.7700 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943528.8705 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943528.9711 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943529.0714 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943529.1722 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943529.2726 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943529.3730 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943529.4734 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943529.5738 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943529.6749 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943529.7747 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943529.8751 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943529.9755 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943530.0760 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943530.1764 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943530.2767 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943530.3771 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943530.4775 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943530.5778 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943530.6782 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943530.7786 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943530.8790 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943530.9793 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943531.0798 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943531.1802 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943531.2806 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943531.3811 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943531.4815 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943531.5820 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943531.6824 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943531.7828 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943531.8832 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943531.9836 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943532.0840 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943532.1843 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943532.2847 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943532.3851 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943532.3853 0 drive robobot/cmd/ti/rc 0 0
+1738943532.4856 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943532.4857 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943532.5861 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943532.5862 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943532.6866 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943532.6868 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943532.7870 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943532.7873 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943532.8877 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943532.8882 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943532.9882 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943532.9882 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943533.0885 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943533.0886 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943533.1890 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943533.1891 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943533.2894 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943533.2895 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943533.3896 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943533.3897 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943533.4898 0 drive robobot/cmd/ti/alive 2025-02-07 16:51:59.740266
+1738943533.4901 0 drive robobot/cmd/T0/leds 16 0 0 0
+1738943533.4903 0 drive robobot/cmd/ti/rc 0 0
+1738943533.5406 0 drive robobot/cmd/T0/stop  
+1738943533.5407 0 drive robobot/cmd/T0/leds 14 0 0 0
+1738943533.5509 0 drive robobot/cmd/T0/leds 15 0 0 0
+1738943533.5511 0 drive robobot/cmd/T0/leds 16 0 0 0
+1738943902.8779 0 drive robobot/cmd/ti/log 1
+1738943903.3716 0 drive robobot/cmd/T0/enc0  
+1738943903.3717 0 drive robobot/cmd/T0/confw 0.075 0.075 19 68 0.23
+1738943903.3718 0 drive robobot/cmd/T0/encrev 1
+1738943903.3718 0 drive robobot/cmd/T0/confi  
+1738943904.0068 0 drive robobot/cmd/T0/lip 1
+1738943904.0273 0 drive robobot/cmd/T0/liwi  
+1738943904.0475 0 drive robobot/cmd/T0/liwi  
+1738943904.0676 0 drive robobot/cmd/T0/liwi  
+1738943904.0880 0 drive robobot/cmd/T0/liwi  
+1738943904.1082 0 drive robobot/cmd/T0/liwi  
+1738943904.1286 0 drive robobot/cmd/T0/liwi  
+1738943904.1488 0 drive robobot/cmd/T0/liwi  
+1738943904.1692 0 drive robobot/cmd/T0/liwi  
+1738943904.1894 0 drive robobot/cmd/T0/liwi  
+1738943904.2109 0 drive robobot/cmd/T0/liwi  
+1738943904.2312 0 drive robobot/cmd/T0/liwi  
+1738943904.2512 0 drive robobot/cmd/T0/liwi  
+1738943904.2715 0 drive robobot/cmd/T0/liwi  
+1738943904.2918 0 drive robobot/cmd/T0/liwi  
+1738943904.3120 0 drive robobot/cmd/T0/liwi  
+1738943904.3322 0 drive robobot/cmd/T0/liwi  
+1738943904.3524 0 drive robobot/cmd/T0/liwi  
+1738943904.3726 0 drive robobot/cmd/T0/liwi  
+1738943904.3929 0 drive robobot/cmd/T0/liwi  
+1738943904.4131 0 drive robobot/cmd/T0/liwi  
+1738943904.4332 0 drive robobot/cmd/T0/liwi  
+1738943904.4535 0 drive robobot/cmd/T0/liwi  
+1738943904.4737 0 drive robobot/cmd/T0/liwi  
+1738943904.4940 0 drive robobot/cmd/T0/liwi  
+1738943904.5143 0 drive robobot/cmd/T0/liwi  
+1738943904.5344 0 drive robobot/cmd/T0/liwi  
+1738943904.5546 0 drive robobot/cmd/T0/liwi  
+1738943904.5748 0 drive robobot/cmd/T0/liwi  
+1738943904.5951 0 drive robobot/cmd/T0/liwi  
+1738943904.6153 0 drive robobot/cmd/T0/liwi  
+1738943904.6355 0 drive robobot/cmd/T0/liwi  
+1738943904.6357 0 drive robobot/cmd/T0/leds 16 0 0 30
+1738943904.6357 0 drive robobot/cmd/ti/rc 0.0 0.0
+1738943904.7548 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943904.7551 0 drive robobot/cmd/ti/rc 0.1 0.5
+1738943904.8554 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943904.9561 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943905.0566 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943905.1570 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943905.2575 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943905.3588 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943905.4590 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943905.5592 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943905.6599 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943905.7603 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943905.8607 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943905.9610 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943906.0614 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943906.1617 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943906.2622 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943906.3626 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943906.4631 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943906.5636 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943906.6640 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943906.7644 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943906.8648 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943906.9652 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943907.0659 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943907.1661 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943907.2667 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943907.3671 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943907.4675 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943907.5679 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943907.6683 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943907.7690 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943907.8694 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943907.9697 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943908.0700 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943908.1705 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943908.2709 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943908.3715 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943908.4726 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943908.5728 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943908.6734 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943908.7735 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943908.8740 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943908.9745 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943909.0746 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943909.1751 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943909.2754 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943909.3758 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943909.4762 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943909.5766 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943909.6770 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943909.7774 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943909.8781 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943909.9785 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943910.0787 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943910.1792 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943910.2796 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943910.3801 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943910.4805 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943910.5809 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943910.6814 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943910.7818 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943910.8824 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943910.9828 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943911.0832 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943911.1843 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943911.2840 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943911.3847 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943911.4852 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943911.5858 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943911.6862 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943911.7867 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943911.8872 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943911.9877 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943912.0882 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943912.1886 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943912.2891 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943912.3898 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943912.4903 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943912.5909 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943912.6913 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943912.7916 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943912.8923 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943912.9926 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943913.0929 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943913.1933 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943913.2938 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943913.3944 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943913.4952 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943913.5955 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943913.6962 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943913.7967 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943913.8971 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943913.9976 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943914.0982 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943914.1986 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943914.2992 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943914.3996 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943914.5001 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943914.6004 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943914.7011 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943914.8018 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943914.8019 0 drive robobot/cmd/ti/rc 0 0
+1738943914.9026 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943914.9027 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943915.0031 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943915.0033 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943915.1036 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943915.1041 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943915.2045 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943915.2049 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943915.3062 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943915.3062 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943915.4063 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943915.4066 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943915.5068 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943915.5071 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943915.6075 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943915.6077 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943915.7081 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943915.7082 0 drive robobot/cmd/T0/leds 16 0 64 0
+1738943915.8086 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943915.8088 0 drive robobot/cmd/T0/leds 16 0 30 30
+1738943915.9092 0 drive robobot/cmd/ti/alive 2025-02-07 16:58:22.875054
+1738943915.9094 0 drive robobot/cmd/T0/leds 16 0 0 0
+1738943915.9096 0 drive robobot/cmd/ti/rc 0 0
+1738943915.9600 0 drive robobot/cmd/T0/stop  
+1738943915.9600 0 drive robobot/cmd/T0/leds 14 0 0 0
+1738943915.9702 0 drive robobot/cmd/T0/leds 15 0 0 0
+1738943915.9704 0 drive robobot/cmd/T0/leds 16 0 0 0

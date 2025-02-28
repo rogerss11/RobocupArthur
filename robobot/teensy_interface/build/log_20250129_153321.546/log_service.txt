@@ -1,0 +1,5 @@
+% Service logfile
+% 1 	Time (sec)
+% 2 	Message
+1738161201.5462 Setup finished OK=1
+1738317970.8866 All terminated; closing logfile

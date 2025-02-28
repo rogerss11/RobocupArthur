@@ -1,0 +1,13 @@
+% Service logfile
+% 1 	Time (sec)
+% 2 	Message
+1738155040.9098 Setup finished OK=1
+1738155055.1581 Log command: robobot/cmd/ti/log 1
+1738155055.8953 Mixer order: robobot/cmd/ti/rc 0.2 0
+1738155056.0208 new Master: (0) 2025-01-29 13:52:59.768904
+1738155066.0229 Mixer order: robobot/cmd/ti/rc 0.1 0.5
+1738155069.0965 Mixer order: robobot/cmd/ti/rc 0.25 0
+1738155069.2435 Mixer order: robobot/cmd/ti/rc 0 0
+1738155069.2687 Log command: robobot/cmd/ti/log 0
+1738155042.1445 Lost Master, alive since 2025-01-29 13:52:59.768904
+1738155210.6571 All terminated; closing logfile

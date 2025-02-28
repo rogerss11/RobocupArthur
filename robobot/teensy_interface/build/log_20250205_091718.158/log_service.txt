@@ -1,0 +1,4 @@
+% Service logfile
+% 1 	Time (sec)
+% 2 	Message
+1738743438.1589 Setup finished OK=1

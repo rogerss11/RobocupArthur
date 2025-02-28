@@ -1,0 +1,271 @@
+#/***************************************************************************
+#*   Copyright (C) 2024 by DTU
+#*   jcan@dtu.dk
+#*
+#*
+#* The MIT License (MIT)  https://mit-license.org/
+#*
+#* Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+#* and associated documentation files (the “Software”), to deal in the Software without restriction,
+#* including without limitation the rights to use, copy, modify, merge, publish, distribute,
+#* sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
+#* is furnished to do so, subject to the following conditions:
+#*
+#* The above copyright notice and this permission notice shall be included in all copies
+#* or substantial portions of the Software.
+#*
+#* THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+#* INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+#* PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+#* FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+#* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#* THE SOFTWARE. */
+
+
+from datetime import *
+import time as t
+from threading import Thread
+import cv2 as cv
+
+class SEdge:
+    # raw AD values
+    edge = [0, 0, 0 , 0, 0, 0, 0, 0]
+    edgeUpdCnt = 0
+    edgeTime = datetime.now()
+    edgeRate = 0
+    # normalizing white values
+    edgenw = [0, 0, 0 , 0, 0, 0, 0, 0]
+    edgenwUpdCnt = 0
+    edgenwTime = datetime.now()
+    # normalized after white calibration
+    edgen = [0, 0, 0 , 0, 0, 0, 0, 0]
+    edgenUpdCnt = 0
+    edgenTime = datetime.now()
+    edgenRate = 0
+    # center of gravity
+    position = 0.0
+    low = 0  # lowest reflectivity
+    high = 0 # highest reflectivity - assumed valid if high > 800
+    #
+
+    ##########################################################
+
+    def setup(self):
+      from uservice import service
+      sendBlack = False;
+      loops = 0
+      # turn line sensor on
+      # lip p w h t xth wi s Set sensor basics 
+      #    p=on, w=white, h=high power, 
+      #    t=tilt comp (not used), 
+      #    xth=cross_th (not used), 
+      #    wi=wide (1), s=swap (o=)
+      topic = service.topicCmd + "T0/lip"
+      service.send(topic, "1 1 1 0 4 1 0")
+      # request data
+      while not service.stop:
+        t.sleep(0.02)
+        # white calibrate requested
+        if service.args.white:
+          if not sendBlack:
+            # make sure black level is black
+            topic = service.topicCmd + "T0/licb"
+            param = "0 0 0 0 0 0 0 0"
+            sendBlack = service.send(topic, param)
+          elif self.edgeUpdCnt < 3:
+            # request raw AD reflectivity
+            service.send(service.topicCmd + "T0/livi"," ")
+            pass
+          else:
+            # send calibration request, averaged over 30 samples
+            service.send(service.topicCmd + "T0/licw","30")
+            # save the calibration as new default
+            service.send(service.topicCmd + "T0/eew","")
+            service.args.white = False
+            # allow communication to settle
+            t.sleep(0.1)
+            # terminate mission
+            service.terminate()
+        elif self.edgenwUpdCnt == 0:
+          # get calibrated white value
+          service.send(service.topicCmd + "T0/liwi"," ")
+          pass
+        elif self.edgenUpdCnt == 0:
+          # wait for line sensor data
+          pass
+        else:
+          print(f"% line sensor (sedge.py) got data stream; after {loops}")
+          break
+        loops += 1
+        if loops > 30:
+          print(f"% line sensor (sedge.py) got no data after {loops} (continues edgenwUpdCnt={self.edgenwUpdCnt}, edgeUpdCnt={self.edgeUpdCnt}, edgenUpdCnt={self.edgenUpdCnt})")
+          break
+      pass
+
+    ##########################################################
+
+    def print(self):
+      from uservice import service
+      print("% Edge " + str(self.edgeTime - service.startTime) +
+            f" ({self.edge[0]}, " +
+            f"{self.edge[1]}, " +
+            f"{self.edge[2]}, " +
+            f"{self.edge[3]}, " +
+            f"{self.edge[4]}, " +
+            f"{self.edge[5]}, " +
+            f"{self.edge[6]}, " +
+            f"{self.edge[7]})" +
+            f" {self.edgeRate:.2f} ms " +
+            str(self.edgeUpdCnt))
+    def printn(self):
+      from uservice import service
+      print("% Edge normalized " + str(self.edgenTime - service.startTime) +
+            f" ({self.edgen[0]}, " +
+            f"{self.edgen[1]}, " +
+            f"{self.edgen[2]}, " +
+            f"{self.edgen[3]}, " +
+            f"{self.edgen[4]}, " +
+            f"{self.edgen[5]}, " +
+            f"{self.edgen[6]}, " +
+            f"{self.edgen[7]})" +
+            f" {self.edgenRate:.2f} ms " +
+            f" {self.position:.2f} " +
+            str(self.edgenUpdCnt))
+    def printnw(self):
+      from uservice import service
+      print("% Edge white level " + str(self.edgenwTime - service.startTime) +
+            f" ({self.edgenw[0]}, " +
+            f"{self.edgenw[1]}, " +
+            f"{self.edgenw[2]}, " +
+            f"{self.edgenw[3]}, " +
+            f"{self.edgenw[4]}, " +
+            f"{self.edgenw[5]}, " +
+            f"{self.edgenw[6]}, " +
+            f"{self.edgenw[7]}) " +
+            str(self.edgenwUpdCnt))
+
+    ##########################################################
+
+    def decode(self, topic, msg):
+        # decode MQTT message
+        used = True
+        if topic == "T0/liv": # raw AD value
+          from uservice import service
+          gg = msg.split(" ")
+          if (len(gg) >= 4):
+            t0 = self.edgeTime;
+            self.edgeTime = datetime.fromtimestamp(float(gg[0]))
+            self.edge[0] = int(gg[1])
+            self.edge[1] = int(gg[2])
+            self.edge[2] = int(gg[3])
+            self.edge[3] = int(gg[4])
+            self.edge[4] = int(gg[5])
+            self.edge[5] = int(gg[6])
+            self.edge[6] = int(gg[7])
+            self.edge[7] = int(gg[8])
+            t1 = self.edgeTime;
+            if self.edgeUpdCnt == 2:
+              self.edgeRate = (t1 -t0).total_seconds()*1000
+            elif self.edgeUpdCnt > 2:
+              self.edgeRate = (self.edgeRate * 99 + (t1 -t0).total_seconds()*1000) / 100
+            self.edgeUpdCnt += 1
+            # self.print()
+        elif topic == "T0/livn": # normalized after calibration range (0..1000)
+          from uservice import service
+          gg = msg.split(" ")
+          if (len(gg) >= 4):
+            t0 = self.edgenTime;
+            self.edgenTime = datetime.fromtimestamp(float(gg[0]))
+            self.edgen[0] = int(gg[1])
+            self.edgen[1] = int(gg[2])
+            self.edgen[2] = int(gg[3])
+            self.edgen[3] = int(gg[4])
+            self.edgen[4] = int(gg[5])
+            self.edgen[5] = int(gg[6])
+            self.edgen[6] = int(gg[7])
+            self.edgen[7] = int(gg[8])
+            t1 = self.edgenTime;
+            if self.edgenUpdCnt == 2:
+              self.edgenRate = (t1 -t0).total_seconds()*1000
+            elif self.edgeUpdCnt > 2:
+              self.edgenRate = (self.edgenRate * 99 + (t1 -t0).total_seconds()*1000) / 100
+            self.edgenUpdCnt += 1
+            # calculate line position - actually center of gravity of white value
+            # - not a good method, but works somehow
+            self.findCOGposition()
+            #self.printn()
+        elif topic == "T0/liw": # get white level
+          from uservice import service
+          gg = msg.split(" ")
+          if (len(gg) >= 4):
+            self.edgenwTime = datetime.fromtimestamp(float(gg[0]))
+            self.edgenw[0] = int(gg[1])
+            self.edgenw[1] = int(gg[2])
+            self.edgenw[2] = int(gg[3])
+            self.edgenw[3] = int(gg[4])
+            self.edgenw[4] = int(gg[5])
+            self.edgenw[5] = int(gg[6])
+            self.edgenw[6] = int(gg[7])
+            self.edgenw[7] = int(gg[8])
+            self.edgenwUpdCnt += 1
+            # self.printnw()
+        else:
+          used = False
+        return used
+
+    ##########################################################
+
+    def findCOGposition(self):
+      sum = 0
+      posSum = 0
+      self.low = 1000
+      self.high = 0
+      for i in range(8):
+        if self.edgen[i] < self.low:
+          self.low = self.edge[i]
+        if self.edgen[i] > self.high:
+          self.hight = self.edgen[i]
+      for i in range(8):
+        v = self.edgen[i] - self.low
+        sum += v
+        posSum += (i+1) * v
+      if sum > 0:
+        self.position = posSum/sum - 4.5
+      else:
+        self.position
+
+    ##########################################################
+
+    def terminate(self):
+      self.need_data = False
+      try:
+        self.th.join()
+        # stop subscription service from Teensy
+        service.send(service.topicCmd + "T0/sub","livn 0")
+      except:
+        print("% Edge thread not running")
+      print("% Edge terminated")
+      pass
+
+    ##########################################################
+
+    def paint(self, img):
+      h, w, ch = img.shape
+      pl = int(h - h/4)
+      st = int(w/10)
+      x = st
+      y = pl
+      cv.line(img, (x,y), (int(x + 7*st), int(y)), (0x35, 0x88, 0), thickness=1, lineType=8)
+      cv.line(img, (x,int(y-h/2)), (int(x + 7*st), int(y-h/2)), (0x35, 0x88, 0), thickness=1, lineType=8)
+      cv.line(img, (x,int(y-h/2*0.8)), (int(x + 7*st), int(y-h/2*0.8)), (0xea, 0x3e, 0x2f), thickness=1, lineType=4)
+      for i in range(8):
+        y = int(pl - self.edgen[i]*h/2/1000)
+        cv.drawMarker(img, (x,y), (0, 0, 0x99), markerType=cv.MARKER_STAR, thickness=2, line_type=8, markerSize = 10)
+        x += st
+      cv.putText(img, "left", (st,pl - 2), cv.FONT_HERSHEY_PLAIN, 1, (0x70, 0x220, 0), thickness=2)
+      cv.putText(img, "right", (int(st+6*st),pl - 2), cv.FONT_HERSHEY_PLAIN, 1, (0x70, 0x220, 0), thickness=2)
+
+
+# create the data object
+edge = SEdge()
+

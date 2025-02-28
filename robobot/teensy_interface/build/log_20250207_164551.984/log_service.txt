@@ -1,0 +1,47 @@
+% Service logfile
+% 1 	Time (sec)
+% 2 	Message
+1738943151.9843 Setup finished OK=1
+1738943231.5137 Log command: robobot/cmd/ti/log 1
+1738943232.2912 Mixer order: robobot/cmd/ti/rc 0.0 0.0
+1738943232.2951 Mixer order: robobot/cmd/ti/rc 0.250 0.000 1738943232.2950077
+1738943232.3054 Mixer order: robobot/cmd/ti/rc 0.250 0.000 1738943232.3051546
+1738943232.3151 Mixer order: robobot/cmd/ti/rc 0.250 0.000 1738943232.3149211
+1738943232.3249 Mixer order: robobot/cmd/ti/rc 0.250 0.000 1738943232.3248117
+1738943232.3349 Mixer order: robobot/cmd/ti/rc 0.250 0.000 1738943232.3347635
+1738943232.3447 Mixer order: robobot/cmd/ti/rc 0.250 0.000 1738943232.344615
+1738943232.3557 Mixer order: robobot/cmd/ti/rc 0.250 0.000 1738943232.355547
+1738943232.3657 Mixer order: robobot/cmd/ti/rc 0.250 0.000 1738943232.365487
+1738943232.3755 Mixer order: robobot/cmd/ti/rc 0.250 0.000 1738943232.3753564
+1738943232.3854 Mixer order: robobot/cmd/ti/rc 0.250 0.000 1738943232.385255
+1738943232.3953 Mixer order: robobot/cmd/ti/rc 0.250 0.000 1738943232.3951292
+1738943232.4052 Mixer order: robobot/cmd/ti/rc 0.250 0.000 1738943232.405021
+1738943232.4110 new Master: (0) 2025-02-07 16:47:11.509731
+1738943232.4112 Mixer order: robobot/cmd/ti/rc 0.1 0.5
+1738943235.4219 Mixer order: robobot/cmd/ti/rc 0 0
+1738943236.5268 Mixer order: robobot/cmd/ti/rc 0 0
+1738943236.5978 Log command: robobot/cmd/ti/log 0
+1738943154.5161 Lost Master, alive since 2025-02-07 16:47:11.509731
+1738943382.4724 Log command: robobot/cmd/ti/log 1
+1738943384.9506 Mixer order: robobot/cmd/ti/rc 0.0 0.0
+1738943385.0694 new Master: (0) 2025-02-07 16:49:42.468643
+1738943385.0696 Mixer order: robobot/cmd/ti/rc 0.1 0.5
+1738943395.1144 Mixer order: robobot/cmd/ti/rc 0 0
+1738943396.2221 Mixer order: robobot/cmd/ti/rc 0 0
+1738943396.2927 Log command: robobot/cmd/ti/log 0
+1738943154.5161 Lost Master, alive since 2025-02-07 16:49:42.468643
+1738943519.7443 Log command: robobot/cmd/ti/log 1
+1738943522.2212 Mixer order: robobot/cmd/ti/rc 0.0 0.0
+1738943522.3405 new Master: (0) 2025-02-07 16:51:59.740266
+1738943522.3405 Mixer order: robobot/cmd/ti/rc 0.1 0.5
+1738943532.3853 Mixer order: robobot/cmd/ti/rc 0 0
+1738943533.4903 Mixer order: robobot/cmd/ti/rc 0 0
+1738943533.5613 Log command: robobot/cmd/ti/log 0
+1738943154.5161 Lost Master, alive since 2025-02-07 16:51:59.740266
+1738943902.8779 Log command: robobot/cmd/ti/log 1
+1738943904.6357 Mixer order: robobot/cmd/ti/rc 0.0 0.0
+1738943904.7548 new Master: (0) 2025-02-07 16:58:22.875054
+1738943904.7551 Mixer order: robobot/cmd/ti/rc 0.1 0.5
+1738943914.8019 Mixer order: robobot/cmd/ti/rc 0 0
+1738943915.9096 Mixer order: robobot/cmd/ti/rc 0 0
+1738943915.9806 Log command: robobot/cmd/ti/log 0

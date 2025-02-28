@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+
+#/***************************************************************************
+#*   Copyright (C) 2024 by DTU
+#*   jcan@dtu.dk
+#*
+#*
+#* The MIT License (MIT)  https://mit-license.org/
+#*
+#* Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+#* and associated documentation files (the “Software”), to deal in the Software without restriction,
+#* including without limitation the rights to use, copy, modify, merge, publish, distribute,
+#* sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
+#* is furnished to do so, subject to the following conditions:
+#*
+#* The above copyright notice and this permission notice shall be included in all copies
+#* or substantial portions of the Software.
+#*
+#* THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+#* INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+#* PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+#* FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+#* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#* THE SOFTWARE. */
+
+#import sys
+#import threading
+import time as t
+#import select
+import numpy as np
+import cv2 as cv
+from datetime import *
+# robot function
+from spose import pose
+from sir import ir
+from srobot import robot
+from scam import cam
+from sedge import edge
+from sgpio import gpio
+from scam import cam
+from uservice import service
+
+
+
+############################################################
+
+def imageAnalysis(save):
+  if cam.useCam:
+    img, imgTime = cam.getImage()
+    if (isinstance(img,bool)):
+      print("% failed to get image")
+    else:
+      h, w, ch = img.shape
+      if not service.args.silent:
+        print(f"% At {imgTime}, got image {cam.cnt} of size= {w}x{h}")
+      edge.paint(img)
+      if not gpio.onPi:
+        cv.imshow('frame for analysis', img)
+      if save:
+        fn = f"image_{imgTime.strftime('%Y_%b_%d_%H%M%S_')}{cam.cnt:03d}.jpg"
+        cv.imwrite(fn, img)
+        if not service.args.silent:
+          print(f"% Saved image {fn}")
+      pass
+    pass
+  pass
+
+############################################################
+
+stateTime = datetime.now()
+def stateTimePassed(self):
+  return (datetime.now() - stateTime).total_seconds()
+
+
+def loop():
+  from ulog import flog
+  state = 0
+  images = 0
+  ledon = True
+  tripTime = datetime.now()
+  oldstate = -1
+  if not service.args.now:
+    print("% Ready, press start button")
+    service.send(service.topicCmd + "T0/leds","16 30 30 0")
+  while not (service.stop or gpio.stop()):
+    if state == 0:
+      start = gpio.start() or service.args.now
+      if start:
+        print("% Starting")
+        service.send(service.topicCmd + "T0/leds","16 0 30 0")
+        service.send(service.topicCmd + "ti/rc","0.25 0")
+        state = 12
+        pose.tripBreset()
+        print("% --- state 0 ended")
+    elif state == 12:
+      if pose.tripB > 0.3 or pose.tripBtimePassed() > 10:
+        print(f"% --- state {state} ended (driven {pose.tripB})")
+        state = 14
+        pose.tripBreset()
+        # new command
+        service.send(service.topicCmd + "ti/rc","0.25 0.5")
+    elif state == 14:
+      if pose.tripBh > np.pi/2 or pose.tripBtimePassed() > 10:
+        print(f"% --- state {state} ended (h = {pose.tripBh:.4f})")
+        state = 20
+        # new command
+        service.send(service.topicCmd + "ti/rc","0 0")
+      print(f"% --- state {state}, h = {pose.tripBh:.4f}, t={pose.tripBtimePassed():.3f}")
+    elif state == 20:
+      imageAnalysis(images == 2)
+      images += 1
+      # blink LED
+      if ledon:
+        service.send(service.topicCmd + "T0/leds","16 0 64 0")
+        gpio.set_value(20, 1)
+      else:
+        service.send(service.topicCmd + "T0/leds","16 0 30 30")
+        gpio.set_value(20, 0)
+      ledon = not ledon
+      # finished?
+      if images>=10 or not cam.useCam:
+        print(f"% --- state {state} ended")
+        images = 0
+        state = 50
+      pass
+    elif state == 50:
+      # show white for a moment
+      service.send(service.topicCmd + "T0/leds","16 30 30 30")
+      # test if time duration is en
+      if (datetime.now() - tripTime).total_seconds() > 10:
+        print(f"% --- state {state}")
+        state = 99
+    else:
+      print(f"% Mission finished; state={state}")
+      break
+    if (cam.useCam):
+      # allow openCV to handle imshow
+      key = cv.waitKey(100) # ms
+      if key > 0: # e.g. Esc (key=27) pressed with focus on image
+        break
+    # take images as we go
+    if state > 0:
+      imageAnalysis(true)
+    # note state change and reset state timer
+    if state != oldstate:
+      flog.write(state)
+      flog.writeRemark(f"State change from {oldstate} to {state}")
+      print(f"State change from {oldstate} to {state}")
+      oldstate = state
+      stateTime = datetime.now()
+    # do not loop too fast
+    t.sleep(0.1)
+    pass # end of while loop
+  # turn LEDS off
+  service.send(service.topicCmd + "T0/leds","16 0 0 0") 
+  gpio.set_value(20, 0)
+  service.send(service.topicCmd + "ti/rc","0 0")
+  # turn off interface logging
+  # this one is not send?
+  service.send("robobot/cmd/ti/log", "0")
+  t.sleep(0.05)
+  pass
+
+############################################################
+
+if __name__ == "__main__":
+    print("% Starting")
+    service.setup('192.168.2.55')
+    #service.setup('10.197.216.216')
+    #service.setup('10.197.217.204')
+    #service.setup('10.197.216.193')
+    if service.connected:
+      loop()
+      service.terminate()
+    print("% Main Terminated")

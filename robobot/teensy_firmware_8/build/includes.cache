@@ -1,0 +1,617 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/cores/teensy4"
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/teensy_firmware_8.ino.cpp",
+    "Include": "ADC.h",
+    "Includepath": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/ADC"
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/teensy_firmware_8.ino.cpp",
+    "Include": "MPU9250_asukiaaa.h",
+    "Includepath": "/home/local/Arduino/libraries/MPU9250_asukiaaa/src"
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/teensy_firmware_8.ino.cpp",
+    "Include": "Wire.h",
+    "Includepath": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/Wire"
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/teensy_firmware_8.ino.cpp",
+    "Include": "Adafruit_GFX.h",
+    "Includepath": "/home/local/Arduino/libraries/Adafruit_GFX_Library"
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/teensy_firmware_8.ino.cpp",
+    "Include": "Adafruit_I2CDevice.h",
+    "Includepath": "/home/local/Arduino/libraries/Adafruit_BusIO"
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/teensy_firmware_8.ino.cpp",
+    "Include": "SPI.h",
+    "Includepath": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SPI"
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/teensy_firmware_8.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/udemo_behave.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/AS5X47.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/AS5X47Spi.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/Adafruit_SSD1306_mod.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/rbuf.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/uad.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/uasenc.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/ucommand.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/ucurrent.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/udisplay.cpp",
+    "Include": "USBHost_t36.h",
+    "Includepath": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36"
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/udisplay.cpp",
+    "Include": "SdFat.h",
+    "Includepath": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src"
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/udisplay.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/ueeconfig.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/uencoder.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/uimu2.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/uirdist.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/uledband.cpp",
+    "Include": "WS2812Serial.h",
+    "Includepath": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/WS2812Serial"
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/uledband.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/ulinesensor.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/ulog.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/umotor.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/umotortest.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/urobot.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/uservice.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/uservo.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/usubs.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/usubss.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/uusb.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/svn/robobot/teensy_firmware_8/build/sketch/src/uusbhost.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/ADC/ADC.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/ADC/ADC_Module.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/ADC/AnalogBufferDMA.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/Arduino/libraries/MPU9250_asukiaaa/src/MPU9250_asukiaaa.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/Wire/Wire.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/Wire/WireIMXRT.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/Wire/WireKinetis.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/Wire/utility/twi.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/Arduino/libraries/Adafruit_GFX_Library/Adafruit_GFX.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/Arduino/libraries/Adafruit_GFX_Library/Adafruit_GrayOLED.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/Arduino/libraries/Adafruit_GFX_Library/Adafruit_SPITFT.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/Arduino/libraries/Adafruit_GFX_Library/glcdfont.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/Arduino/libraries/Adafruit_BusIO/Adafruit_BusIO_Register.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/Arduino/libraries/Adafruit_BusIO/Adafruit_I2CDevice.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/Arduino/libraries/Adafruit_BusIO/Adafruit_SPIDevice.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SPI/SPI.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/BluetoothConnection.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/MassStorageDriver.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/SerEMU.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/USBFilesystemFormatter.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/adk.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/antplus.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/bluetooth.cpp",
+    "Include": "EEPROM.h",
+    "Includepath": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/EEPROM"
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/bluetooth.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/digitizer.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/ehci.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/enumeration.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/hid.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/hub.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/joystick.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/keyboard.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/keyboardHIDExtras.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/memory.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/midi.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/mouse.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/print.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/rawhid.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/USBHost_t36/serial.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/ExFatLib/ExFatDbg.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/ExFatLib/ExFatFile.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/ExFatLib/ExFatFilePrint.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/ExFatLib/ExFatFileWrite.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/ExFatLib/ExFatFormatter.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/ExFatLib/ExFatName.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/ExFatLib/ExFatPartition.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/ExFatLib/ExFatVolume.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/ExFatLib/upcase.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FatLib/FatDbg.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FatLib/FatFile.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FatLib/FatFileLFN.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FatLib/FatFilePrint.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FatLib/FatFileSFN.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FatLib/FatFormatter.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FatLib/FatName.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FatLib/FatPartition.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FatLib/FatVolume.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FreeStack.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FsLib/FsFile.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FsLib/FsNew.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/FsLib/FsVolume.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/MinimumSerial.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/SdCard/SdCardInfo.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/SdCard/SdSpiCard.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/SdCard/SdioTeensy.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/SpiDriver/SdSpiArtemis.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/SpiDriver/SdSpiChipSelect.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/SpiDriver/SdSpiDue.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/SpiDriver/SdSpiESP.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/SpiDriver/SdSpiParticle.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/SpiDriver/SdSpiSTM32.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/SpiDriver/SdSpiSTM32Core.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/SpiDriver/SdSpiTeensy3.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/common/FmtNumber.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/common/FsCache.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/common/FsDateTime.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/common/FsName.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/common/FsStructs.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/common/FsUtf.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/common/PrintBasic.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/common/upcase.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/iostream/StdioStream.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/iostream/StreamBaseClass.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/iostream/istream.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/SdFat/src/iostream/ostream.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/WS2812Serial/WS2812Serial.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/local/.arduino15/packages/teensy/hardware/avr/1.59.0/libraries/EEPROM/EEPROM.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
