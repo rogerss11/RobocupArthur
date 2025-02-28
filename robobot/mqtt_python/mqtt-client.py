@@ -59,7 +59,7 @@ def imageAnalysis(save):
       if not service.args.silent:
         # print(f"% At {imgTime}, got image {cam.cnt} of size= {w}x{h}")
         pass
-      edge.paint(img)
+      #edge.paint(img)
       if not gpio.onPi:
         cv.imshow('frame for analysis', img)
       if save:
