@@ -4,7 +4,6 @@
 #*   Copyright (C) 2024 by DTU
 #*   jcan@dtu.dk
 #*
-#*
 #* The MIT License (MIT)  https://mit-license.org/
 #*
 #* Permission is hereby granted, free of charge, to any person obtaining a copy of this software
@@ -49,6 +48,7 @@ setproctitle("mqtt-client")
 
 
 def imageAnalysis(save):
+  save = 1
   if cam.useCam:
     ok, img, imgTime = cam.getImage()
     if not ok: # size(img) == 0):
@@ -81,7 +81,7 @@ def stateTimePassed():
 
 def loop():
   from ulog import flog
-  state = 0
+  state = 20
   images = 0
   ledon = True
   tripTime = datetime.now()
@@ -100,7 +100,7 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turnrate rad/sec)
         # follow line (at 0.25cm/s)
         edge.lineControl(0.25, 0.0) # m/s and position on line -2.0..2.0
-        state = 12 # until no more line
+        state = 20 # until no more line
         pose.tripBreset() # use trip counter/timer B
     elif state == 12: # following line
       if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 20:
@@ -117,6 +117,7 @@ def loop():
     elif state == 20: # image analysis
       imageAnalysis(images == 2)
       images += 1
+      t.sleep(2)
       # blink LED
       if ledon:
         service.send(service.topicCmd + "T0/leds","16 0 64 0")
@@ -126,7 +127,7 @@ def loop():
         gpio.set_value(20, 0)
       ledon = not ledon
       # finished?
-      if images >= 10 or (not cam.useCam) or stateTimePassed() > 20:
+      if images >= 20 or (not cam.useCam) or stateTimePassed() > 100:
         images = 0
         state = 99
       pass
