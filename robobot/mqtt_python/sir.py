@@ -74,7 +74,7 @@ class SIr:
             if self.irUpdCnt == 2:
               self.irInterval = (t1 -t0).total_seconds()
             else:
-              self.irInterval = (self.irInterval * 99 + (t1 -t0).total_seconds()) / 100
+              self.irInterval = (self.irInterval * 99 + (t1 - t0).total_seconds()) / 100
             self.irUpdCnt += 1
             # self.print()
         else:

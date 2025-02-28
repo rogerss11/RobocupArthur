@@ -175,3 +175,9 @@ if __name__ == "__main__":
       loop()
       service.terminate()
     print("% Main Terminated")
+
+
+
+
+#IR due valori, primo per il sensore laterale, secondo per il frontale, il valore è in metri 
+# quindi quando è 0.16 indica 16 cm, it works. quando non percepisce niente spara 1.5
