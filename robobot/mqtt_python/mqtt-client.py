@@ -41,7 +41,6 @@ from sgpio import gpio
 from scam import cam
 from uservice import service
 
-
 # set title of process, so that it is not just called Python
 setproctitle("mqtt-client")
 
@@ -141,7 +140,9 @@ def loop():
       key = cv.waitKey(100) # ms
       if key > 0: # e.g. Esc (key=27) pressed with focus on image
         break
-    #
+
+    edge.plot_error() # plot error
+
     # note state change and reset state timer
     if state != oldstate:
       flog.write(state)

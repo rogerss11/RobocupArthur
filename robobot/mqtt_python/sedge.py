@@ -27,6 +27,7 @@ import time as t
 from threading import Thread
 import cv2 as cv
 from ulog import flog
+import matplotlib.pyplot as plt # graph for Ziegler-Nichols method
 
 class SEdge:
     # raw AD values
@@ -34,49 +35,77 @@ class SEdge:
     edgeUpdCnt = 0
     edgeTime = datetime.now()
     edgeInterval = 0
+
     # normalizing white values
     edge_n_w = [0, 0, 0 , 0, 0, 0, 0, 0]
     edge_n_wUpdCnt = 0
     edge_n_wTime = datetime.now()
+
     # normalized after white calibration
     edge_n = [0, 0, 0 , 0, 0, 0, 0, 0]
     edge_nUpdCnt = 0
     edge_nTime = datetime.now()
     edge_nInterval = 0
     edgeIntervalSetup = 0.1
+
     # line detection levels
     lineValidThreshold = 850 # 1000 is calibrated white
     crossingThreshold = 800 # average above this is assumed to be crossing line
+
     # level for relevant white values
-    low = lineValidThreshold - 100;
+    low = lineValidThreshold - 100 #? find out what its for
+
     # line detection values
-    position = 0.0
+    position = 0.0 #? what exactly is 0, between 4 and 5th sensor?
+    
     lineValid = False
     lineValidCnt = 0 # a value up to 20 for most confident line detect
+
     crossingLine = False
     crossingLineCnt = 0  # a value up to 20 for most confident crossing line
-    average = 0
+
+    average = 0 # avarage edge_n[] value
     high = 0 # highest reflectivity
     low = 0  # the darkest value found in latest sample
-    #
+
     topicLip = ""
     sendCalibRequest = False
-    #
+    
     # follow line controller
     lineCtrl = False # private
-    # try with a P-controller
+
+    # my PID values
+    Kp = 1.0  # Proportional constant
+    Ki = 0.5  # Integral constant
+    Kd = 0.1  # Derivative constant
+
+    # values for ID
+    errorSum = 0.0  # Integral term (sum of errors)
+    lastError = 0.0  # Previous error for calculating the derivative term
+    lastTime = time.time()  # Time of last update to calculate the derivative (dt)
+
+    # Lists to store data for graphing
+    error_list = []
+    time_list = []
+    startingTime = 0
+
+
+    # old values for P and lead compensator
     lineKp = 3.0
     lineTauZ = 0.8
     lineTauP = 0.15
+
     # Lead pre-calculated factors
     tauP2pT = 1.0
     tauP2mT = 0.0
     tauZ2pT = 1.0
     tauZ2mT = 0.0
-    # control values
+
+    # old control values 
     lineE1 = 0.0 # old error * Kp (rad/s)
     lineY1 = 0.0 # old control output (rad/s)
     lineY = 0.0  # control output (rad/s)
+
     # management
     topicRc = ""
     lostLineCnt = 0
@@ -85,16 +114,19 @@ class SEdge:
 
     ##########################################################
 
-    def setup(self):
+    def setup(self): #? understand entire function
       from uservice import service
-      sendBlack = False
+      sendBlack = False #? what exactly is this
       loops = 0
+      startingTime = time.time()
+      
       # turn line sensor on (command 'lip 1')
       print("% Edge (sedge.py):: turns on line sensor")
       self.topicLip = service.topicCmd + "T0/lip"
       service.send(self.topicLip, "1")
       # topic for (remote) control
       self.topicRc = service.topicCmd + "ti/rc"
+      
       # request data
       while not service.stop:
         t.sleep(0.02)
@@ -148,7 +180,7 @@ class SEdge:
 
     ##########################################################
 
-    def print(self):
+    def print(self): # print raw values
       from uservice import service
       print("% Edge (sedge.py):: " + str(self.edgeTime - service.startTime) +
             f" ({self.edge[0]}, " +
@@ -161,7 +193,7 @@ class SEdge:
             f"{self.edge[7]})" +
             f" {self.edgeInterval:.2f} ms " +
             str(self.edgeUpdCnt))
-    def printn(self):
+    def printn(self): # pring normalized values
       from uservice import service
       print("% Edge (sedge.py):: normalized " + str(self.edge_nTime - service.startTime) +
             f" ({self.edge_n[0]}, " +
@@ -175,7 +207,7 @@ class SEdge:
             f" {self.edge_nInterval:.2f} ms " +
             f" {self.position:.2f} " +
             str(self.edge_nUpdCnt))
-    def printnw(self):
+    def printnw(self): #! idk exactly what these values are
       from uservice import service
       print("% Edge (sedge.py):: white level " + str(self.edge_n_wTime) +
             f" ({self.edge_n_w[0]}, " +
@@ -197,7 +229,7 @@ class SEdge:
           from uservice import service
           gg = msg.split(" ")
           if (len(gg) >= 4):
-            t0 = self.edgeTime;
+            t0 = self.edgeTime
             self.edgeTime = datetime.fromtimestamp(float(gg[0]))
             self.edge[0] = int(gg[1])
             self.edge[1] = int(gg[2])
@@ -207,7 +239,7 @@ class SEdge:
             self.edge[5] = int(gg[6])
             self.edge[6] = int(gg[7])
             self.edge[7] = int(gg[8])
-            t1 = self.edgeTime;
+            t1 = self.edgeTime
             if self.edgeUpdCnt == 2:
               self.edgeInterval = (t1 -t0).total_seconds()*1000
             elif self.edgeUpdCnt > 2:
@@ -218,7 +250,7 @@ class SEdge:
           from uservice import service
           gg = msg.split(" ")
           if (len(gg) >= 4):
-            t0 = self.edge_nTime;
+            t0 = self.edge_nTime
             self.edge_nTime = datetime.fromtimestamp(float(gg[0]))
             self.edge_n[0] = int(gg[1])
             self.edge_n[1] = int(gg[2])
@@ -228,7 +260,7 @@ class SEdge:
             self.edge_n[5] = int(gg[6])
             self.edge_n[6] = int(gg[7])
             self.edge_n[7] = int(gg[8])
-            t1 = self.edge_nTime;
+            t1 = self.edge_nTime
             if self.edge_nUpdCnt == 2:
               self.edge_nInterval = (t1 -t0).total_seconds()*1000
             elif self.edge_nUpdCnt > 2:
@@ -242,7 +274,7 @@ class SEdge:
             self.LineDetect()
             # use to control, if active
             if self.lineCtrl:
-              self.followLine()
+              self.followLine() #! here follow line is called
             #self.printn()
         elif topic == "T0/liw": # get white level
           from uservice import service
@@ -265,7 +297,7 @@ class SEdge:
 
     ##########################################################
 
-    def LineDetect(self):
+    def LineDetect(self): #! calculating current positions, crossings and so on
       sum = 0
       posSum = 0
       low = int(1000)
@@ -279,7 +311,7 @@ class SEdge:
       self.high = high # most white level
       # print(f"% Edge (sedge.py):: {low}, {high} - what")
       # average white level
-      self.average = sum / 8.0;
+      self.average = sum / 8.0
       # detect if we have a crossing line
       self.crossingLine = self.average >= self.crossingThreshold
       # is line valid (high above threshold)
@@ -325,39 +357,77 @@ class SEdge:
 
     ##########################################################
 
+    #TODO merge with lead control
     def followLine(self):
       from uservice import service
       # some parameters depend on sample time, adjust
       # print(f"LineCtrl:: sample time {self.edge_nInterval}")
-      if abs(self.edge_nInterval - self.edgeIntervalSetup) > 2.0: # ms
+      if abs(self.edge_nInterval - self.edgeIntervalSetup) > 2.0: # ms #? why
         self.PIDrecalculate()
         self.edgeIntervalSetup = self.edge_nInterval
+
       # line to (much) the right gives a line position value.
       # Then the robot is too much to the left.
       # To correct we need a negative turnrate,
       # so sign is OK
-      e = self.refPosition - self.position
-      self.u = self.lineKp * e; # error times Kp
-      # Lead filter
-      self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
-      #
-      if self.lineY > 1:
-        self.lineY = 1
-      elif self.lineY < -1:
-        self.lineY = -1
-      # save old values
-      self.lineE1 = self.u;
-      self.lineY1 = self.lineY;
-      # make response
-      par = f"{self.velocity:.3f} {self.lineY:.3f} {t.time()}"
-      service.send(self.topicRc, par) # send new turn command, maintaining velocity
-      # debug print
-      if self.edge_nUpdCnt % 20 == 0:
-        print(f"% Edge::followLine: ctrl: e={e:.3f}, u={self.u:.3f}, y={self.lineY:.3f} -> {par}")
+      
+      # Time difference for derivative and integral calculations
+      currentTime = time.time()
+      deltaTime = currentTime - self.lastTime
+
+      if deltaTime > 0: # just to make sure
+        # Calculate the error between the desired position and the current position
+        e = self.refPosition - self.position
+
+        self.errorSum += e * deltaTime  # Sum of errors for integral term
+        errorDiff = (e - self.lastError) / deltaTime  # Derivative term
+
+        # PID control output
+        control = self.Kp * e + self.Ki * self.errorSum + self.Kd * errorDiff
+
+        # Ensure control signal stays within bounds
+        if control > 1:
+            control = 1
+        elif control < -1:
+            control = -1
+        
+        # Save data for graphing
+        self.error_list.append(e)
+        self.time_list.append(currentTime - startingTime)
+
+        # Update the turn rate signal (lineY)
+        #! not sure this is correct
+        self.lineY = control
+
+        # Lead filter
+        """
+        self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
+      
+        if self.lineY > 1:
+          self.lineY = 1
+        elif self.lineY < -1:
+          self.lineY = -1
+
+        # save old values
+        self.lineE1 = self.u
+        self.lineY1 = self.lineY
+        """
+
+        # Save last values
+        self.lastError = e
+        self.lastTime = currentTime
+
+        # make response
+        par = f"{self.velocity:.3f} {self.lineY:.3f} {t.time()}"
+        service.send(self.topicRc, par) # send new turn command, maintaining velocity
+
+        # debug print
+        if self.edge_nUpdCnt % 20 == 0:
+          print(f"% Edge::followLine: ctrl: e={e:.3f}, u={self.u:.3f}, y={self.lineY:.3f} -> {par}")
 
     ##########################################################
 
-    def PIDrecalculate(self):
+    def PIDrecalculate(self): #? idk how it works
       print(f"LineCtrl:: PIDrecalculate: T={self.edgeIntervalSetup:.2f} -> {self.edge_nInterval:.2f} ms")
       Tsec = self.edge_nInterval/1000
       self.tauP2pT = self.lineTauP * 2.0 + Tsec
@@ -367,7 +437,6 @@ class SEdge:
       # debug
       print(f"%% Lead: tauZ {self.lineTauZ:.3f} sec, tauP = {self.lineTauP:.3f} sec, T = {self.edge_nInterval:.3f} ms\n")
       print(f"%%       tauZ2pT = {self.tauZ2pT:.4f}, tauZ2mT = {self.tauZ2mT:.4f}, tauP2pT = {self.tauP2pT:.4f}, tauP2mT = {self.tauP2pT:.4f}")
-
 
     ##########################################################
 
@@ -387,7 +456,7 @@ class SEdge:
 
     ##########################################################
 
-    def paint(self, img):
+    def paint(self, img): # paint sensor values etc. onto an image
       h, w, ch = img.shape
       pl = int(h - h/4) # base position bottom (most positive y)
       st = int(w/10) # distance between sensors
@@ -421,6 +490,20 @@ class SEdge:
       cv.putText(img, "White (1000)", (int(st),pl - gh - 2), cv.FONT_HERSHEY_PLAIN, 1, dtuPurple, thickness=2)
       if self.crossingLine:
         cv.putText(img, "Crossing", (int(st),int(pl - 20)), cv.FONT_HERSHEY_PLAIN, 1, dtuRed, thickness=2)
+    
+    ##########################################################
+    
+    def plot_error(self):
+        """Plot error over time to analyze oscillations."""
+        plt.figure(figsize=(10, 5))
+        plt.plot(self.time_list, self.error_list, label="Error")
+        plt.axhline(y=0, color='black', linestyle='--')  # Reference line at zero
+        plt.xlabel("Time (s)")
+        plt.ylabel("Error")
+        plt.title("PID Error Over Time")
+        plt.legend()
+        plt.grid()
+        plt.show()
 
 
 # create the data object
