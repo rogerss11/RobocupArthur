@@ -85,12 +85,16 @@ def loop():
   ledon = True
   tripTime = datetime.now()
   oldstate = -1
+  startTime = time.time() # temporary for testing
   if not service.args.now:
     print("% Ready, press start button")
     service.send(service.topicCmd + "T0/leds","16 30 30 0") # LED 16: yellow - waiting
   # main state machine
   edge.lineControl(0, 0) # make sure line control is off
   while not (service.stop or gpio.stop()):
+    if time.time() - startTime >= 5:  # Check if 5 seconds have passed
+      print("% Mission finished due to time limit")
+      break
     if state == 0: # wait for start signal
       start = 1 #gpio.start() or service.args.now
       if start:
@@ -99,7 +103,7 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turnrate rad/sec)
         # follow line (at 0.25cm/s)
         edge.lineControl(0.25, 0.0) # m/s and position on line -2.0..2.0
-        state = 12 # until no more line
+        state = 100 # until no more line
         pose.tripBreset() # use trip counter/timer B
     elif state == 12: # following line
       if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 20:
@@ -128,6 +132,8 @@ def loop():
       if images >= 10 or (not cam.useCam) or stateTimePassed() > 20:
         images = 0
         state = 99
+      pass
+    elif state == 100: #line testing
       pass
     else: # abort
       print(f"% Mission finished/aborted; state={state}")
