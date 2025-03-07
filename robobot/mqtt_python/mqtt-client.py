@@ -98,16 +98,30 @@ def loop():
         print("% Starting")
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turnrate rad/sec)
-        # follow line (at 0.25cm/s)
-        edge.lineControl(0.25, 0.0) # m/s and position on line -2.0..2.0
-        state = 12 # until no more line
+        # follow line (at 0.20cm/s)
+        edge.lineControl(0.2, 0.0) # m/s and position on line -2.0..2.0
+        state = 13 # until no more line
         pose.tripBreset() # use trip counter/timer B
     elif state == 12: # following line
-      if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 20:
+      if edge.lineValidCnt == 0 :#or pose.tripBtimePassed() > 20:
         # no more line
         edge.lineControl(0,0) # stop following line
         pose.tripBreset()
         service.send(service.topicCmd + "ti/rc","0.1 0.5") # turn left
+        state = 13 # turn left
+    elif state == 13: # following line
+      if edge.lineValidCnt == 0 :#or pose.tripBtimePassed() > 20:
+        # no more line
+        #edge.lineControl(0,0) # stop following line
+        #pose.tripBreset()
+        ir.print()
+        time.sleep(0.2)
+        if ir[1] > 0.3: #se presente un oggetto a meno di 30 cm rallenti 
+          edge.lineControl(0.2, 0.0)
+        else:
+          edge.lineControl(0.1, 0.0)
+        pose.tripBreset()
+        #service.send(service.topicCmd + "ti/rc","0.1 0.5") # turn left
         state = 14 # turn left
     elif state == 14: # turning left
       if pose.tripBh > np.pi/2 or pose.tripBtimePassed() > 25:
@@ -170,7 +184,7 @@ if __name__ == "__main__":
     #service.setup('localhost') # localhost
     #service.setup('10.197.217.81') # Juniper
     #service.setup('10.197.217.80') # Newton
-    service.setup('10.197.217.224') #Arthur
+    service.setup('10.197.219.147') #Arthur
     if service.connected:
       loop()
       service.terminate()
