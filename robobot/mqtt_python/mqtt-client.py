@@ -231,7 +231,8 @@ if __name__ == "__main__":
     #service.setup('localhost') # localhost
     #service.setup('10.197.217.81') # Juniper
     #service.setup('10.197.217.80') # Newton
-    service.setup('bode.local') # Bode
+    #service.setup('bode.local') # Bode
+    service.setup('10.197.219.147') #Arthur
     if service.connected:
       loop()
     service.terminate()
