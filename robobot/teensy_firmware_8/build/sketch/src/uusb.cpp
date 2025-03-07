@@ -30,6 +30,7 @@
 #include "ulog.h"
 #include "usubss.h"
 #include "uservice.h"
+#include "urobot.h"
 
 UUSB usb;
 
@@ -485,6 +486,10 @@ void UUSB::stopAllSubscriptions()
 
 void UUSB::sendAllHelp()
 {
+  const int MRL = 200;
+  char reply[MRL];
+  snprintf(reply, MRL, "# Command list (host %s %s) ------- \r\n", robot.deviceName, robot.getRobotName());
+  usb.send(reply);
   for (int i = 0; i < (int)subscriptions.size(); i++)
   {
     subscriptions[i]->sendHelp();

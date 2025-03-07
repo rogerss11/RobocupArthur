@@ -1,0 +1,16 @@
+% Teensy 0 Motor control (log_20250307_101614.854/log_t0_motor_1_pid.txt) logfile
+% 1 	Time (sec)
+% 2 	Reference for teensy 0 motor (rad/sec or mm/s)
+% 3 	Measured velocity for motor (rad/sec or mm/s)
+% 4 	Value after Kp (V)
+% 5 	Value after Lead (V)
+% 6 	Integrator value (V)
+% 7 	Motor voltage output (V)
+% 8 	Is output limited (1=limited)
+% PID parameters
+% 	Kp = 7
+% 	tau_d = 0, alpha = 1 (use lead=0)
+% 	tau_i = 0.05 (used=1)
+% 	feed forward = 0
+% 	sample time = 15.0 ms
+% 	(derived values: le0=1, le1=0, lu1=0, ie=0.15)
