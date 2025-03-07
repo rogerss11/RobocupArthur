@@ -101,7 +101,7 @@ void UIrDist::sendStatusDistIR()
 {
   const int MRL = 64;
   char reply[MRL];
-  snprintf(reply, MRL, "ir %.3f %.3f %lu %lu %lu %lu %lu %lu %d\r\n" ,
+  snprintf(reply, MRL, "ir %.3f %.3f %lu %lu %lu %lu %lu %lu %d \r\n" ,
            irDistance[0], irDistance[1],
            irRaw[0], irRaw[1],
            irCal13cm[0], irCal50cm[0],
@@ -115,7 +115,7 @@ void UIrDist::sendStatusDistIR2()
 {
   const int MRL = 64;
   char reply[MRL];
-  snprintf(reply, MRL, "ir %.3f %.3f %lu %lu %d\r\n" ,
+  snprintf(reply, MRL, "ird %.3f %.3f %lu %lu %d\r\n" ,
            irDistance[0], irDistance[1],
            irRaw[0], irRaw[1],
            useDistSensor

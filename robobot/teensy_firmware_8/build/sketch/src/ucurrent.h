@@ -57,12 +57,14 @@ public:
    * NB! no test for valid index.
    * \returns current in amps */
   float getMotorCurrentM(int m, int32_t value);
+  /// averaged for logger
   inline float getMotorCurrentM(int m)
   { return getMotorCurrentM(m, motorCurrentMLowPass[m]); }
   void logIntervalChanged();
 //   void motorDisabled();
   float motorCurrentA[3];
   int32_t motorCurrentMOffset[2] = {0};
+  /// averaged for logger
   float getSupplyCurrent();
 
   
@@ -89,6 +91,8 @@ private:
    * supply current - averaged for external use */
   int32_t supplyCurrentAvg = 0;
   int supplyAvgCnt = 0;
+  float motorCurrentAvg[2] = {0};
+  int motorAvgCnt = 0;
   /**
    * Filter constant - out of 300,
    * i.e. 300 is no filter, 1 is filter over 300 samples */

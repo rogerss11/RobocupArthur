@@ -150,7 +150,7 @@ class SEdge:
             service.send(service.topicCmd + "T0/livi"," ")
             pass
           elif not self.sendCalibRequest:
-            # send calibration request, averaged over 30 samples
+            # send calibration request, averaged over 100 samples
             print("send calibration request")
             service.send(service.topicCmd + "T0/liwi","")
             t.sleep(0.02)

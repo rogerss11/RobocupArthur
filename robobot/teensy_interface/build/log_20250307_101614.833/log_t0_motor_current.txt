@@ -1,0 +1,4 @@
+% Motor current for all motors (Teensy 0)
+% 1 	Time (sec)
+% 2-5 	Voltage current (from Teensy) 1,2,(3,4) (Amps)
+% 6 	Board current (Amps) (also in state log)

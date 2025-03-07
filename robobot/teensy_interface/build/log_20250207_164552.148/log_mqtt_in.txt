@@ -1784,3 +1784,16 @@
 1739526774.6000 0 drive robobot/cmd/T0/leds 14 0 0 0
 1739526774.6102 0 drive robobot/cmd/T0/leds 15 0 0 0
 1739526774.6103 0 drive robobot/cmd/T0/leds 16 0 0 0
+1739526957.6157 0 drive robobot/cmd/ti/log 1
+1739526957.9675 0 drive robobot/cmd/ti/log 1
+1739526958.1247 0 drive robobot/cmd/ti/log 1
+1739527506.2073 0 drive robobot/cmd/ti/log 1
+1739527510.2954 0 drive robobot/cmd/T0/stop  
+1739527510.3395 0 drive robobot/cmd/T0/leds 14 0 0 0
+1739527510.3395 0 drive robobot/cmd/T0/leds 15 0 0 0
+1739527510.3395 0 drive robobot/cmd/T0/leds 16 0 0 0
+1739527612.7869 0 drive robobot/cmd/ti/log 1
+1739527637.6706 0 drive robobot/cmd/T0/stop  
+1739527637.7151 0 drive robobot/cmd/T0/leds 14 0 0 0
+1739527637.7152 0 drive robobot/cmd/T0/leds 15 0 0 0
+1739527637.7152 0 drive robobot/cmd/T0/leds 16 0 0 0

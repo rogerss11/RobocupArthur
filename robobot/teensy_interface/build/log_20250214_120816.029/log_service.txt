@@ -1,0 +1,7 @@
+% Service logfile
+% 1 	Time (sec)
+% 2 	Message
+1739531296.0297 Setup finished OK=1
+1739531942.3893 Got power off from (teensy 1) Teensy (battery)
+1739531942.3895 Shutdown: robobot/cmd/shutdown 1739531942.3893 Teensy (battery)
+1739531945.0325 All terminated; closing logfile

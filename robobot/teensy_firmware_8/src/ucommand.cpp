@@ -24,7 +24,7 @@
 // adjust REV_MINOR to save new SVN revision number
 #define REV_MINOR 5
 // revision (REV_ID) moved to teensy_firmware.ino file
-//#define REV_ID "$Id: ucommand.cpp 1015 2025-01-25 16:30:24Z jcan $"
+//#define REV_ID "$Id: ucommand.cpp 1146 2025-02-11 19:23:22Z jcan $"
 
 #include <malloc.h>
 #include <ADC.h>
@@ -114,8 +114,7 @@ bool UCommand::decode(const char * buf)
     usb.stopAllSubscriptions();
   }
   else if (strncmp(buf, "reboot", 6) == 0)
-  { // host are leaving - stop subscriptions
-    // reboot
+  { // reboot now
     SRC_GPR5 = 0x0BAD00F1;
     SCB_AIRCR = 0x05FA0004;
     while (1) ;
@@ -179,6 +178,9 @@ void UCommand::sendHelp()
   snprintf(reply, MRL, "# Command information for %s %s ------- \r\n", robot.deviceName, robot.getRobotName());
   usb.send(reply);
   snprintf(reply, MRL, "# -- \thelp \tThis help text.\r\n");
+  usb.send(reply);
+  snprintf(reply, MRL, "# -- \tleave \tStop all subscriptions.\r\n");
+  usb.send(reply);
   snprintf(reply, MRL, "# -- \treboot \tReboot the Teensy processor.\r\n");
   usb.send(reply);
 }

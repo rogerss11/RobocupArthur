@@ -1,0 +1,64 @@
+% mqtt logfile, enabled=true
+% broker=tcp://localhost:1883
+% context=drive
+% client id=tif_in
+% system=robobot/ (top level ID)
+% function=drive/ (next level name)
+% 1 	Time (sec)
+% 2 	Quality of service 0=max once, 1=at least once, 2=once, S=subscribe
+% 3 	'Topic'
+% 4 	Message / payload
+1740749482.8497 0 drive robobot/cmd/ti/log 1
+1740749483.0535 0 drive robobot/cmd/T0/enc0  
+1740749483.0537 0 drive robobot/cmd/T0/confw 0.075 0.075 19 68 0.23
+1740749483.0540 0 drive robobot/cmd/T0/encrev 1
+1740749483.0541 0 drive robobot/cmd/T0/confi  
+1740749483.2721 0 drive robobot/cmd/T0/lip 1
+1740749483.2924 0 drive robobot/cmd/T0/liwi  
+1740749483.3126 0 drive robobot/cmd/T0/leds 16 30 30 0
+1740749485.8033 0 drive robobot/cmd/T0/leds 16 0 64 0
+1740749486.1396 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749488.4471 0 drive robobot/cmd/T0/leds 16 0 30 30
+1740749488.8937 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749491.2402 0 drive robobot/cmd/T0/leds 16 0 64 0
+1740749491.6978 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749494.0447 0 drive robobot/cmd/T0/leds 16 0 30 30
+1740749494.4920 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749496.8394 0 drive robobot/cmd/T0/leds 16 0 64 0
+1740749497.2873 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749499.6439 0 drive robobot/cmd/T0/leds 16 0 30 30
+1740749500.0927 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749502.4394 0 drive robobot/cmd/T0/leds 16 0 64 0
+1740749502.8878 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749505.2451 0 drive robobot/cmd/T0/leds 16 0 30 30
+1740749505.6940 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749508.0416 0 drive robobot/cmd/T0/leds 16 0 64 0
+1740749508.4891 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749510.8358 0 drive robobot/cmd/T0/leds 16 0 30 30
+1740749511.2934 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749513.6411 0 drive robobot/cmd/T0/leds 16 0 64 0
+1740749514.0901 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749516.4374 0 drive robobot/cmd/T0/leds 16 0 30 30
+1740749516.8940 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749519.2402 0 drive robobot/cmd/T0/leds 16 0 64 0
+1740749519.6884 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749522.0470 0 drive robobot/cmd/T0/leds 16 0 30 30
+1740749522.4849 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749524.8419 0 drive robobot/cmd/T0/leds 16 0 64 0
+1740749525.2891 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749527.6458 0 drive robobot/cmd/T0/leds 16 0 30 30
+1740749528.0946 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749530.4406 0 drive robobot/cmd/T0/leds 16 0 64 0
+1740749530.8875 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749533.2348 0 drive robobot/cmd/T0/leds 16 0 30 30
+1740749533.6919 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749536.0382 0 drive robobot/cmd/T0/leds 16 0 64 0
+1740749536.4859 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749538.8428 0 drive robobot/cmd/T0/leds 16 0 30 30
+1740749539.2898 0 drive robobot/cmd/ti/alive 2025-02-28 14:31:22.846765
+1740749539.2899 0 drive robobot/cmd/T0/leds 16 0 0 0
+1740749539.2899 0 drive robobot/cmd/ti/rc 0 0
+1740749539.3401 0 drive robobot/cmd/T0/stop  
+1740749539.3402 0 drive robobot/cmd/T0/leds 14 0 0 0
+1740749539.3503 0 drive robobot/cmd/T0/leds 15 0 0 0
+1740749539.3503 0 drive robobot/cmd/T0/leds 16 0 0 0
