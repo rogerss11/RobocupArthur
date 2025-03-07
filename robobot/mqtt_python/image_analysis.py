@@ -29,10 +29,16 @@ def blue_ball(image):
 '''
 #the whole image is of the size 616x820x3
 def middle_ball(xy):
-    if(xy[0] > 410):
+    middle_x = 410
+    range = 5
+
+    if(xy[0] > middle_x + range):
         #then turn left
-    elif(xy[0] < 410):
+    elif(xy[0] < middle_x - range):
         #then turn right
     else:
         #ball is in the middle
+
+    #update the picture and the ball detection
+    xy = blue_ball(image)
 '''
