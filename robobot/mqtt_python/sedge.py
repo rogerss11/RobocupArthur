@@ -88,7 +88,7 @@ class SEdge:
     # values for ID
     errorSum = 0.0  # Integral term (sum of errors)
     lastError = 0.0  # Previous error for calculating the derivative term
-    lastTime = time.time()  # Time of last update to calculate the derivative (dt)
+    lastTime = t.time()  # Time of last update to calculate the derivative (dt)
 
     # Lists to store data for graphing
     error_list = []
@@ -125,7 +125,7 @@ class SEdge:
       from uservice import service
       sendBlack = False #? what exactly is this
       loops = 0
-      startingTime = time.time()
+      startingTime = t.time()
       
       # turn line sensor on (command 'lip 1')
       print("% Edge (sedge.py):: turns on line sensor")
@@ -140,6 +140,7 @@ class SEdge:
         # white calibrate requested
         if service.args.white:
           if not sendBlack:
+            print("set black to 0?")
             # make sure black level is black
             topic = service.topicCmd + "T0/litb"
             param = "0 0 0 0 0 0 0 0"
@@ -150,6 +151,7 @@ class SEdge:
             pass
           elif not self.sendCalibRequest:
             # send calibration request, averaged over 30 samples
+            print("send calibration request")
             service.send(service.topicCmd + "T0/liwi","")
             t.sleep(0.02)
             service.send(service.topicCmd + "T0/licw","100")
@@ -402,7 +404,7 @@ class SEdge:
       # so sign is OK
       
       # Time difference for derivative and integral calculations
-      currentTime = time.time()
+      currentTime = t.time()
       deltaTime = currentTime - self.lastTime
 
       if deltaTime > 0: # just to make sure
