@@ -47,7 +47,6 @@ setproctitle("mqtt-client")
 
 ############################################################
 
-
 def imageAnalysis(save):
   if cam.useCam:
     ok, img, imgTime = cam.getImage()
@@ -79,6 +78,60 @@ def stateTimePassed():
 
 ############################################################
 
+def driveOneMeter():
+  state = 0
+  pose.tripBreset()
+  print("# Driving 1m -------------------------")
+  service.send(service.topicCmd + "T0/leds","16 0 100 0") # green
+  while not (service.stop or gpio.stop()):
+    if state == 0: # wait for start signal
+      service.send("robobot/cmd/ti/rc","0.2 0.0") # (forward m/s, turn-rate rad/sec)
+      state = 1
+    elif state == 1:
+      if pose.tripB > 1.0 or pose.tripBtimePassed() > 15:
+        service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
+        state = 2
+      pass
+    elif state == 2:
+      if abs(pose.velocity()) < 0.001:
+        state = 99
+    else:
+      print(f"# drive 1m drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
+      service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
+      break;
+    print(f"# drive {state}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
+    t.sleep(0.05)
+  pass
+  service.send(service.topicCmd + "T0/leds","16 0 0 0") # end
+  print("# Driving 1m ------------------------- end")
+
+def driveTurnPi():
+  state = 0
+  pose.tripBreset()
+  print("# Driving a Pi turn -------------------------")
+  service.send(service.topicCmd + "T0/leds","16 0 100 0") # green
+  while not (service.stop or gpio.stop()):
+    if state == 0: # wait for start signal
+      service.send("robobot/cmd/ti/rc","0.2 0.5") # (forward m/s, turn-rate rad/sec)
+      state = 1
+    elif state == 1:
+      if pose.tripBh > 3.14 or pose.tripBtimePassed() > 15:
+        service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
+        state = 2
+      pass
+    elif state == 2:
+      if abs(pose.velocity()) < 0.001 and abs(pose.turnrate()) < 0.001:
+        state = 99
+    else:
+      print(f"# drive turned {pose.tripBh:.3f} rad in {pose.tripBtimePassed():.3f} seconds")
+      service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
+      break;
+    print(f"# turn {state}, now {pose.tripBh:.3f} rad in {pose.tripBtimePassed():.3f} seconds")
+    t.sleep(0.05)
+  pass
+  service.send(service.topicCmd + "T0/leds","16 0 0 0") # end
+  print("# Driving a Pi turn ------------------------- end")
+
 def loop():
   from ulog import flog
   state = 0
@@ -86,14 +139,18 @@ def loop():
   ledon = True
   tripTime = datetime.now()
   oldstate = -1
-  if not service.args.now:
+  service.send(service.topicCmd + "T0/leds","16 30 30 0") # LED 16: yellow - waiting
+  if service.args.meter:
+    state = 101 # run 1m
+  elif service.args.pi:
+    state = 102 # run 1m
+  elif not service.args.now:
     print("% Ready, press start button")
-    service.send(service.topicCmd + "T0/leds","16 30 30 0") # LED 16: yellow - waiting
   # main state machine
   edge.lineControl(0, 0) # make sure line control is off
   while not (service.stop or gpio.stop()):
     if state == 0: # wait for start signal
-      start = 1 #gpio.start() or service.args.now
+      start = gpio.start() or service.args.now
       if start:
         print("% Starting")
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
@@ -124,7 +181,7 @@ def loop():
         #service.send(service.topicCmd + "ti/rc","0.1 0.5") # turn left
         state = 14 # turn left
     elif state == 14: # turning left
-      if pose.tripBh > np.pi/2 or pose.tripBtimePassed() > 25:
+      if pose.tripBh > np.pi/2 or pose.tripBtimePassed() > 10:
         state = 20 # finished   =17 go look for line
         service.send(service.topicCmd + "ti/rc","0 0") # stop for images
       print(f"% --- state {state}, h = {pose.tripBh:.4f}, t={pose.tripBtimePassed():.3f}")
@@ -144,6 +201,12 @@ def loop():
         images = 0
         state = 99
       pass
+    elif state == 101:
+      driveOneMeter();
+      state = 100;
+    elif state == 102:
+      driveTurnPi();
+      state = 100;
     else: # abort
       print(f"% Mission finished/aborted; state={state}")
       break
@@ -164,9 +227,7 @@ def loop():
       oldstate = state
       stateTime = datetime.now()
     # do not loop too fast
-    t.sleep(0.05)
-    # tell interface that we are alive
-    service.send(service.topicCmd + "ti/alive",str(service.startTime))
+    t.sleep(0.1)
     pass # end of while loop
   # end of mission, turn LEDs off and stop
   service.send(service.topicCmd + "T0/leds","16 0 0 0") 
@@ -187,7 +248,7 @@ if __name__ == "__main__":
     service.setup('10.197.219.147') #Arthur
     if service.connected:
       loop()
-      service.terminate()
+    service.terminate()
     print("% Main Terminated")
 
 

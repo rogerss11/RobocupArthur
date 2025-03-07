@@ -63,7 +63,7 @@ class SIr:
     def decode(self, topic, msg):
         # decode MQTT message
         used = True
-        if topic == "T0/dist":
+        if topic == "T0/ir" or topic == "T0/ird":
           gg = msg.split(" ")
           if (len(gg) >= 3):
             t0 = self.irTime;

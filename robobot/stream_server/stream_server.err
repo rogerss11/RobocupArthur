@@ -1,24 +1,5 @@
-[0:00:08.245747617] [749] [1;32m INFO [1;37mCamera [1;34mcamera_manager.cpp:327 [0mlibcamera v0.4.0+50-83cb8101
-[0:00:08.253930450] [1333] [1;32m INFO [1;37mRPI [1;34mpisp.cpp:720 [0mlibpisp version v1.1.0 e7974a156008 27-01-2025 (21:50:51)
-[0:00:08.263571993] [1333] [1;32m INFO [1;37mRPI [1;34mpisp.cpp:1179 [0mRegistered camera /base/axi/pcie@120000/rp1/i2c@80000/ov5647@36 to CFE device /dev/media3 and ISP device /dev/media0 using PiSP variant BCM2712_C0
-[0:00:08.267161231] [749] [1;32m INFO [1;37mCamera [1;34mcamera.cpp:1202 [0mconfiguring streams: (0) 820x616-XBGR8888 (1) 1296x972-GBRG_PISP_COMP1
-[0:00:08.267328620] [1333] [1;32m INFO [1;37mRPI [1;34mpisp.cpp:1484 [0mSensor: /base/axi/pcie@120000/rp1/i2c@80000/ov5647@36 - Selected sensor format: 1296x972-SGBRG10_1X10 - Selected CFE format: 1296x972-PC1g
-10.197.217.224 - - [14/Feb/2025 10:28:48] "GET /stream.mjpg HTTP/1.1" 200 -
-WARNING:root:Removed streaming client ('10.197.217.224', 43440): [Errno 104] Connection reset by peer
-10.197.217.224 - - [14/Feb/2025 10:30:33] "GET /stream.mjpg HTTP/1.1" 200 -
-WARNING:root:Removed streaming client ('10.197.217.224', 45530): [Errno 104] Connection reset by peer
-10.197.217.224 - - [14/Feb/2025 10:36:44] "GET /stream.mjpg HTTP/1.1" 200 -
-WARNING:root:Removed streaming client ('10.197.217.224', 43362): [Errno 104] Connection reset by peer
-10.197.217.224 - - [14/Feb/2025 10:39:42] "GET /stream.mjpg HTTP/1.1" 200 -
-WARNING:root:Removed streaming client ('10.197.217.224', 49812): [Errno 104] Connection reset by peer
-10.197.217.224 - - [14/Feb/2025 10:48:38] "GET /stream.mjpg HTTP/1.1" 200 -
-WARNING:root:Removed streaming client ('10.197.217.224', 55888): [Errno 104] Connection reset by peer
-10.197.217.224 - - [14/Feb/2025 10:50:23] "GET /stream.mjpg HTTP/1.1" 200 -
-WARNING:root:Removed streaming client ('10.197.217.224', 60482): [Errno 104] Connection reset by peer
-10.197.217.224 - - [14/Feb/2025 10:51:01] "GET /stream.mjpg HTTP/1.1" 200 -
-WARNING:root:Removed streaming client ('10.197.217.224', 35654): [Errno 104] Connection reset by peer
-10.197.217.224 - - [14/Feb/2025 10:51:53] "GET /stream.mjpg HTTP/1.1" 200 -
-WARNING:root:Removed streaming client ('10.197.217.224', 46644): [Errno 104] Connection reset by peer
-10.197.217.224 - - [14/Feb/2025 10:52:27] "GET /stream.mjpg HTTP/1.1" 200 -
-WARNING:root:Removed streaming client ('10.197.217.224', 51902): [Errno 104] Connection reset by peer
-10.197.217.224 - - [14/Feb/2025 10:55:59] "GET /stream.mjpg HTTP/1.1" 200 -
+[0:00:07.890208070] [733] [1;32m INFO [1;37mCamera [1;34mcamera_manager.cpp:327 [0mlibcamera v0.4.0+50-83cb8101
+[0:00:07.898234859] [1376] [1;32m INFO [1;37mRPI [1;34mpisp.cpp:720 [0mlibpisp version v1.1.0 e7974a156008 27-01-2025 (21:50:51)
+[0:00:07.910862676] [1376] [1;32m INFO [1;37mRPI [1;34mpisp.cpp:1179 [0mRegistered camera /base/axi/pcie@120000/rp1/i2c@80000/ov5647@36 to CFE device /dev/media0 and ISP device /dev/media1 using PiSP variant BCM2712_C0
+[0:00:07.915206017] [733] [1;32m INFO [1;37mCamera [1;34mcamera.cpp:1202 [0mconfiguring streams: (0) 820x616-XBGR8888 (1) 1296x972-GBRG_PISP_COMP1
+[0:00:07.915349277] [1376] [1;32m INFO [1;37mRPI [1;34mpisp.cpp:1484 [0mSensor: /base/axi/pcie@120000/rp1/i2c@80000/ov5647@36 - Selected sensor format: 1296x972-SGBRG10_1X10 - Selected CFE format: 1296x972-PC1g

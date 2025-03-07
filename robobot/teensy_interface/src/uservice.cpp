@@ -51,7 +51,7 @@
 #include "umqttin.h"
 #include "uservice.h"
 
-#define REV "$Id: uservice.cpp 1123 2025-02-01 14:00:39Z jcan $"
+#define REV "$Id: uservice.cpp 1167 2025-03-02 15:40:30Z jcan $"
 // define the service class
 UService service;
 // make a configuration structure
@@ -342,7 +342,7 @@ bool UService::mqttDecode(const char* topic, const char * payload, UTime& msgTim
     const char * p1 = &topic[15];
     std::snprintf(s, MSL, "%s %s\n", p1, payload);
     bool ok = teensy[0].send(s);
-    if (not ok)
+    if (not ok or true)
     {
       printf("# UService::mqttDecode: got '%s' '%s', send (queued) to T0 as '%s'", topic, payload, s);
     }
@@ -540,7 +540,7 @@ void UService::terminate()
 
 std::string UService::getVersionString()
 {
-  // #define REV "$Id: uservice.cpp 1123 2025-02-01 14:00:39Z jcan $"
+  // #define REV "$Id: uservice.cpp 1167 2025-03-02 15:40:30Z jcan $"
   std::string ver = REV;
   int n1 = ver.find(' ', 10);
   int n2 = ver.rfind("Z ");
@@ -653,24 +653,27 @@ void UService::run()
       fflush(nullptr);
       printf("# Flush of logfiles to disk took %f sec\n", t2.getTimePassed());
     }
-    if (lastMqttMessage.getTimePassed() > 4.0)
-    { // we have lost the python app, stop the wheels
+    if (false and lastMqttMessage.getTimePassed() > 4.0)
+    { // dropped for now -- make manual MQTT messages problemetic
+      // we have lost the python app, stop the wheels
       // probably never used, as alive will timeout first
-      if (mixer.areWheelsRunning())
+      if (mixer.shouldWheelsBeRunning())
       {
         mixer.setVelocity(0, 0);
         if (logfile != nullptr)
           fprintf(logfile, "%lu.%04ld Lost MQTT messages for %.1f sec, so set velocity to (0,0)\n", t.getSec(), t.getMicrosec()/100, lastMqttMessage.getTimePassed());
+        lastMqttMessage.now();
       }
     }
-    if (masterAliveTime.getTimePassed() > 2.0 and masterAliveCnt > 0)
+    if (masterAliveTime.getTimePassed() > 4.0 and masterAliveCnt > 0)
     { // master lost
-      printf("# UService::run: master lost (%s)\n", masterAliveID);
+      printf("# UService::run: master lost (%s), no alive in %.2f sec\n",
+             masterAliveID, masterAliveTime.getTimePassed());
       masterAliveCnt = 0;
       masterAliveErr = 0;
       // stop the robot
-      printf("# UService:: stop the robot\n");
-      mixer.setVelocity(0, 0);
+      printf("# UService:: should probably stop the robot, but ignored for now.\n");
+      // mixer.setVelocity(0, 0);
       //
       if (logfile != nullptr)
         fprintf(logfile, "%lu.%04ld Lost Master, alive since %s\n",

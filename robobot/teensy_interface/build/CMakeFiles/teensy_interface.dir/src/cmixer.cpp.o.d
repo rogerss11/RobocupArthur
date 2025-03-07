@@ -281,4 +281,5 @@ CMakeFiles/teensy_interface.dir/src/cmixer.cpp.o: \
  /usr/include/aarch64-linux-gnu/c++/12/bits/c++io.h \
  /usr/include/c++/12/bits/fstream.tcc \
  /home/local/svn/robobot/teensy_interface/src/mjoy.h \
+ /home/local/svn/robobot/teensy_interface/src/mvelocity.h \
  /usr/include/c++/12/stdlib.h

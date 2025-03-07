@@ -121,16 +121,16 @@ void URobot::tick()
       // usb.send("# start button prell\n");
       buttonCnt++;
     }
-      if ((service.time_sec() - pressTime) > 5.0)
-      { // has been pressed more than 5 seconds
-        // time to power off
-        if (usb.usbIsUp)
-          // tell Raspberry power will be off in 20 seconds
-          powerOff(40.0);
-        else
-          // Just Teensy - do it now
-          powerOff(0.00003);
-      }
+    if ((service.time_sec() - pressTime) > 5.0)
+    { // has been pressed more than 5 seconds
+      // time to power off
+      if (usb.usbIsUp)
+        // tell Raspberry power will be off in 20 seconds
+        powerOff(40.0);
+      else
+        // Just Teensy - do it now
+        powerOff(0.00003);
+    }
   }
   else
   { // button not pressed
