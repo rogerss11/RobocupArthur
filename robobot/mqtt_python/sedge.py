@@ -49,6 +49,7 @@ class SEdge:
     edgeIntervalSetup = 0.1
 
     # line detection levels
+    # TODO test these values
     lineValidThreshold = 850 # 1000 is calibrated white
     crossingThreshold = 800 # average above this is assumed to be crossing line
 
@@ -59,10 +60,15 @@ class SEdge:
     position = 0.0 #? what exactly is 0, between 4 and 5th sensor?
     
     lineValid = False
-    lineValidCnt = 0 # a value up to 20 for most confident line detect
+    # start at 10 to avoid going to different mode at the start
+    lineValidCnt = 10 # a value up to 20 for most confident line detect, 0 = line isnt valid
 
-    crossingLine = False
-    crossingLineCnt = 0  # a value up to 20 for most confident crossing line
+    atIntersection = False
+    atIntersectionCnt = 0  #20 = at Intersection
+    passedIntersections = 0 # how many intersection have we passed
+    intersectionPath = ['r', 'r', 'l'] # l = choose left line, r = choose right line
+    timeArrivedAtIntersection = 0
+    currentlyNavigatingIntersection = False
 
     average = 0 # avarage edge_n[] value
     high = 0 # highest reflectivity
@@ -76,8 +82,8 @@ class SEdge:
 
     # my PID values
     Kp = 1.0  # Proportional constant
-    Ki = 0.5  # Integral constant
-    Kd = 0.1  # Derivative constant
+    Ki = 0.0  # Integral constant
+    Kd = 0.0  # Derivative constant
 
     # values for ID
     errorSum = 0.0  # Integral term (sum of errors)
@@ -114,6 +120,7 @@ class SEdge:
 
     ##########################################################
 
+    #TODO popsat
     def setup(self): #? understand entire function
       from uservice import service
       sendBlack = False #? what exactly is this
@@ -193,6 +200,7 @@ class SEdge:
             f"{self.edge[7]})" +
             f" {self.edgeInterval:.2f} ms " +
             str(self.edgeUpdCnt))
+      
     def printn(self): # pring normalized values
       from uservice import service
       print("% Edge (sedge.py):: normalized " + str(self.edge_nTime - service.startTime) +
@@ -207,7 +215,8 @@ class SEdge:
             f" {self.edge_nInterval:.2f} ms " +
             f" {self.position:.2f} " +
             str(self.edge_nUpdCnt))
-    def printnw(self): #! idk exactly what these values are
+      
+    def printnw(self): # print normalized white values
       from uservice import service
       print("% Edge (sedge.py):: white level " + str(self.edge_n_wTime) +
             f" ({self.edge_n_w[0]}, " +
@@ -222,6 +231,7 @@ class SEdge:
 
     ##########################################################
 
+    #TODO popsat
     def decode(self, topic, msg):
         # decode MQTT message
         used = True
@@ -297,11 +307,13 @@ class SEdge:
 
     ##########################################################
 
-    def LineDetect(self): #! calculating current positions, crossings and so on
+    # Calculate current position, crossings and so on
+    def LineDetect(self):
       sum = 0
       posSum = 0
       low = int(1000)
       high = int(1)
+
       # find levels (and average)
       # using normalised readings (0 (no reflection) to 1000 (calibrated white)))
       for i in range(8):
@@ -309,15 +321,19 @@ class SEdge:
         if self.edge_n[i] > high:
           high = self.edge_n[i] # most bright value (floor level)
       self.high = high # most white level
+
       # print(f"% Edge (sedge.py):: {low}, {high} - what")
+
       # average white level
       self.average = sum / 8.0
+
       # detect if we have a crossing line
-      self.crossingLine = self.average >= self.crossingThreshold
+      self.atIntersection = self.average >= self.crossingThreshold
+
       # is line valid (high above threshold)
       self.lineValid = self.high >= self.lineValidThreshold
-      # find line position
-      # using COG method for values above a threshold
+
+      # find position
       sum = 0
       for i in range(8):
         # everything more black than 'low' is ignored
@@ -326,33 +342,47 @@ class SEdge:
           sum += v
           posSum += (i+1) * v
       if sum > 0 and self.lineValid:
+        """
+        using weighted average 
+        position= [∑(sensor intensity) * ∑(sensor index)]/ ∑(sensor intensity) - middle(4.5)
+        """
         self.position = posSum/sum - 4.5
       else:
         self.position = 0
-      #
+
+      # updates lineValidCnt
+      # -1 if theres not a line
+      # +1 up to 20 if there is
       if self.lineValid and self.lineValidCnt < 20:
         self.lineValidCnt += 1
       elif not self.lineValid:
         if self.lineValidCnt > 0:
-          self.lineValidCnt -= 1
+          self.lineValidCnt -= 1  
         else:
           self.lineValidCnt = 0
-      if self.crossingLine and self.crossingLineCnt < 20:
-        self.crossingLineCnt += 1
-      elif not self.crossingLine:
-        self.crossingLineCnt -= 1
-        if self.crossingLineCnt < 0:
-          self.crossingLineCnt = 0
-      pass
+
+      # updates crossingValidCnt
+      # -1 if theres not a crossing
+      # +1 up to 20 if there is
+      if self.atIntersection and self.atIntersectionCnt < 20:
+        self.atIntersectionCnt += 1
+      elif not self.atIntersection:
+        self.atIntersectionCnt -= 1
+        if self.atIntersectionCnt < 0:
+          self.atIntersectionCnt = 0
+      
+      if self.atIntersection == 20:
+        print("arrived at an intersection")
+
       # print(f"% Edge (sedge.py):: ({self.edge_n[0]} {self.edge_n[1]} {self.edge_n[2]} {self.edge_n[3]} {self.edge_n[4]} {self.edge_n[5]} {self.edge_n[6]}), min={self.low}, high={self.high}, pos={self.position:.2f}.")
 
     ##########################################################
 
     def lineControl(self, velocity, refPosition):
       self.velocity = velocity
-      self.refPosition = refPosition
+      self.refPosition = refPosition # position on the line (0 = middle)
       # velocity 0 is turning off line control
-      self.lineCtrl = velocity > 0.001
+      self.lineCtrl = velocity > 0.001 # is line control active
       pass
 
     ##########################################################
@@ -440,6 +470,16 @@ class SEdge:
 
     ##########################################################
 
+    # TODO
+    # try and decipher the two lines from the 8 color sensors?
+    # follow the one defined in intersectionPath until intersactionPassedCnt = 20?
+    # add +1 to intersectionsPassed
+    def navigateIntersrction(self):
+      pass
+
+    ##########################################################
+
+
     def terminate(self):
       from uservice import service
       self.need_data = False
@@ -456,6 +496,7 @@ class SEdge:
 
     ##########################################################
 
+    #TODO popsat
     def paint(self, img): # paint sensor values etc. onto an image
       h, w, ch = img.shape
       pl = int(h - h/4) # base position bottom (most positive y)
@@ -488,7 +529,7 @@ class SEdge:
       cv.putText(img, "Left", (st,pl - 2), cv.FONT_HERSHEY_PLAIN, 1, dtuPurple, thickness=2)
       cv.putText(img, "Right", (int(st+6*st),pl - 2), cv.FONT_HERSHEY_PLAIN, 1, dtuPurple, thickness=2)
       cv.putText(img, "White (1000)", (int(st),pl - gh - 2), cv.FONT_HERSHEY_PLAIN, 1, dtuPurple, thickness=2)
-      if self.crossingLine:
+      if self.atIntersection:
         cv.putText(img, "Crossing", (int(st),int(pl - 20)), cv.FONT_HERSHEY_PLAIN, 1, dtuRed, thickness=2)
     
     ##########################################################

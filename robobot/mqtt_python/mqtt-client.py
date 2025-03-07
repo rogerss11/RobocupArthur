@@ -103,7 +103,7 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turnrate rad/sec)
         # follow line (at 0.25cm/s)
         edge.lineControl(0.25, 0.0) # m/s and position on line -2.0..2.0
-        state = 100 # until no more line
+        state = 110 # until no more line
         pose.tripBreset() # use trip counter/timer B
     elif state == 12: # following line
       if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 20:
@@ -133,8 +133,14 @@ def loop():
         images = 0
         state = 99
       pass
-    elif state == 100: #line testing
-      pass
+    elif state == 100: # line testing
+      if edge.atIntersectionCnt == 20: # is at intersection
+        state = 99 #end
+    elif state == 110: # color sensor printing
+      edge.print()
+      edge,printn()
+      edge.printnw()
+      t.sleep(0.5)
     else: # abort
       print(f"% Mission finished/aborted; state={state}")
       break
