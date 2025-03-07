@@ -157,7 +157,7 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
         edge.lineControl(0.25, 0.0) # m/s and position on line -2.0..2.0
-        state = 20 # until no more line
+        state = 12 # until no more line
         pose.tripBreset() # use trip counter/timer B
     elif state == 12: # following line
       if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 10:
