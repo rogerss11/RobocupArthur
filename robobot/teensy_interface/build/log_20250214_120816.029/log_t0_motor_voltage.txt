@@ -1,0 +1,6 @@
+% Motor voltage for all motors
+% 1 	Time (sec)
+% 2-3 	Voltage to motor (to Teensy) 1,2 (Volt)
+% 4-5 	Voltage to motor (from Teensy) 1,2 (Volt)
+% 6-7 	PWM to motor (+/- 2096) (from Teensy) 1,2
+% 8 	Relax motor controller (standing still for some time)

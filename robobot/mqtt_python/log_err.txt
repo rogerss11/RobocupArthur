@@ -1,0 +1,46 @@
+Exception in thread Thread-1 (run):
+Traceback (most recent call last):
+  File "/usr/lib/python3.11/threading.py", line 1038, in _bootstrap_inner
+    self.run()
+  File "/usr/lib/python3.11/threading.py", line 975, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/local/svn/robobot/mqtt_python/uservice.py", line 120, in run
+    self.client.loop()
+  File "/usr/lib/python3/dist-packages/paho/mqtt/client.py", line 1120, in loop
+    return self._loop(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/paho/mqtt/client.py", line 1164, in _loop
+    rc = self.loop_read()
+         ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/paho/mqtt/client.py", line 1556, in loop_read
+    rc = self._packet_read()
+         ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/paho/mqtt/client.py", line 2439, in _packet_read
+    rc = self._packet_handle()
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/paho/mqtt/client.py", line 3033, in _packet_handle
+    return self._handle_publish()
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/paho/mqtt/client.py", line 3327, in _handle_publish
+    self._handle_on_message(message)
+  File "/usr/lib/python3/dist-packages/paho/mqtt/client.py", line 3570, in _handle_on_message
+    on_message(self, self._userdata, message)
+  File "/home/local/svn/robobot/mqtt_python/uservice.py", line 172, in on_message
+    self.decode(msg.topic, got)
+  File "/home/local/svn/robobot/mqtt_python/uservice.py", line 198, in decode
+    elif edge.decode(subtopic, msg):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/local/svn/robobot/mqtt_python/sedge.py", line 287, in decode
+    self.followLine() #! here follow line is called
+    ^^^^^^^^^^^^^^^^^
+  File "/home/local/svn/robobot/mqtt_python/sedge.py", line 426, in followLine
+    self.time_list.append(currentTime - startingTime)
+                                        ^^^^^^^^^^^^
+NameError: name 'startingTime' is not defined
+Traceback (most recent call last):
+  File "/home/local/svn/robobot/mqtt_python/mqtt-client.py", line 188, in <module>
+    loop()
+  File "/home/local/svn/robobot/mqtt_python/mqtt-client.py", line 141, in loop
+    edge,printn()
+         ^^^^^^
+NameError: name 'printn' is not defined. Did you mean: 'print'?

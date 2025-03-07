@@ -1,0 +1,32 @@
+% Service logfile
+% 1 	Time (sec)
+% 2 	Message
+1740753058.0042 Setup finished OK=1
+1740757130.0698 Log command: robobot/cmd/ti/log 1
+1740757279.9053 Log command: robobot/cmd/ti/log 0
+1740757283.4956 Log command: robobot/cmd/ti/log 1
+1740757285.1288 new Master: (0) 2025-02-28 16:41:23.491963
+1740757365.0901 Mixer order: robobot/cmd/ti/rc 0 0
+1740757365.1610 Log command: robobot/cmd/ti/log 0
+1740753060.5407 Lost Master, alive since 2025-02-28 16:41:23.491963
+1740757369.4542 Log command: robobot/cmd/ti/log 1
+1740757371.1052 new Master: (0) 2025-02-28 16:42:49.450017
+1740757451.0775 Mixer order: robobot/cmd/ti/rc 0 0
+1740757451.1486 Log command: robobot/cmd/ti/log 0
+1740753060.5407 Lost Master, alive since 2025-02-28 16:42:49.450017
+1740757454.9363 Log command: robobot/cmd/ti/log 1
+1740757456.5046 new Master: (0) 2025-02-28 16:44:14.932452
+1740757536.4657 Mixer order: robobot/cmd/ti/rc 0 0
+1740757536.5366 Log command: robobot/cmd/ti/log 0
+1740753060.5407 Lost Master, alive since 2025-02-28 16:44:14.932452
+1740757548.6630 Log command: robobot/cmd/ti/log 1
+1740757550.0908 new Master: (0) 2025-02-28 16:45:48.659154
+1740757583.1933 Log command: robobot/cmd/ti/log 0
+1740753060.5407 Lost Master, alive since 2025-02-28 16:45:48.659154
+1740758106.5817 Log command: robobot/cmd/ti/log 1
+1740758107.8293 new Master: (0) 2025-02-28 16:55:06.577717
+1740758150.0888 Log command: robobot/cmd/ti/log 0
+1740753060.5407 Lost Master, alive since 2025-02-28 16:55:06.577717
+1740758759.9970 Got power off from (teensy 1) Teensy (battery)
+1740758759.9973 Shutdown: robobot/cmd/shutdown 1740758759.9970 Teensy (battery)
+1740758762.2097 All terminated; closing logfile

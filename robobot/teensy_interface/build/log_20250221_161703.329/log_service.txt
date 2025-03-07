@@ -1,0 +1,8 @@
+% Service logfile
+% 1 	Time (sec)
+% 2 	Message
+1740151023.3290 Setup finished OK=1
+1740739671.6074 Log command: robobot/cmd/ti/log 1
+1740739733.1659 Log command: robobot/cmd/ti/log 1
+1740739770.8873 Log command: robobot/cmd/ti/log 1
+1740739775.9615 Log command: robobot/cmd/ti/log 0

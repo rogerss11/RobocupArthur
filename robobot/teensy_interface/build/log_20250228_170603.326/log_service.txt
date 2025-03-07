@@ -1,0 +1,8 @@
+% Service logfile
+% 1 	Time (sec)
+% 2 	Message
+1740758763.3262 Setup finished OK=1
+1741338971.4142 Shutdown: robobot/cmd/shutdown 1741338971.4140 GPIO button
+1741338971.4142 Got power off from (teensy 0) 1741338971.4140 GPIO button
+1741338971.4142 send power off to teensy
+1741338974.6793 All terminated; closing logfile

@@ -112,7 +112,9 @@ void UCurrent::tick()
                                (300 - lowPassFactor))/300 +
                                ad.motorCurrentRawAD[1] * lowPassFactor;
   }
-  motorCurrentMLowPass[2] = (motorCurrentMLowPass[2] * (300 - lowPassFactor))/300 + ad.supplyCurrent * lowPassFactor;
+  motorCurrentMLowPass[2] = (motorCurrentMLowPass[2] *
+                             (300 - lowPassFactor))/300 +
+                             ad.supplyCurrent * lowPassFactor;
 
   motorCurrentA[0] = getMotorCurrentM(0, motorCurrentMLowPass[0]);
   motorCurrentA[1] = getMotorCurrentM(1, motorCurrentMLowPass[1]);
@@ -137,6 +139,10 @@ void UCurrent::tick()
   // sum for external use
   supplyCurrentAvg += ad.supplyCurrent;
   supplyAvgCnt++;
+  // sum for external use
+  motorCurrentAvg[0] += getMotorCurrentM(0, ad.motorCurrentRawAD[0] * 300);
+  motorCurrentAvg[1] += getMotorCurrentM(1, ad.motorCurrentRawAD[1] * 300);
+  motorAvgCnt++;
 }
 
 
@@ -164,7 +170,12 @@ void UCurrent::sendMotorCurrent()
 {
   const int MRL = 64;
   char reply[MRL];
-  snprintf(reply, MRL,"mca %.3f %.3f\r\n", motorCurrentA[0], motorCurrentA[1]);
+  if (motorAvgCnt == 0)
+    motorAvgCnt = 1;
+  snprintf(reply, MRL,"mca %.3f %.3f %d\r\n", motorCurrentAvg[0]/motorAvgCnt, motorCurrentAvg[1]/motorAvgCnt, motorAvgCnt);
+  motorCurrentAvg[0] = 0;
+  motorCurrentAvg[1] = 0;
+  motorAvgCnt = 0;
   usb.send(reply);
 }
 
@@ -231,8 +242,8 @@ void UCurrent::logIntervalChanged()
   else if (logger.logInterval_ms > 300)
     lowPassFactor = 300/150; // time constant about 150ms
   else
-    // use half the sample interval
-    lowPassFactor = 2*300/logger.logInterval_ms;
+    // use twice the sample interval
+    lowPassFactor = 300/(logger.logInterval_ms*2);
 }
 
 

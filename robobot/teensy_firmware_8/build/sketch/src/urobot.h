@@ -242,14 +242,14 @@ private:
     "Johanne",
     "Andrea", // 49
     "Silje", // 50
-    "Thea", 
-    "Adriana", 
-    "Dicte", 
-    "Silke", 
+    "Thea",
+    "Adriana",
+    "Dicte",
+    "Silke",
     "Eva", // 55
-    "Gry", 
-    "Tania", 
-    "Susanne", 
+    "Gry",
+    "Tania",
+    "Susanne",
     "Augusta",  // 59
     "Birte", // 60
     "Dagmar",
@@ -260,7 +260,7 @@ private:
     "Sigrid",
     "Nicoline",
     "Tilde",
-    "Ronja",
+    "Europa",
     "Saga", // 70
     "Viola",
     "Emilia",
@@ -281,7 +281,7 @@ private:
     "Ronja",
     "Vera",
     "Mary", // 89
-    "Hans", // 90 
+    "Hans", // 90
     "Joe",
     "Stub",
     "Rumle",
