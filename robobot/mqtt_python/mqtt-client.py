@@ -167,19 +167,14 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0.1 0.5") # turn left
         state = 13 # turn left
     elif state == 13: # following line
-      if edge.lineValidCnt == 0 :#or pose.tripBtimePassed() > 20:
-        # no more line
-        #edge.lineControl(0,0) # stop following line
-        #pose.tripBreset()
-        ir.print()
-        time.sleep(0.2)
-        if ir[1] > 0.3: #se presente un oggetto a meno di 30 cm rallenti 
-          edge.lineControl(0.2, 0.0)
-        else:
-          edge.lineControl(0.1, 0.0)
-        pose.tripBreset()
-        #service.send(service.topicCmd + "ti/rc","0.1 0.5") # turn left
-        state = 14 # turn left
+      ir.print()
+      time.sleep(0.2)
+      if ir[1] > 0.3: #se presente un oggetto a meno di 30 cm rallenti 
+        print("far")
+        edge.lineControl(0.2, 0.0)
+      else:
+        print("close")
+        edge.lineControl(0.1, 0.0)
     elif state == 14: # turning left
       if pose.tripBh > np.pi/2 or pose.tripBtimePassed() > 10:
         state = 20 # finished   =17 go look for line
