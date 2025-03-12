@@ -104,6 +104,8 @@ def driveOneMeter():
   service.send(service.topicCmd + "T0/leds","16 0 0 0") # end
   print("# Driving 1m ------------------------- end")
 
+############################################################
+
 def driveTurnPi():
   state = 0
   pose.tripBreset()
@@ -131,6 +133,8 @@ def driveTurnPi():
   service.send(service.topicCmd + "T0/leds","16 0 0 0") # end
   print("# Driving a Pi turn ------------------------- end")
 
+############################################################
+
 def loop():
   from ulog import flog
   state = 0
@@ -138,7 +142,7 @@ def loop():
   ledon = True
   tripTime = datetime.now()
   oldstate = -1
-  startTime = time.time() # temporary for testing
+  startTime = t.time() # temporary for testing
   service.send(service.topicCmd + "T0/leds","16 30 30 0") # LED 16: yellow - waiting
   if service.args.meter:
     state = 101 # run 1m
@@ -147,9 +151,9 @@ def loop():
   elif not service.args.now:
     print("% Ready, press start button")
   # main state machine
-  edge.lineControl(0, 0) # make sure line control is off
+  edge.lineControl(0.1, 0) # make sure line control is off
   while not (service.stop or gpio.stop()):
-    if time.time() - startTime >= 5:  # Check if 5 seconds have passed
+    if t.time() - startTime >= 20:  # Check if 5 seconds have passed
       print("% Mission finished due to time limit")
       break
     if state == 0: # wait for start signal
@@ -190,20 +194,28 @@ def loop():
         images = 0
         state = 99
       pass
+
+    # testing states
     elif state == 101:
-      driveOneMeter();
-      state = 100;
+      driveOneMeter()
+      state = 100
     elif state == 102:
-      driveTurnPi();
-      state = 100;
-    elif state == 110: # line testing
+      driveTurnPi()
+      state = 100
+    
+    ###### MY TESTING STATES #######
+    # line testing
+    elif state == 110:
       if edge.atIntersectionCnt == 20: # is at intersection
         state = 99 #end
-    elif state == 120: # color sensor printing
+
+    # color sensor printing
+    elif state == 120:
       edge.print()
       edge,printn()
       edge.printnw()
       t.sleep(0.5)
+
     else: # abort
       print(f"% Mission finished/aborted; state={state}")
       break
@@ -241,10 +253,9 @@ def loop():
 if __name__ == "__main__":
     print("% Starting")
     # where is the MQTT data server:
-    #service.setup('localhost') # localhost
+    service.setup('localhost') # localhost
     #service.setup('10.197.217.81') # Juniper
     #service.setup('10.197.217.80') # Newton
-    service.setup('bode.local') # Bode
     if service.connected:
       loop()
     service.terminate()

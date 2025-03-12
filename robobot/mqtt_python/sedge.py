@@ -22,6 +22,18 @@
 #* THE SOFTWARE. */
 
 
+######## INFROMATION #########
+# start with -w, --white -> Calibrate white tape level (python3 mqtt-client.py -w)
+
+
+#TODO
+# test color calibration
+# find values for PID
+# figure out lead compensator
+# test threshold values (should be okay when calibrated properly)
+
+
+
 from datetime import *
 import time as t
 from threading import Thread
@@ -49,7 +61,6 @@ class SEdge:
     edgeIntervalSetup = 0.1
 
     # line detection levels
-    # TODO test these values
     lineValidThreshold = 850 # 1000 is calibrated white
     crossingThreshold = 800 # average above this is assumed to be crossing line
 
@@ -75,7 +86,7 @@ class SEdge:
     low = 0  # the darkest value found in latest sample
 
     topicLip = ""
-    sendCalibRequest = False
+    sendCalibRequest = False # False = Calibrate
     
     # follow line controller
     lineCtrl = False # private
@@ -84,6 +95,7 @@ class SEdge:
     Kp = 1.0  # Proportional constant
     Ki = 0.0  # Integral constant
     Kd = 0.0  # Derivative constant
+    # PID values from the c++ code (upid)
 
     # values for ID
     errorSum = 0.0  # Integral term (sum of errors)
@@ -120,12 +132,11 @@ class SEdge:
 
     ##########################################################
 
-    #TODO popsat
-    def setup(self): #? understand entire function
+    def setup(self):
       from uservice import service
-      sendBlack = False #? what exactly is this
+      sendBlack = False # False = Calibrate
       loops = 0
-      startingTime = t.time()
+      self.startingTime = t.time()
       
       # turn line sensor on (command 'lip 1')
       print("% Edge (sedge.py):: turns on line sensor")
@@ -137,26 +148,32 @@ class SEdge:
       # request data
       while not service.stop:
         t.sleep(0.02)
+
         # white calibrate requested
         if service.args.white:
+          print("% Edge (sedge.py):: white calibrate requested")
+          
+          # sendBlack = 0 -> set lowest value ("black") to 0
           if not sendBlack:
-            print("set black to 0?")
-            # make sure black level is black
+            print("% Edge (sedge.py):: set lowest value (black) to 0")
             topic = service.topicCmd + "T0/litb"
             param = "0 0 0 0 0 0 0 0"
             sendBlack = service.send(topic, param)
+
+          # require at least 3 updates (reflectivity data is stable)
           elif self.edgeUpdCnt < 3:
             # request raw AD reflectivity
             service.send(service.topicCmd + "T0/livi"," ")
             pass
+
+          # calibration is requested
           elif not self.sendCalibRequest:
+            print("% Edge (sedge.py):: sending calibration request")
             # send calibration request, averaged over 100 samples
-            print("send calibration request")
             service.send(service.topicCmd + "T0/liwi","")
             t.sleep(0.02)
             service.send(service.topicCmd + "T0/licw","100")
             # allow communication to settle
-            print("# Edge (sedge.py):: sending calibration request")
             # wait for calibration to finish (each sample takes 1-2 ms)
             t.sleep(0.25)
             # save the calibration as new default
@@ -165,22 +182,27 @@ class SEdge:
             # ask for new white values
             service.send(service.topicCmd + "T0/liwi","")
             t.sleep(0.02)
+
+          # no calibration requested
           else:
             t.sleep(0.25)
             service.args.white = False
             print(f"% Edge (sedge.py):: calibration should be fine, got {self.edge_n_wUpdCnt} updates - terminates")
             # terminate mission
             service.terminate()
+
         elif self.edge_n_wUpdCnt == 0:
           # get calibrated white value
           service.send(service.topicCmd + "T0/liwi"," ")
           pass
+
         elif self.edge_nUpdCnt == 0:
           # wait for line sensor data
           pass
+
         else:
           print(f"% Edge (sedge.py):: got data stream; after {loops}")
-          break
+          break       
         loops += 1
         if loops > 30:
           print(f"% Edge (sedge.py):: got no data after {loops} (continues edge_n_wUpdCnt={self.edge_n_wUpdCnt}, edgeUpdCnt={self.edgeUpdCnt}, edge_nUpdCnt={self.edge_nUpdCnt})")
@@ -203,7 +225,7 @@ class SEdge:
             f" {self.edgeInterval:.2f} ms " +
             str(self.edgeUpdCnt))
       
-    def printn(self): # pring normalized values
+    def printn(self): # print normalized values
       from uservice import service
       print("% Edge (sedge.py):: normalized " + str(self.edge_nTime - service.startTime) +
             f" ({self.edge_n[0]}, " +
@@ -233,7 +255,6 @@ class SEdge:
 
     ##########################################################
 
-    #TODO popsat
     def decode(self, topic, msg):
         # decode MQTT message
         used = True
@@ -286,7 +307,7 @@ class SEdge:
             self.LineDetect()
             # use to control, if active
             if self.lineCtrl:
-              self.followLine() #! here follow line is called
+              self.followLine()
             #self.printn()
         elif topic == "T0/liw": # get white level
           from uservice import service
@@ -309,7 +330,7 @@ class SEdge:
 
     ##########################################################
 
-    # Calculate current position, crossings and so on
+    # Calculate current position, intersections and so on
     def LineDetect(self):
       sum = 0
       posSum = 0
@@ -389,7 +410,6 @@ class SEdge:
 
     ##########################################################
 
-    #TODO merge with lead control
     def followLine(self):
       from uservice import service
       # some parameters depend on sample time, adjust
@@ -415,35 +435,24 @@ class SEdge:
         errorDiff = (e - self.lastError) / deltaTime  # Derivative term
 
         # PID control output
-        control = self.Kp * e + self.Ki * self.errorSum + self.Kd * errorDiff
-
-        # Ensure control signal stays within bounds
-        if control > 1:
-            control = 1
-        elif control < -1:
-            control = -1
-        
-        # Save data for graphing
-        self.error_list.append(e)
-        self.time_list.append(currentTime - startingTime)
-
-        # Update the turn rate signal (lineY)
-        #! not sure this is correct
-        self.lineY = control
+        self.u = self.Kp * e + self.Ki * self.errorSum + self.Kd * errorDiff
 
         # Lead filter
-        """
-        self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
+        # self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
+        self.lineY = self.u
       
         if self.lineY > 1:
           self.lineY = 1
         elif self.lineY < -1:
           self.lineY = -1
 
+        # Save data for graphing
+        self.error_list.append(e)
+        self.time_list.append(currentTime - self.startingTime)
+
         # save old values
         self.lineE1 = self.u
         self.lineY1 = self.lineY
-        """
 
         # Save last values
         self.lastError = e
@@ -459,7 +468,7 @@ class SEdge:
 
     ##########################################################
 
-    def PIDrecalculate(self): #? idk how it works
+    def PIDrecalculate(self):
       print(f"LineCtrl:: PIDrecalculate: T={self.edgeIntervalSetup:.2f} -> {self.edge_nInterval:.2f} ms")
       Tsec = self.edge_nInterval/1000
       self.tauP2pT = self.lineTauP * 2.0 + Tsec
@@ -467,20 +476,19 @@ class SEdge:
       self.tauZ2pT = self.lineTauZ * 2.0 + Tsec
       self.tauZ2mT = self.lineTauZ * 2.0 - Tsec
       # debug
-      print(f"%% Lead: tauZ {self.lineTauZ:.3f} sec, tauP = {self.lineTauP:.3f} sec, T = {self.edge_nInterval:.3f} ms\n")
+      print(f"%% Lead: tauZ {self.lineTauZ:.3f} sec, tauP = {self.lineTauP:.3f} sec, T = {self.edge_nInterval:.3f} ms")
       print(f"%%       tauZ2pT = {self.tauZ2pT:.4f}, tauZ2mT = {self.tauZ2mT:.4f}, tauP2pT = {self.tauP2pT:.4f}, tauP2mT = {self.tauP2pT:.4f}")
 
     ##########################################################
 
-    # TODO
     # try and decipher the two lines from the 8 color sensors?
     # follow the one defined in intersectionPath until intersactionPassedCnt = 20?
     # add +1 to intersectionsPassed
     def navigateIntersrction(self):
+      print("navigateIntersection callled")
       pass
 
     ##########################################################
-
 
     def terminate(self):
       from uservice import service
@@ -498,7 +506,6 @@ class SEdge:
 
     ##########################################################
 
-    #TODO popsat
     def paint(self, img): # paint sensor values etc. onto an image
       h, w, ch = img.shape
       pl = int(h - h/4) # base position bottom (most positive y)
@@ -537,7 +544,7 @@ class SEdge:
     ##########################################################
     
     def plot_error(self):
-        """Plot error over time to analyze oscillations."""
+        # Plot error over time
         plt.figure(figsize=(10, 5))
         plt.plot(self.time_list, self.error_list, label="Error")
         plt.axhline(y=0, color='black', linestyle='--')  # Reference line at zero
