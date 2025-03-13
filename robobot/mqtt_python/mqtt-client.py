@@ -213,6 +213,7 @@ def loop():
     # line testing
     elif state == 110:
       if edge.atIntersectionCnt == 20: # is at intersection
+        print("% Arrived at intersection")
         state = 99 #end
 
     # color sensor printing
@@ -221,6 +222,12 @@ def loop():
       edge,printn()
       edge.printnw()
       t.sleep(0.5)
+
+    # at intersection testing values
+    #! make sure to set lineCtrl to true in edge.py
+    elif state == 130:
+      print("% AtIntersectionCnt: ", edge.atIntersectionCnt, ", navigatingIntersection: ", edge.navigatingIntersection)
+
 
     else: # abort
       print(f"% Mission finished/aborted; state={state}")

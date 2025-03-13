@@ -31,6 +31,7 @@
 # find values for PID
 # figure out lead compensator
 # test threshold values (should be okay when calibrated properly)
+# try if the detection of intersections work as intended with zero speed, just move it by hand
 
 
 
@@ -74,12 +75,11 @@ class SEdge:
     # start at 10 to avoid going to different mode at the start
     lineValidCnt = 10 # a value up to 20 for most confident line detect, 0 = line isnt valid
 
-    atIntersection = False
-    atIntersectionCnt = 0  #20 = at Intersection
+    atIntersection = False # if the current reading suggests that we are at an intersection
+    atIntersectionCnt = 0  # 20 = at Intersection
     passedIntersections = 0 # how many intersection have we passed
     intersectionPath = ['r', 'r', 'l'] # l = choose left line, r = choose right line
-    timeArrivedAtIntersection = 0
-    currentlyNavigatingIntersection = False
+    navigatingIntersection = False # if we are currently navigating an intersection
 
     average = 0 # avarage edge_n[] value
     high = 0 # highest reflectivity
@@ -350,29 +350,8 @@ class SEdge:
       # average white level
       self.average = sum / 8.0
 
-      # detect if we have a crossing line
-      self.atIntersection = self.average >= self.crossingThreshold
-
       # is line valid (high above threshold)
       self.lineValid = self.high >= self.lineValidThreshold
-
-      # find position
-      sum = 0
-      for i in range(8):
-        # everything more black than 'low' is ignored
-        v = self.edge_n[i] - self.low
-        if v > 0:
-          sum += v
-          posSum += (i+1) * v
-      if sum > 0 and self.lineValid:
-        """
-        using weighted average 
-        position= [∑(sensor intensity) * ∑(sensor index)]/ ∑(sensor intensity) - middle(4.5)
-        """
-        self.position = posSum/sum - 4.5
-      else:
-        self.position = 0
-
       # updates lineValidCnt
       # -1 if theres not a line
       # +1 up to 20 if there is
@@ -384,6 +363,8 @@ class SEdge:
         else:
           self.lineValidCnt = 0
 
+      # detect if we have a crossing line
+      self.atIntersection = self.average >= self.crossingThreshold
       # updates crossingValidCnt
       # -1 if theres not a crossing
       # +1 up to 20 if there is
@@ -393,12 +374,46 @@ class SEdge:
         self.atIntersectionCnt -= 1
         if self.atIntersectionCnt < 0:
           self.atIntersectionCnt = 0
-      
-      if self.atIntersection == 20:
-        print("arrived at an intersection")
+
+      #TODO test the values of switching navigatingIntersection
+      # if we have arrived at an intersection
+      if self.atIntersectionCnt == 20: 
+        self.navigatingIntersection = True
+      # if we have passed the intersection
+      elif self.atIntersectionCnt =< 2 and self.navigatingIntersection:
+        self.navigatingIntersection = False
+        self.passedIntersections += 1
+
+      # find position of the line we want to follow
+      if self.navigatingIntersection: # if we are navigating an intersection, find the position of the line we want to follow
+        self.navigateIntersrction()
+      else: # otherwise just average the values
+        sum = 0
+        for i in range(8):
+          # everything more black than 'low' is ignored
+          v = self.edge_n[i] - self.low
+          if v > 0:
+            sum += v
+            posSum += (i+1) * v
+        if sum > 0 and self.lineValid:
+          """
+          using weighted average 
+          position= [∑(sensor intensity) * ∑(sensor index)]/ ∑(sensor intensity) - middle(4.5)
+          """
+          self.position = posSum/sum - 4.5
+        else:
+          self.position = 0
+
 
       # print(f"% Edge (sedge.py):: ({self.edge_n[0]} {self.edge_n[1]} {self.edge_n[2]} {self.edge_n[3]} {self.edge_n[4]} {self.edge_n[5]} {self.edge_n[6]}), min={self.low}, high={self.high}, pos={self.position:.2f}.")
 
+    ##########################################################
+
+    # try and decipher the two lines from the 8 color sensors and follow the one defined in intersectionPath
+    def navigateIntersrction(self):
+      print("navigateIntersection callled")
+      pass
+    
     ##########################################################
 
     def lineControl(self, velocity, refPosition):
@@ -478,15 +493,6 @@ class SEdge:
       # debug
       print(f"%% Lead: tauZ {self.lineTauZ:.3f} sec, tauP = {self.lineTauP:.3f} sec, T = {self.edge_nInterval:.3f} ms")
       print(f"%%       tauZ2pT = {self.tauZ2pT:.4f}, tauZ2mT = {self.tauZ2mT:.4f}, tauP2pT = {self.tauP2pT:.4f}, tauP2mT = {self.tauP2pT:.4f}")
-
-    ##########################################################
-
-    # try and decipher the two lines from the 8 color sensors?
-    # follow the one defined in intersectionPath until intersactionPassedCnt = 20?
-    # add +1 to intersectionsPassed
-    def navigateIntersrction(self):
-      print("navigateIntersection callled")
-      pass
 
     ##########################################################
 
