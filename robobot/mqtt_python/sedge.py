@@ -27,7 +27,6 @@
 
 
 #TODO
-# test color calibration
 # find values for PID
 # figure out lead compensator
 # test threshold values (should be okay when calibrated properly)
@@ -85,7 +84,7 @@ class SEdge:
     high = 0 # highest reflectivity
     low = 0  # the darkest value found in latest sample
 
-    topicLip = ""
+    topicLip = ""   
     sendCalibRequest = False # False = Calibrate
     
     # follow line controller
@@ -93,8 +92,8 @@ class SEdge:
 
     # my PID values
     Kp = 1.0  # Proportional constant
-    Ki = 0.0  # Integral constant
-    Kd = 0.0  # Derivative constant
+    Ki = 0.6  # Integral constant
+    Kd = 0.5  # Derivative constant
     # PID values from the c++ code (upid)
 
     # values for ID
@@ -151,12 +150,11 @@ class SEdge:
 
         # white calibrate requested
         if service.args.white:
-          print("% Edge (sedge.py):: white calibrate requested")
           
           # sendBlack = 0 -> set lowest value ("black") to 0
           if not sendBlack:
             print("% Edge (sedge.py):: set lowest value (black) to 0")
-            topic = service.topicCmd + "T0/litb"
+            topic = service.topicCmd + "T0/litb"  
             param = "0 0 0 0 0 0 0 0"
             sendBlack = service.send(topic, param)
 
@@ -189,7 +187,7 @@ class SEdge:
             service.args.white = False
             print(f"% Edge (sedge.py):: calibration should be fine, got {self.edge_n_wUpdCnt} updates - terminates")
             # terminate mission
-            # service.terminate()
+            service.terminate()
 
         elif self.edge_n_wUpdCnt == 0:
           # get calibrated white value
