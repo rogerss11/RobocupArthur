@@ -31,7 +31,7 @@
 # find values for PID
 # figure out lead compensator
 # test threshold values (should be okay when calibrated properly)
-# try if the detection of intersections work as intended with zero speed, just move it by hand
+# test the values of switching navigatingIntersection with zero speed, just move it by hand
 
 
 
@@ -66,7 +66,7 @@ class SEdge:
     crossingThreshold = 800 # average above this is assumed to be crossing line
 
     # level for relevant white values
-    low = lineValidThreshold - 100 #? find out what its for
+    low = lineValidThreshold - 100
 
     # line detection values
     position = 0.0 #? what exactly is 0, between 4 and 5th sensor?
@@ -189,7 +189,7 @@ class SEdge:
             service.args.white = False
             print(f"% Edge (sedge.py):: calibration should be fine, got {self.edge_n_wUpdCnt} updates - terminates")
             # terminate mission
-            service.terminate()
+            # service.terminate()
 
         elif self.edge_n_wUpdCnt == 0:
           # get calibrated white value
@@ -333,7 +333,6 @@ class SEdge:
     # Calculate current position, intersections and so on
     def LineDetect(self):
       sum = 0
-      posSum = 0
       low = int(1000)
       high = int(1)
 
@@ -375,45 +374,93 @@ class SEdge:
         if self.atIntersectionCnt < 0:
           self.atIntersectionCnt = 0
 
-      #TODO test the values of switching navigatingIntersection
       # if we have arrived at an intersection
       if self.atIntersectionCnt == 20: 
         self.navigatingIntersection = True
       # if we have passed the intersection
-      elif self.atIntersectionCnt =< 2 and self.navigatingIntersection:
+      elif self.atIntersectionCnt <= 2 and self.navigatingIntersection:
         self.navigatingIntersection = False
-        self.passedIntersections += 1
+        self.passedIntersections += 0 #! change to 1 after testing
 
       # find position of the line we want to follow
       if self.navigatingIntersection: # if we are navigating an intersection, find the position of the line we want to follow
-        self.navigateIntersrction()
+        self.calculateIntersection()
       else: # otherwise just average the values
-        sum = 0
-        for i in range(8):
-          # everything more black than 'low' is ignored
-          v = self.edge_n[i] - self.low
-          if v > 0:
-            sum += v
-            posSum += (i+1) * v
-        if sum > 0 and self.lineValid:
-          """
-          using weighted average 
-          position= [∑(sensor intensity) * ∑(sensor index)]/ ∑(sensor intensity) - middle(4.5)
-          """
-          self.position = posSum/sum - 4.5
-        else:
-          self.position = 0
+        self.calculateLine()
 
 
       # print(f"% Edge (sedge.py):: ({self.edge_n[0]} {self.edge_n[1]} {self.edge_n[2]} {self.edge_n[3]} {self.edge_n[4]} {self.edge_n[5]} {self.edge_n[6]}), min={self.low}, high={self.high}, pos={self.position:.2f}.")
 
     ##########################################################
 
+    #! just a thought, should probably find a better way to do this
     # try and decipher the two lines from the 8 color sensors and follow the one defined in intersectionPath
-    def navigateIntersrction(self):
-      print("navigateIntersection callled")
-      pass
+    def calculateIntersection(self):
+      #print("calculateIntersection callled")
+      return
+
+      # ignore or values under low
+      values = [max(self.edge_n[i] - self.low, 0) for i in range(8)]
+      print("values: ", values)
+
+      # iterate from right to left or left to right depending on the intersectionPath
+      if self.intersectionPath[self.passedIntersections] == 'l':
+        start, end, step = 0, 8, 1
+      elif self.intersectionPath[self.passedIntersections] == 'r':
+        start, end, step = 8, 0, -1
+      else:
+        print("Invalid intersectionPath")
+        return
+
+      sum = 0
+      posSum = 0
+      found_nonzero = False  # flag to check if a nonzero value has been encountered
+      for i in range(start, end, step):
+
+        if values[i] != 0:
+          found_nonzero = True  # Mark that we have seen a nonzero value
+        elif found_nonzero and values[i] == 0:
+          break  # Stop the loop when we hit 0 after a nonzero value
+          
+        sum += values[i]
+        posSum += (i + 1) * values[i]
+
+
+      if sum > 0 and self.lineValid:
+        """
+        using weighted average 
+        position= [∑(sensor intensity) * ∑(sensor index)]/ ∑(sensor intensity) - middle(4.5)
+        """
+        self.position = posSum/sum - 4.5
+      else:
+        self.position = 0
+      
+      print("position: ", self.position)  
+
+
     
+    ##########################################################
+
+    # find line position
+    def calculateLine(self):
+      sum = 0
+      posSum = 0
+      for i in range(8):
+        # everything more black than 'low' is ignored
+        v = self.edge_n[i] - self.low
+        if v > 0:
+          sum += v
+          posSum += (i+1) * v
+
+      if sum > 0 and self.lineValid:
+        """
+        using weighted average 
+        position= [∑(sensor intensity) * ∑(sensor index)]/ ∑(sensor intensity) - middle(4.5)
+        """
+        self.position = posSum/sum - 4.5
+      else:
+        self.position = 0
+
     ##########################################################
 
     def lineControl(self, velocity, refPosition):
@@ -549,17 +596,20 @@ class SEdge:
     
     ##########################################################
     
-    def plot_error(self):
-        # Plot error over time
-        plt.figure(figsize=(10, 5))
-        plt.plot(self.time_list, self.error_list, label="Error")
-        plt.axhline(y=0, color='black', linestyle='--')  # Reference line at zero
-        plt.xlabel("Time (s)")
-        plt.ylabel("Error")
-        plt.title("PID Error Over Time")
-        plt.legend()
-        plt.grid()
-        plt.show()
+    def plot_error(self, filename="pid_error_plot.png"):
+      # Plot error over time
+      plt.figure(figsize=(10, 5))
+      plt.plot(self.time_list, self.error_list, label="Error")
+      plt.axhline(y=0, color='black', linestyle='--')  # Reference line at zero
+      plt.xlabel("Time (s)")
+      plt.ylabel("Error")
+      plt.title("PID Error Over Time")
+      plt.legend()
+      plt.grid()
+      
+      # Save plot to file
+      plt.savefig(filename, dpi=300, bbox_inches="tight")
+      plt.close()  # Close the figure to free memory
 
 
 # create the data object

@@ -166,8 +166,8 @@ def loop():
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
-        edge.lineControl(0.25, 0.0) # m/s and position on line -2.0..2.0
-        state = 110 # until no more line
+        edge.lineControl(0.0, 0.0) # m/s and position on line
+        state = 120
         pose.tripBreset()
 
     elif state == 12: # following line
@@ -218,9 +218,9 @@ def loop():
 
     # color sensor printing
     elif state == 120:
-      edge.print()
-      edge,printn()
-      edge.printnw()
+      #edge.print()
+      edge.printn()
+      #edge.printnw()
       t.sleep(0.5)
 
     # at intersection testing values
@@ -270,8 +270,6 @@ if __name__ == "__main__":
     print("% Starting")
     # where is the MQTT data server:
     service.setup('localhost') # localhost
-    #service.setup('10.197.217.81') # Juniper
-    #service.setup('10.197.217.80') # Newton
     if service.connected:
       loop()
     service.terminate()
