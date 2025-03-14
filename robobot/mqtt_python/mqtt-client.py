@@ -186,19 +186,21 @@ def loop():
         state = 99
       pass
     elif state == 21: #ball detection
-      while images <= 10:
-        image_ia = imageAnalysis(0)
-        xy,stat = ia.ball(image_ia, 0) #detect blue ball
-        images += 1
-        if stat == 0: #just found one ball
-          #draw xy
-          image_ia = cv.circle(image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1)
-        elif stat == 2: #found more than one ball
-          for coord in xy:
-            image_ia= cv.circle(image_ia, coord, radius=10, color=(0, 0, 255), thickness=-1)
-        fn = f"image_{images}.jpg"
-        cv.imwrite(fn, image_ia)
-        t.sleep(1)
+      #while images <= 10:
+      image_ia = imageAnalysis(0)
+      xy,stat = ia.ball(image_ia, 0) #detect blue ball
+      #images += 1
+      if stat == 0: #just found one ball
+        #draw xy
+        image_ia = cv.circle(image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1)
+      elif stat == 2: #found more than one ball
+        for coord in xy:
+          image_ia= cv.circle(image_ia, coord, radius=10, color=(0, 0, 255), thickness=-1)
+      #fn = f"image_{images}.jpg"
+      #cv.imwrite(fn, image_ia)
+      if not gpio.onPi:
+        cv.imshow('frame for analysis', image_ia)
+      t.sleep(0.5)
     elif state == 101:
       driveOneMeter();
       state = 100;
@@ -240,10 +242,11 @@ def loop():
 if __name__ == "__main__":
     print("% Starting")
     # where is the MQTT data server:
-    service.setup('localhost') # localhost
+    #service.setup('localhost') # localhost
     #service.setup('10.197.217.81') # Juniper
     #service.setup('10.197.217.80') # Newton
     #service.setup('bode.local') # Bode
+    service.setup('10.197.216.214')
     if service.connected:
       loop()
     service.terminate()
