@@ -132,7 +132,7 @@ def driveTurnPi():
 
 def loop():
   from ulog import flog
-  state = 20
+  state = 21
   images = 0
   ledon = True
   tripTime = datetime.now()
@@ -190,8 +190,10 @@ def loop():
       xy,stat = ia.ball(image_ia, 0) #detect blue ball
       if stat == 0: #just found one ball
         #draw xy
-        image_ia = cv.circle(image_ia, (xy[0],xy[1]), radius=5, color=(0, 255, 0), thickness=-1)
-        print('Painted circle')
+        image_ia = cv.circle(image_ia, xy, radius=5, color=(0, 255, 0), thickness=-1)
+      elif stat == 2: #found more than one ball
+        for coord in xy:
+          image_ia= cv.circle(image_ia, coord, radius=5, color=(0, 255, 0), thickness=-1)
       if not gpio.onPi:
         cv.imshow('frame for analysis', image_ia)
     elif state == 101:
@@ -235,10 +237,10 @@ def loop():
 if __name__ == "__main__":
     print("% Starting")
     # where is the MQTT data server:
-    #service.setup('localhost') # localhost
+    service.setup('localhost') # localhost
     #service.setup('10.197.217.81') # Juniper
     #service.setup('10.197.217.80') # Newton
-    service.setup('bode.local') # Bode
+    #service.setup('bode.local') # Bode
     if service.connected:
       loop()
     service.terminate()

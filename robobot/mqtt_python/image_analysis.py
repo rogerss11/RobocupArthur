@@ -24,7 +24,11 @@ def ball(image, color):
     r_low = [20,150]
 
     # color of the thresholds (for images in BGR)
-    image_ball = (image[:,:,0] >= b_low[color]) & (image[:,:,0] <= b_high[color]) & (image[:,:,1] >= g_low[color]) & (image[:,:,1] <= g_high[color]) & (image[:,:,2] >= r_low) & (image[:,:,2] <= r_high)
+    image_ball = (
+        (image[:,:,0] >= b_low[color]) & (image[:,:,0] <= b_high[color]) & 
+        (image[:,:,1] >= g_low[color]) & (image[:,:,1] <= g_high[color]) & 
+        (image[:,:,2] >= r_low[color]) & (image[:,:,2] <= r_high[color])
+    )
     
     # clean up the picture
     image_ball_cl = remove_small_holes(image_ball, 10000, 1)
@@ -35,10 +39,10 @@ def ball(image, color):
     regions = regionprops(label_image=labeled_image)
 
     status = 99
-    xy = [0,0]
+    xy = []
 
     if (n_labels == 1):
-        xy = regions[0].centroid
+        xy = tuple(map(int, regions[0].centroid[::-1])) 
         status = 0
     elif(n_labels == 0):
         print('No ball found')
@@ -46,6 +50,7 @@ def ball(image, color):
     else:
         print('More than one ball found')
         status = 2
+        xy = [tuple(map(int, r.centroid[::-1])) for r in regions]
 
     return xy, status # gives back a tuple with the pixel position of the (roughly) middle of the ball and the result
 
