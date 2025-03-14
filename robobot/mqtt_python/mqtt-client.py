@@ -39,6 +39,7 @@ from sedge import edge
 from sgpio import gpio
 from scam import cam
 from uservice import service
+import image_analysis as ia
 
 
 # set title of process, so that it is not just called Python
@@ -47,7 +48,6 @@ setproctitle("mqtt-client")
 ############################################################
 
 def imageAnalysis(save):
-  save = 1
   if cam.useCam:
     ok, img, imgTime = cam.getImage()
     if not ok: # size(img) == 0):
@@ -59,8 +59,6 @@ def imageAnalysis(save):
         # print(f"% At {imgTime}, got image {cam.cnt} of size= {w}x{h}")
         pass
       #edge.paint(img)
-      if not gpio.onPi:
-        cv.imshow('frame for analysis', img)
       if save:
         fn = f"image_{imgTime.strftime('%Y_%b_%d_%H%M%S_')}{cam.cnt:03d}.jpg"
         cv.imwrite(fn, img)
@@ -69,7 +67,7 @@ def imageAnalysis(save):
       pass
     pass
   pass
-
+  return img
 ############################################################
 
 stateTime = datetime.now()
@@ -174,7 +172,6 @@ def loop():
     elif state == 20: # image analysis
       imageAnalysis(images == 2)
       images += 1
-      t.sleep(2)
       # blink LED
       if ledon:
         service.send(service.topicCmd + "T0/leds","16 0 64 0")
@@ -188,6 +185,15 @@ def loop():
         images = 0
         state = 99
       pass
+    elif state == 21: #ball detection
+      image_ia = imageAnalysis(0)
+      xy,stat = ia.ball(image_ia, 0) #detect blue ball
+      if stat == 0: #just found one ball
+        #draw xy
+        image_ia = cv.circle(image_ia, (xy[0],xy[1]), radius=5, color=(0, 255, 0), thickness=-1)
+        print('Painted circle')
+      if not gpio.onPi:
+        cv.imshow('frame for analysis', image_ia)
     elif state == 101:
       driveOneMeter();
       state = 100;

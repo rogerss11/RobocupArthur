@@ -1,4 +1,3 @@
-import cv2 as cv
 from skimage.morphology import binary_erosion
 from skimage.morphology import remove_small_holes
 from skimage.morphology import remove_small_objects
@@ -36,12 +35,13 @@ def ball(image, color):
     regions = regionprops(label_image=labeled_image)
 
     status = 99
+    xy = [0,0]
+
     if (n_labels == 1):
         xy = regions[0].centroid
         status = 0
     elif(n_labels == 0):
         print('No ball found')
-        xy = [0,0]
         status = 1
     else:
         print('More than one ball found')
