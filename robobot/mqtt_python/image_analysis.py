@@ -25,9 +25,9 @@ def ball(image, color):
 
     # color of the thresholds (for images in BGR)
     image_ball = (
-        (image[:,:,0] >= b_low[color]) & (image[:,:,0] <= b_high[color]) & 
-        (image[:,:,1] >= g_low[color]) & (image[:,:,1] <= g_high[color]) & 
-        (image[:,:,2] >= r_low[color]) & (image[:,:,2] <= r_high[color])
+        (image[:,:,0] >= b_low[color]) & (image[:,:,0] <= b_high[color]) & #blue 
+        (image[:,:,1] >= g_low[color]) & (image[:,:,1] <= g_high[color]) & #green
+        (image[:,:,2] >= r_low[color]) & (image[:,:,2] <= r_high[color])   #red
     )
     
     # clean up the picture
