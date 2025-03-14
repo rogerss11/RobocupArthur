@@ -91,9 +91,9 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 1.0  # Proportional constant
-    Ki = 0.6  # Integral constant
-    Kd = 0.5  # Derivative constant
+    Kp = 0.5  # Proportional constant
+    Ki = 0.5  # Integral constant
+    Kd = 0.8  # Derivative constant
     # PID values from the c++ code (upid)
 
     # values for ID
