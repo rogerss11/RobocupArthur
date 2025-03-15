@@ -58,20 +58,21 @@ def ball(image, color):
 def move_middle(xy):
     #the whole image is of the size 616x820x3
     middle_x = 410
-    range = 5
+    range = 10
     status = 99
 
     if(xy[0] > middle_x + range):
         #then turn left
-        service.send(service.topicCmd + "ti/rc","0.05 0.5")
+        service.send(service.topicCmd + "ti/rc","0.05 -0.5")
         status = 1
     elif(xy[0] < middle_x - range):
         #then turn right
-        service.send(service.topicCmd + "ti/rc","0.05 -0.5")
+        service.send(service.topicCmd + "ti/rc","0.05 0.5")
         status = 2
     else:
         #ball is in the middle
         status = 0
+        service.send(service.topicCmd + "ti/rc","0 0")
 
     #update the picture and the ball detection
 

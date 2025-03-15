@@ -157,7 +157,7 @@ def loop():
         edge.lineControl(0.25, 0.0) # m/s and position on line -2.0..2.0
         state = 12 # until no more line
         pose.tripBreset() # use trip counter/timer B
-    elif state == 12: # following line
+    elif state == 12: # following line    
       if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 10:
         # no more line
         edge.lineControl(0,0) # stop following line
@@ -193,14 +193,19 @@ def loop():
       if stat == 0: #just found one ball
         #draw xy
         image_ia = cv.circle(image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1)
+        ia.move_middle(xy)
       elif stat == 2: #found more than one ball
         for coord in xy:
           image_ia= cv.circle(image_ia, coord, radius=10, color=(0, 0, 255), thickness=-1)
+        ia.move_middle(xy[0])
+      elif stat == 1: #found no ball
+        service.send(service.topicCmd + "ti/rc","0 0")
       #fn = f"image_{images}.jpg"
       #cv.imwrite(fn, image_ia)
       if not gpio.onPi:
         cv.imshow('frame for analysis', image_ia)
-      t.sleep(0.5)
+      if stateTimePassed() >= 30:
+          state = 99
     elif state == 101:
       driveOneMeter();
       state = 100;
@@ -246,7 +251,7 @@ if __name__ == "__main__":
     #service.setup('10.197.217.81') # Juniper
     #service.setup('10.197.217.80') # Newton
     #service.setup('bode.local') # Bode
-    service.setup('10.197.216.214')
+    service.setup('10.197.216.214') #Arthur
     if service.connected:
       loop()
     service.terminate()
