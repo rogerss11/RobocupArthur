@@ -190,11 +190,11 @@ def loop():
       image_ia = imageAnalysis(0)
       xy,stat = ia.ball(image_ia, 0) #detect blue ball
       #images += 1
-      if (stat >= 1): #just found one or more balls
+      if (stat >= 1) & (xy != (0,0)): #just found one or more balls
         #draw xy
         image_ia = cv.circle(image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1)
         ia.move_middle(xy)
-      elif stat == 0: #found no ball
+      else: #found no ball
         service.send(service.topicCmd + "ti/rc","0 0")
       #fn = f"image_{images}.jpg"
       #cv.imwrite(fn, image_ia)
