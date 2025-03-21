@@ -29,8 +29,10 @@
 #TODO
 # test threshold values (should be okay when calibrated properly)s
 # test the values of switching navigatingIntersection with zero speed, just move it by hand
-# figure out if adding lead compensator is better
-# fine-tune values for PID
+# PID Tuning (Kp, Ki, Kd)
+# Derivative Filtering
+# Anti-Windup for Integral
+# Optional: Lead Compensator (if needed)
 
 
 
@@ -97,7 +99,9 @@ class SEdge:
     Kp = 0.2  # Proportional constant
     Ki = 0.2  # Integral constant
     Kd = 0.12  # Derivative constant
-    # PID values from the c++ code (upid)
+    
+    # Low-pass filter for derivative term
+    alpha = 0.1  # Choose a suitable alpha value
 
     # values for ID
     errorSum = 0.0  # Integral term (sum of errors)
@@ -467,10 +471,13 @@ class SEdge:
     ##########################################################
 
     def lineControl(self, velocity, refPosition):
+      from uservice import service
       self.velocity = velocity
       self.refPosition = refPosition # position on the line (0 = middle)
       # velocity 0 is turning off line control
       self.lineCtrl = velocity > 0.001 # is line control active
+      if not self.lineCtrl:
+        service.send("robobot/cmd/ti/rc","0.0 0.0")
       pass
 
     ##########################################################
@@ -497,10 +504,10 @@ class SEdge:
         e = self.refPosition - self.position
 
         self.errorSum += e * deltaTime  # Sum of errors for integral term
-        errorDiff = (e - self.lastError) / deltaTime  # Derivative term
+        errorDiffFiltered = alpha * errorDiff + (1 - alpha) * self.lastErrorDiff
 
         # PID control output
-        self.u = self.Kp * e + self.Ki * self.errorSum + self.Kd * errorDiff
+        self.u = self.Kp * e + self.Ki * self.errorSum + self.Kd * errorDiffFiltered
 
         # Lead filter
         # self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;

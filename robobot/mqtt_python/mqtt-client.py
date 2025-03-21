@@ -216,7 +216,7 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
         edge.lineControl(0.25, 0.0) # m/s and position on line
-        state = 140
+        state = 110
         pose.tripBreset()
 
     elif state == 12: # following line
@@ -265,7 +265,7 @@ def loop():
     ###### MY TESTING STATES #######
     # line testing
     elif state == 110:
-      if stateTimePassed() > 10: # is at intersection
+      if stateTimePassed() > 15: # is at intersection
         print("% Time over")
         state = 99 #end
 
@@ -284,9 +284,9 @@ def loop():
 
     elif state == 140: # following line
       print(edge.velocity)
-      if ir.ir[1] > 0.6: #it decelerates if there is an object in front of him in less than 30 cm
+      if ir.ir[1] > 0.3: #it decelerates if there is an object in front of him in less than 30 cm
         print("far")
-        edge.lineControl(0.3, 0.0)
+        edge.lineControl(0.25, 0.0)
       else:
         print("close")
         edge.lineControl(0.0, 0.0)
