@@ -168,8 +168,8 @@ def loop():
         state = 13 # turn left
     elif state == 13: # following line
       ir.print()
-      time.sleep(0.2)
-      if ir[1] > 0.3: #se presente un oggetto a meno di 30 cm rallenti 
+      t.sleep(0.2)
+      if ir.ir[1] > 0.3: #it decelerates if there is an object in front of him in less than 30 cm
         print("far")
         edge.lineControl(0.2, 0.0)
       else:
@@ -240,7 +240,7 @@ if __name__ == "__main__":
     #service.setup('localhost') # localhost
     #service.setup('10.197.217.81') # Juniper
     #service.setup('10.197.217.80') # Newton
-    service.setup('10.197.219.147') #Arthur
+    service.setup('10.197.218.24') #Arthur
     if service.connected:
       loop()
     service.terminate()

@@ -54,7 +54,7 @@ class SIr:
 
     def print(self):
       from uservice import service
-      print("% IR dist " + str(self.accTime - service.startTime) + " (" +
+      print("% IR dist " + str(self.irTime - service.startTime) + " (" +
             str(self.ir[0]) + ", " +
             str(self.ir[1]) + ", " +
             f") {self.irInterval:.4f} sec " +
