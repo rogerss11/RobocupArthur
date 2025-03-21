@@ -209,13 +209,14 @@ def loop():
     #  break
 
     if state == 0: # starting state (waiting for start signal or --now)
-      if not service.args.distance() or ir.ir[0] < 0.2: # if -d was used when starting mqtt-client, wait for someone to 'touch' side IR sensor
+      print("IR: ", ir.ir[0])
+      if not service.args.distance or ir.ir[0] < 0.1: # if -d was used when starting mqtt-client, wait for someone to 'touch' side IR sensor
         print("% Starting")
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
-        edge.lineControl(0.0, 0.0) # m/s and position on line
-        state = 130
+        edge.lineControl(0.25, 0.0) # m/s and position on line
+        state = 110
         pose.tripBreset()
 
     elif state == 12: # following line
@@ -264,7 +265,7 @@ def loop():
     ###### MY TESTING STATES #######
     # line testing
     elif state == 110:
-      if stateTimePassed() > 7: # is at intersection
+      if stateTimePassed() > 10: # is at intersection
         print("% Time over")
         state = 99 #end
 
@@ -309,7 +310,7 @@ def loop():
     pass # end of while loop
 
   # end of mission, turn LEDs off and stop
-  # edge.plot_error() # plot error (temporary for PID tuning)
+  edge.plot_error() # plot error (temporary for PID tuning)
   service.send(service.topicCmd + "T0/leds","16 0 0 0") 
   gpio.set_value(20, 0)
   edge.lineControl(0,0) # stop following line
