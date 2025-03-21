@@ -94,9 +94,9 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 0.3  # Proportional constant
-    Ki = 0.3  # Integral constant
-    Kd = 0.2  # Derivative constant
+    Kp = 0.2  # Proportional constant
+    Ki = 0.2  # Integral constant
+    Kd = 0.12  # Derivative constant
     # PID values from the c++ code (upid)
 
     # values for ID
@@ -525,6 +525,7 @@ class SEdge:
         self.lastTime = currentTime
 
         # make response
+        print("velocity edge: ", self.velocity)
         par = f"{self.velocity:.3f} {self.lineY:.3f} {t.time()}"
         service.send(self.topicRc, par) # send new turn command, maintaining velocity
 
