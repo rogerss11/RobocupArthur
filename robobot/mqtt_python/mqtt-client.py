@@ -183,8 +183,8 @@ def loop():
     state = 101 # run 1m
   elif service.args.pi:
     state = 102 # run 1m
-  elif service.args.usestate > 0:
-    state = service.args.usestate
+  #elif service.args.usestate > 0:
+  #  state = service.args.usestate
   print(f"% Using state {state}")
   # elif not service.args.now:
   #   print("% Ready, press start button")
@@ -302,7 +302,8 @@ if __name__ == "__main__":
       #service.setup('localhost') # localhost
       #service.setup('10.197.217.81') # Juniper
       #service.setup('10.197.217.80') # Newton
-      service.setup('bode.local') # Bode
+      #service.setup('bode.local') # Bode
+      service.setup('10.197.218.24')
       if service.connected:
         loop()
       service.terminate()

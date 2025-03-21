@@ -85,9 +85,8 @@ def move_middle(xy):
         service.send(service.topicCmd + "ti/rc","0 0")
 
     #update the picture and the ball detection
-    time.sleep(0.5)
+    time.sleep(0.2)
     service.send(service.topicCmd + "ti/rc", "0 0")
-    time.sleep(0.1)
 
     return status
 
