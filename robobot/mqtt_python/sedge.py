@@ -27,10 +27,10 @@
 
 
 #TODO
-# find values for PID
-# figure out lead compensator
-# test threshold values (should be okay when calibrated properly)
+# test threshold values (should be okay when calibrated properly)s
 # test the values of switching navigatingIntersection with zero speed, just move it by hand
+# figure out if adding lead compensator is better
+# fine-tune values for PID
 
 
 
@@ -107,10 +107,9 @@ class SEdge:
     startingTime = 0
 
 
-    # old values for P and lead compensator
-    lineKp = 3.0
-    lineTauZ = 0.8
-    lineTauP = 0.15
+    # lead compensator
+    lineTauZ = 1.5
+    lineTauP = 0.5
 
     # Lead pre-calculated factors
     tauP2pT = 1.0
@@ -499,6 +498,7 @@ class SEdge:
 
         # Lead filter
         # self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
+        
         self.lineY = self.u
       
         if self.lineY > 1:

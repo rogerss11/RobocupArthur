@@ -155,9 +155,9 @@ def loop():
   # main state machine
   while not (service.stop or gpio.stop()): # main loop (until red stop button is pressed, or stop signal received)
 
-    if t.time() - startTime >= 20:  # time limit for mission
-      print("% Mission finished due to time limit")
-      break
+    #if t.time() - startTime >= 200:  # time limit for mission
+    #  print("% Mission finished due to time limit")
+    #  break
 
     if state == 0: # starting state (waiting for start signal or --now)
       start = gpio.start() or service.args.now
@@ -166,8 +166,9 @@ def loop():
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
-        edge.lineControl(0.2, 0.0) # m/s and position on line
-        state = 110
+        edge.lineControl(0.0, 0.0) # m/s and position on line
+        edge.lineControl = True
+        state = 130
         pose.tripBreset()
 
     elif state == 12: # following line
@@ -224,7 +225,6 @@ def loop():
       t.sleep(0.5)
 
     # at intersection testing values
-    #! make sure to set lineCtrl to true in edge.py
     elif state == 130:
       print("% AtIntersectionCnt: ", edge.atIntersectionCnt, ", navigatingIntersection: ", edge.navigatingIntersection)
 
@@ -256,7 +256,7 @@ def loop():
     pass # end of while loop
 
   # end of mission, turn LEDs off and stop
-  edge.plot_error() # plot error (temporary for PID tuning)
+  # edge.plot_error() # plot error (temporary for PID tuning)
   service.send(service.topicCmd + "T0/leds","16 0 0 0") 
   gpio.set_value(20, 0)
   edge.lineControl(0,0) # stop following line
@@ -269,7 +269,8 @@ def loop():
 if __name__ == "__main__":
     print("% Starting")
     # where is the MQTT data server:
-    service.setup('localhost') # localhost
+    # service.setup('localhost') # localhost
+    service.setup('10.197.218.24')
     if service.connected:
       loop()
     service.terminate()
