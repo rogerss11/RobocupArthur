@@ -1,10 +1,9 @@
-from skimage.morphology import binary_erosion
-from skimage.morphology import remove_small_holes
-from skimage.morphology import remove_small_objects
-from skimage.measure import label
-from skimage.measure import regionprops
+from skimage.morphology import binary_erosion, remove_small_holes, remove_small_objects
+from skimage.measure import label, regionprops, regionprops_table
 from scipy.ndimage import gaussian_filter
+import pandas as pd
 import numpy as np
+import time 
 
 from uservice import service
 
@@ -31,8 +30,8 @@ def ball(image, color):
     )
     
     # clean up the picture
-    image_ball_cl = remove_small_holes(image_ball, 10000, 1)
-    mask = remove_small_objects(image_ball_cl, min_size=500, connectivity=1)
+    image_ball_cl = remove_small_holes(image_ball, 100, 1)
+    mask = remove_small_objects(image_ball_cl, min_size=200, connectivity=1)
 
     # find the middle of the ball from the up left corner
     labeled_image, n_labels = label(mask, background=0,return_num=True,connectivity=2)
@@ -43,15 +42,26 @@ def ball(image, color):
 
     if (n_labels == 1):
         xy = tuple(map(int, regions[0].centroid[::-1])) 
-        status = 0
+        status = 1
     elif(n_labels == 0):
         print('No ball found')
-        status = 1
+        status = 0
     else:
-        print('More than one ball found')
-        status = 2
-        xy = [tuple(map(int, r.centroid[::-1])) for r in regions]
+        print("More than one ball found")
+        region_table = regionprops_table(labeled_image, properties=['centroid', 'area']) 
+        pd_regions = pd.DataFrame(region_table)
+        pd_regions = pd_regions[(pd_regions['centroid-0'] > 200) & 
+            (pd_regions['area'] > 200) & 
+            (pd_regions['area'] < 10000)]
+        pd_regions = pd_regions.sort_values(by='centroid-0', ascending=False) 
 
+        if not pd_regions.empty:
+            xy = (int(pd_regions.iloc[0]['centroid-1']), int(pd_regions.iloc[0]['centroid-0']))
+        else:
+            xy = (0,0)  # Or set a default value
+            print("Warning: No valid regions found after filtering")
+        
+        status = 2
     return xy, status # gives back a tuple with the pixel position of the (roughly) middle of the ball and the result
 
 # drive the robot so that the object is in the middle of the picture
@@ -75,6 +85,9 @@ def move_middle(xy):
         service.send(service.topicCmd + "ti/rc","0 0")
 
     #update the picture and the ball detection
+    time.sleep(0.5)
+    service.send(service.topicCmd + "ti/rc", "0 0")
+    time.sleep(0.1)
 
     return status
 
