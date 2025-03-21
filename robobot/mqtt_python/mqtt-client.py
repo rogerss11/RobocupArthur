@@ -103,10 +103,12 @@ def driveOneMeter():
   service.send(service.topicCmd + "T0/leds","16 0 0 0") # end
   print("% Driving 1m ------------------------- end")
 
+############################################################
+
 def driveToLine():
   state = 0
   pose.tripBreset()
-  dist_to_line = 0;
+  dist_to_line = 0
   print("% Driving to line ---------------------- right ir start ---")
   service.send(service.topicCmd + "T0/leds","16 0 100 0") # green
   while not (service.stop):
@@ -140,7 +142,7 @@ def driveToLine():
     else:
       print(f"# drive to line {dist_to_line:.3f}m, then along line {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
       service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
-      break;
+      break
     # print(f"# drive {state}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds, line valid cnt = {edge.lineValidCnt}")
     t.sleep(0.01)
   pass
@@ -191,27 +193,28 @@ def loop():
     state = 101 # run 1m
   elif service.args.pi:
     state = 102 # run 1m
-  elif service.args.usestate > 0:
-    state = service.args.usestate
+  #elif service.args.usestate > 0:
+  #  state = service.args.usestate
+
   print(f"% Using state {state}")
   # elif not service.args.now:
   #   print("% Ready, press start button")
+
   # main state machine
-  while not (service.stop or gpio.stop()): # main loop (until red stop button is pressed, or stop signal received)
+  while not (service.stop): # main loop (until red stop button is pressed, or stop signal received)
 
     #if t.time() - startTime >= 200:  # time limit for mission
     #  print("% Mission finished due to time limit")
     #  break
 
     if state == 0: # starting state (waiting for start signal or --now)
-      start = gpio.start() or service.args.now
+      start = True #gpio.start() or service.args.now
       if start:
         print("% Starting")
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
         edge.lineControl(0.0, 0.0) # m/s and position on line
-        edge.lineControl = True
         state = 130
         pose.tripBreset()
 
@@ -274,7 +277,9 @@ def loop():
 
     # at intersection testing values
     elif state == 130:
+      edge.printn()
       print("% AtIntersectionCnt: ", edge.atIntersectionCnt, ", navigatingIntersection: ", edge.navigatingIntersection)
+      t.sleep(0.5)
 
 
     else: # abort

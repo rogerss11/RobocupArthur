@@ -62,9 +62,13 @@ class SEdge:
 
     # line detection levels
     lineValidThreshold = 750 # 1000 is calibrated white
-    crossingThreshold = 700 # average above this is assumed to be crossing line
     # level for relevant white values
     low = lineValidThreshold - 100
+
+    # crossing thresholds - average above this is assumed to be crossing line
+    crossingThreshold = 800 # grey
+    #crossingThreshold = 400 # black ground
+    #crossingThreshold = 480 # black ramp
 
     # line detection values
     position = 0.0 #? what exactly is 0, between 4 and 5th sensor?
