@@ -1,27 +1,31 @@
 % Starting
-% Command line argument '--silent'=False
-% ConnectedOut to MQTT Broker 10.197.219.147 on 1883
-% Connected to MQTT Broker 10.197.219.147 on 1883
+% Failed to connect to 10.197.216.214 on 1883
+% Won't work without MQTT connection, terminate!
+% Failed to connect out to 10.197.216.214 on 1883
+% Won't work without both MQTT connections, terminate!
+% failed to publish robobot/cmd/ti/alive with 2025-03-21 10:40:49.610637
+% failed to publish robobot/cmd/ti/log with 1
 % GPIO all ok
-% Robot (srobot.py) data stream OK; 5 loops.
-% IR sensor (sir.py):: got data stream; 0 loops.
-% Teensy info 1741340560.3416 # got confw: r1=0.075, r2=0.075, G=19, PPR=68, WB=0.23
-% SPose.py:: Robot config info 1 at 0:00:00.261447
-%    - Wheel radius (left,right): (0.075, 0.075 m
-%    - Encoder tick per rev: 68.0
-%    - Gearing: 19.0:1
-%    - Wheel base: 0.23 m
-%    - Encoder reversed: 0.0 (1 = reversed)
-% Pose:: configured, and got data stream; 1 loops.
-% IMU (simu.py):: no data updates after 21 wait loops (continues).
+% failed to publish robobot/cmd/ti/alive with 2025-03-21 10:40:49.610637
+% failed to publish robobot/cmd/ti/alive with 2025-03-21 10:40:49.610637
+% Robot (srobot.py) got no HBT data after 31 loops (stops).
+% Is teensy_interface running?
+% Service - thread stopped
+% Service - thread stopped
+% SCam:: Camera failed to open
 % Edge (sedge.py):: turns on line sensor
-% Camera available: size (616x820, 3 channels)
-% Edge (sedge.py):: got data stream; after 1
-% (uservice.py) Setup finished with connected=True
-% Starting
-LineCtrl:: PIDrecalculate: T=0.10 -> 9.88 ms
-%% Lead: tauZ 0.800 sec, tauP = 0.150 sec, T = 9.880 ms
-
-%%       tauZ2pT = 1.6099, tauZ2mT = 1.5901, tauP2pT = 0.3099, tauP2mT = 0.3099
-% State change from -1 to 110
-% Edge (sedge.py):: -1 day, 23:59:59.977379 (0, 0, 0, 0, 0, 0, 0, 0) 0.00 ms 0
+% failed to publish robobot/cmd/T0/lip with 1
+% (uservice.py) Setup finished with connected=False
+% shutting down
+% Pose terminated
+% Robot terminated
+% Pose terminated
+% IR terminated
+% Edge (sedge.py):: turn off line sensor
+% failed to publish robobot/cmd/T0/lip with 0
+% Edge (sedge.py):: terminated
+% join cam failed
+% Camera terminated
+% GPIO terminated
+% logfile closed
+% Main Terminated

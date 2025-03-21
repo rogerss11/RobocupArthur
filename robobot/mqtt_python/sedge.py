@@ -61,9 +61,8 @@ class SEdge:
     edgeIntervalSetup = 0.1
 
     # line detection levels
-    lineValidThreshold = 850 # 1000 is calibrated white
-    crossingThreshold = 800 # average above this is assumed to be crossing line
-
+    lineValidThreshold = 750 # 1000 is calibrated white
+    crossingThreshold = 700 # average above this is assumed to be crossing line
     # level for relevant white values
     low = lineValidThreshold - 100
 
@@ -142,7 +141,8 @@ class SEdge:
       service.send(self.topicLip, "1")
       # topic for (remote) control
       self.topicRc = service.topicCmd + "ti/rc"
-      
+      # request fast update (every 3 ms)
+      service.send(service.topicCmd + "T0/sub","livn 10")
       # request data
       while not service.stop:
         t.sleep(0.02)
@@ -198,8 +198,8 @@ class SEdge:
           pass
 
         else:
-          print(f"% Edge (sedge.py):: got data stream; after {loops}")
-          break       
+          print(f"% Edge (sedge.py):: got data stream; after {loops} loops")
+          break
         loops += 1
         if loops > 30:
           print(f"% Edge (sedge.py):: got no data after {loops} (continues edge_n_wUpdCnt={self.edge_n_wUpdCnt}, edgeUpdCnt={self.edgeUpdCnt}, edge_nUpdCnt={self.edge_nUpdCnt})")
@@ -305,6 +305,8 @@ class SEdge:
             # use to control, if active
             if self.lineCtrl:
               self.followLine()
+            # log relevant line sensor data
+            flog.write()
             #self.printn()
         elif topic == "T0/liw": # get white level
           from uservice import service
@@ -501,10 +503,10 @@ class SEdge:
         
         self.lineY = self.u
       
-        if self.lineY > 1:
-          self.lineY = 1
-        elif self.lineY < -1:
-          self.lineY = -1
+        if self.lineY > 4:
+          self.lineY = 4
+        elif self.lineY < -4:
+          self.lineY = -4
 
         # Save data for graphing
         self.error_list.append(e)
