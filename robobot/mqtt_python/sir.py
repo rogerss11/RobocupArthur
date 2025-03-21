@@ -20,7 +20,7 @@
 #* FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 #* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #* THE SOFTWARE. */
-
+#bua
 
 import time as t
 from datetime import *
@@ -54,7 +54,7 @@ class SIr:
 
     def print(self):
       from uservice import service
-      print("% IR dist " + str(self.accTime - service.startTime) + " (" +
+      print("% IR dist " + str(self.irTime - service.startTime) + " (" +
             str(self.ir[0]) + ", " +
             str(self.ir[1]) + ", " +
             f") {self.irInterval:.4f} sec " +
@@ -74,7 +74,7 @@ class SIr:
             if self.irUpdCnt == 2:
               self.irInterval = (t1 -t0).total_seconds()
             else:
-              self.irInterval = (self.irInterval * 99 + (t1 -t0).total_seconds()) / 100
+              self.irInterval = (self.irInterval * 99 + (t1 - t0).total_seconds()) / 100
             self.irUpdCnt += 1
             # self.print()
         else:

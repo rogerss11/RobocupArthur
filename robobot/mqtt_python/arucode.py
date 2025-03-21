@@ -1,35 +1,37 @@
-import cv2 as cv
-import cv2.aruco as aruco
-import numpy as np
 
-#also because we want to open the camera once, then reuse it when needed
-class ArucoDetector: #creating a class for encapsulation, all arucode here and easy to add 
-    def __init__ (self):
-        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250) #this is the dictonary
-        #returns an object that contains tunable settings for marker detection, can refine them
-        self.parameters = aruco.DetectorParameters_create() #the parameters for marker detection
-        self.cap = cv.VideoCapture(0) #initalizes the camera
+
+import cv2 as cv
+import numpy as np
+from scam import cam  # Use the robot's existing camera system
+
+class ArucoDetector:
+    def __init__(self):
+        self.aruco_dict = cv.aruco.getPredefinedDictionary(cv.aruco.DICT_4X4_250)  # Dictionary
+        self.parameters = cv.aruco.DetectorParameters()
 
     def detect_markers(self):
-        ret, frame = self.cap.read() #ret true if image captures, frame is the image
-        if not ret:
-            return None, None
-        
-        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY) #converts the image to grayscale
+        """
+        Gets a frame from the robot's camera and detects ArUco markers.
+        """
+        ok, frame, _ = cam.getImage()  # Get the latest image from the robot's camera
 
-        #basically detects the markers, returns the corners, ids, and rejected points
-        corners, ids, rejected = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
+        if not ok or frame is None or frame.size == 0:  # Ensure valid frame
+            print("⚠️ Warning: Failed to capture image from camera.")
+            return None, None, None
 
-        if ids is not None: 
-            #draws the detected on the image. 
-            frame = aruco.drawDetectedMarkers(frame, corners, ids)
-            #convert to simple list
-            return ids.flatten().tolist(), corners #returning detected ids and corner positions
-        return None, None 
-    
+        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)  # Convert to grayscale
+        corners, ids, rejected = cv.aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
+
+        if ids is not None:
+            cv.aruco.drawDetectedMarkers(frame, corners, ids)
+            for i, marker_id in enumerate(ids.flatten()):
+                position = corners[i][0].tolist()
+                cv.putText(frame, f"id={marker_id}", tuple(int(x) for x in position[0]), 
+                           cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+            return ids.flatten().tolist(), corners, frame
+        else:
+            return None, None, frame
+
     def release(self):
-        self.cap.release()
+        """ Releases OpenCV windows (no need to release the camera). """
         cv.destroyAllWindows()
-
-
-

@@ -45,8 +45,8 @@ class SEdge:
     edge_nInterval = 0
     edgeIntervalSetup = 0.1
     # line detection levels
-    lineValidThreshold = 850 # 1000 is calibrated white
-    crossingThreshold = 800 # average above this is assumed to be crossing line
+    lineValidThreshold = 750 # 1000 is calibrated white
+    crossingThreshold = 700 # average above this is assumed to be crossing line
     # level for relevant white values
     low = lineValidThreshold - 100;
     # line detection values
@@ -65,9 +65,9 @@ class SEdge:
     # follow line controller
     lineCtrl = False # private
     # try with a P-Lead controller
-    lineKp = 3.0
-    lineTauZ = 0.8
-    lineTauP = 0.15
+    lineKp = 5.0 # 3
+    lineTauZ = 0.8 # 0.8
+    lineTauP = 0.15 # 0.15
     # Lead pre-calculated factors
     tauP2pT = 1.0
     tauP2mT = 0.0
@@ -95,6 +95,8 @@ class SEdge:
       service.send(self.topicLip, "1")
       # topic for (remote) control
       self.topicRc = service.topicCmd + "ti/rc"
+      # request fast update (every 3 ms)
+      service.send(service.topicCmd + "T0/sub","livn 10")
       # request data
       while not service.stop:
         t.sleep(0.02)
@@ -138,7 +140,7 @@ class SEdge:
           # wait for line sensor data
           pass
         else:
-          print(f"% Edge (sedge.py):: got data stream; after {loops}")
+          print(f"% Edge (sedge.py):: got data stream; after {loops} loops")
           break
         loops += 1
         if loops > 30:
@@ -243,6 +245,8 @@ class SEdge:
             # use to control, if active
             if self.lineCtrl:
               self.followLine()
+            # log relevant line sensor data
+            flog.write()
             #self.printn()
         elif topic == "T0/liw": # get white level
           from uservice import service
@@ -341,19 +345,22 @@ class SEdge:
       # Lead filter
       self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
       #
-      if self.lineY > 1:
-        self.lineY = 1
-      elif self.lineY < -1:
-        self.lineY = -1
+      if self.lineY > 4:
+        self.lineY = 4
+      elif self.lineY < -4:
+        self.lineY = -4
       # save old values
       self.lineE1 = self.u;
       self.lineY1 = self.lineY;
       # make response
       par = f"{self.velocity:.3f} {self.lineY:.3f} {t.time()}"
+      # debug - no action, go straight
+      #par = f"{self.velocity:.3f} 0 {t.time()}"
+      # debug end
       service.send(self.topicRc, par) # send new turn command, maintaining velocity
       # debug print
-      if self.edge_nUpdCnt % 20 == 0:
-        print(f"% Edge::followLine: ctrl: e={e:.3f}, u={self.u:.3f}, y={self.lineY:.3f} -> {par}")
+      if True: # self.edge_nUpdCnt % 20 == 0:
+        print(f"% Edge::followLine: ctrl: e={e:.3f}, u={self.u:.3f}, y={self.lineY:.3f}, cnt {self.lineValidCnt}, -> rc {par}")
 
     ##########################################################
 
