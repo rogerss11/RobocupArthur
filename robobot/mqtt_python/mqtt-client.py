@@ -41,6 +41,9 @@ from sgpio import gpio
 from scam import cam
 from uservice import service
 
+from arucode import ArucoDetector  # Import ArucoDetector
+aruco_detector = ArucoDetector()
+
 
 # set title of process, so that it is not just called Python
 setproctitle("mqtt-client")
@@ -51,25 +54,25 @@ setproctitle("mqtt-client")
 def imageAnalysis(save):
   if cam.useCam:
     ok, img, imgTime = cam.getImage()
-    if not ok: # size(img) == 0):
+
+    if not ok:  # size(img) == 0
       if cam.imageFailCnt < 5:
-        print("% Failed to get image.")
-    else:
-      h, w, ch = img.shape
+        print("Failed to get image.")
+      return None  
+
+    h, w, ch = img.shape
+    if not service.args.silent:
+      pass 
+    edge.paint(img)
+    if not gpio.onPi:
+      cv.imshow('frame for analysis', img)
+      # cv.waitKey(1)
+    if save:
+      fn = f"image_{imgTime.strftime('%Y_%b_%d_%H%M%S_')}{cam.cnt:03d}.jpg"
+      cv.imwrite(fn, img)
       if not service.args.silent:
-        # print(f"% At {imgTime}, got image {cam.cnt} of size= {w}x{h}")
-        pass
-      edge.paint(img)
-      if not gpio.onPi:
-        cv.imshow('frame for analysis', img)
-      if save:
-        fn = f"image_{imgTime.strftime('%Y_%b_%d_%H%M%S_')}{cam.cnt:03d}.jpg"
-        cv.imwrite(fn, img)
-        if not service.args.silent:
-          print(f"% Saved image {fn}")
-      pass
-    pass
-  pass
+        print(f"% Saved image {fn}")
+    return img
 
 ############################################################
 
@@ -91,7 +94,7 @@ def loop():
     service.send(service.topicCmd + "T0/leds","16 30 30 0") # LED 16: yellow - waiting
   # main state machine
   edge.lineControl(0, 0) # make sure line control is off
-  while not (service.stop or gpio.stop()):
+  while not service.stop:
     if state == 0: # wait for start signal
       start = 1 #gpio.start() or service.args.now
       if start:
@@ -115,8 +118,24 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0 0") # stop for images
       print(f"% --- state {state}, h = {pose.tripBh:.4f}, t={pose.tripBtimePassed():.3f}")
     elif state == 20: # image analysis
-      imageAnalysis(images == 2)
-      images += 1
+      img = imageAnalysis(0) #getting the image
+      print("first part fail")
+      if img is not None: 
+        print("second part fail")
+        #detect the aruco markers
+        marker_ids, marker_positions, img = aruco_detector.detect_markers(img)
+        if marker_ids:
+          print("third part fail")
+          for i, marker_id in enumerate(marker_ids):
+            position = marker_positions[i][0].tolist()
+            print(f"Detected ArUco Marker ID: {marker_id} at {position}")
+            service.send(service.topicCmd + "robot/arucode", f"{marker_id} {position}")
+            # Show the image with detected markers
+          if not gpio.onPi:
+            cv.imshow('Live ArUco Detection', img)
+      if not cam.useCam or stateTimePassed() > 20:
+         state = 99
+      
       # blink LED
       if ledon:
         service.send(service.topicCmd + "T0/leds","16 0 64 0")
@@ -126,12 +145,8 @@ def loop():
         gpio.set_value(20, 0)
       ledon = not ledon
       # finished?
-      if images >= 10 or (not cam.useCam) or stateTimePassed() > 20:
-        images = 0
-        state = 99
-      pass
     else: # abort
-      print(f"% Mission finished/aborted; state={state}")
+      print(f"%Mission finished/aborted; state={state}")
       break
     # allow openCV to handle imshow (if in use)
     # images are almost useless while turning, but
@@ -170,7 +185,7 @@ if __name__ == "__main__":
     #service.setup('localhost') # localhost
     #service.setup('10.197.217.81') # Juniper
     #service.setup('10.197.217.80') # Newton
-    service.setup('10.197.217.224') #Arthur
+    service.setup('10.197.218.24') #Arthur
     if service.connected:
       loop()
       service.terminate()

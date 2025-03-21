@@ -1,0 +1,37 @@
+import cv2 as cv
+import numpy as np
+
+class ArucoDetector:
+    def __init__(self):
+        self.aruco_dict = cv.aruco.getPredefinedDictionary(cv.aruco.DICT_4X4_250)
+        self.parameters = cv.aruco.DetectorParameters()
+
+    def detect_markers(self, frame):
+        """
+        Detects ArUco markers in the given frame.
+        """
+        if frame is None or frame.size == 0:
+            print("Warning: Invalid image received.")
+            return None, None, None
+
+        try:
+            gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+            corners, ids, rejected = cv.aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
+
+            if ids is not None:
+                cv.aruco.drawDetectedMarkers(frame, corners, ids)
+                for i, marker_id in enumerate(ids.flatten()):
+                    position = corners[i][0].tolist()
+                    cv.putText(frame, f"id={marker_id}", tuple(int(x) for x in position[0]), 
+                               cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+                return ids.flatten().tolist(), corners, frame
+            else:
+                print("No markers found.")
+                return None, None, frame
+        except Exception as e:
+            print(f"Error in ArUco Detection: {e}")
+            return None, None, None
+
+    def release(self):
+        """ Releases OpenCV windows. """
+        cv.destroyAllWindows()
