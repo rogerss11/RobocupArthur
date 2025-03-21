@@ -6,15 +6,16 @@
 % 7 Line sensor line position
 % 8,9 trip A (distance and heading change)
 % 10,11 trip B (distance and heading change)
-% 1741345667.8195593 robobot/cmd/ti/log 1
-% 1741345669.629583 robobot/cmd/T0/enc0  
-% 1741345669.6403294 robobot/cmd/T0/confw 0.075 0.075 19 68 0.23
-% 1741345669.6403735 robobot/cmd/T0/encrev 1
-% 1741345669.655732 robobot/cmd/T0/confi  
-% 1741345690.7889931 robobot/cmd/T0/lip 1
-% 1741345690.8194664 robobot/cmd/T0/liwi  
-% 1741345690.850668 robobot/cmd/T0/liwi  
-% 1741345690.8863623 robobot/cmd/T0/liwi  
-% 1741345690.9227624 robobot/cmd/T0/liwi  
-% 1741345690.9543066 robobot/cmd/T0/liwi  
-% 1741345690.9757466 robobot/cmd/T0/lip 0
+% 1742551932.4702656 robobot/cmd/ti/alive 2025-03-21 11:12:12.466857
+% 1742551932.4703937 robobot/cmd/ti/log 1
+% 1742551932.9705827 robobot/cmd/ti/alive 2025-03-21 11:12:12.466857
+% 1742551933.627692 robobot/cmd/T0/lip 1
+% 1742551933.627779 robobot/cmd/T0/leds 16 30 30 0
+% 1742551933.627864 robobot/cmd/T0/leds 16 0 0 0
+% 1742551933.6279857 robobot/cmd/ti/rc 0 0
+% 1742551933.678257 robobot/cmd/T0/stop  
+% 1742551933.6783183 robobot/cmd/T0/leds 14 0 0 0
+% 1742551933.6885483 robobot/cmd/T0/leds 15 0 0 0
+% 1742551933.688619 robobot/cmd/T0/leds 16 0 0 0
+% 1742551933.6988087 robobot/cmd/ti/log 0
+% 1742551933.6989539 robobot/cmd/T0/lip 0
