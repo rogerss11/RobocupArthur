@@ -40,9 +40,6 @@ from scam import cam
 from uservice import service
 from ulog import flog
 
-# set title of process, so that it is not just called Python
-setproctitle("mqtt-client")
-
 ############################################################
 
 def imageAnalysis(save):
@@ -185,6 +182,7 @@ def loop():
   state = 0 # current state
   images = 0 # number of images taken
   ledon = True # LED on/off
+  tripTime = datetime.now()
   oldstate = -1 # previous state
   startTime = t.time() # time since beginning of mission
 
@@ -193,12 +191,15 @@ def loop():
     state = 101 # run 1m
   elif service.args.pi:
     state = 102 # run 1m
+
   #elif service.args.usestate > 0:
   #  state = service.args.usestate
 
   print(f"% Using state {state}")
   # elif not service.args.now:
   #   print("% Ready, press start button")
+
+  edge.lineControl(0, 0) # make sure line control is off
 
   # main state machine
   while not (service.stop): # main loop (until red stop button is pressed, or stop signal received)
@@ -208,8 +209,7 @@ def loop():
     #  break
 
     if state == 0: # starting state (waiting for start signal or --now)
-      start = True #gpio.start() or service.args.now
-      if start:
+      if not service.args.distance() or ir.ir[0] < 0.2: # if -d was used when starting mqtt-client, wait for someone to 'touch' side IR sensor
         print("% Starting")
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
