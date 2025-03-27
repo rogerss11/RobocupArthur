@@ -228,7 +228,7 @@ def loop():
         
     elif state == 14: # turning left
       if pose.tripBh > np.pi/2 or pose.tripBtimePassed() > 10:
-        state = 20 # finished   =17 go look for line
+        state = 20 # finished
         service.send(service.topicCmd + "ti/rc","0 0") # stop for images
       print(f"% --- state {state}, h = {pose.tripBh:.4f}, t={pose.tripBtimePassed():.3f}")
 
@@ -265,8 +265,9 @@ def loop():
     ###### MY TESTING STATES #######
     # line testing
     elif state == 110:
-      if stateTimePassed() > 15: # is at intersection
-        print("% Time over")
+      #print("% AtIntersectionCnt: ", edge.atIntersectionCnt, ", navigatingIntersection: ", edge.navigatingIntersection)
+      if edge.navigatingIntersection or pose.tripBtimePassed() > 10: # is at intersection
+        print("% at intersection")
         state = 99 #end
 
     # color sensor printing
@@ -298,11 +299,11 @@ def loop():
     # allow openCV to handle imshow (if in use)
     # images are almost useless while turning, but
     # used here to illustrate some image processing (painting)
-    if (cam.useCam):
-      imageAnalysis(False)
-      key = cv.waitKey(100) # ms
-      if key > 0: # e.g. Esc (key=27) pressed with focus on image
-        break
+    #if (cam.useCam):
+    #  imageAnalysis(False)
+    #  key = cv.waitKey(100) # ms
+    #  if key > 0: # e.g. Esc (key=27) pressed with focus on image
+    #    break
 
     # note state change and reset state timer
     if state != oldstate:

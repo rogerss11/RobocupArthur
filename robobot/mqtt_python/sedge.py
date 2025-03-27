@@ -68,7 +68,7 @@ class SEdge:
     low = lineValidThreshold - 100
 
     # crossing thresholds - average above this is assumed to be crossing line
-    crossingThreshold = 800 # grey
+    crossingThreshold = 730 # grey
     #crossingThreshold = 400 # black ground
     #crossingThreshold = 480 # black ramp
 
@@ -96,27 +96,27 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 0.2  # Proportional constant
-    Ki = 0.2  # Integral constant
-    Kd = 0.12  # Derivative constant
+    Kp = 1.2  # Proportional constant
+    Ki = 1.2  # Integral constant
+    Kd = 0.8  # Derivative constant
     
+    # lead compensator
+    lineTauZ = 1.5
+    lineTauP = 0.5
+
     # Low-pass filter for derivative term
     alpha = 0.1  # Choose a suitable alpha value
 
     # values for ID
     errorSum = 0.0  # Integral term (sum of errors)
     lastError = 0.0  # Previous error for calculating the derivative term
+    lastErrorDiff = 0.0  # Previous derivative term for filtering
     lastTime = t.time()  # Time of last update to calculate the derivative (dt)
 
     # Lists to store data for graphing
     error_list = []
     time_list = []
     startingTime = 0
-
-
-    # lead compensator
-    lineTauZ = 1.5
-    lineTauP = 0.5
 
     # Lead pre-calculated factors
     tauP2pT = 1.0
@@ -477,7 +477,7 @@ class SEdge:
       # velocity 0 is turning off line control
       self.lineCtrl = velocity > 0.001 # is line control active
       if not self.lineCtrl:
-        service.send("robobot/cmd/ti/rc","0.0 0.0")
+        service.send("robobot/cmd/ti/rc","0.0 0.0") # stop robot
       pass
 
     ##########################################################
@@ -499,46 +499,46 @@ class SEdge:
       currentTime = t.time()
       deltaTime = currentTime - self.lastTime
 
-      if deltaTime > 0: # just to make sure
-        # Calculate the error between the desired position and the current position
-        e = self.refPosition - self.position
+      # Calculate the error between the desired position and the current position
+      e = self.refPosition - self.position
 
-        self.errorSum += e * deltaTime  # Sum of errors for integral term
-        errorDiffFiltered = alpha * errorDiff + (1 - alpha) * self.lastErrorDiff
+      self.errorSum += e * deltaTime  # Sum of errors for integral term
+      errorDiff = (e - self.lastError) / deltaTime  # Derivative term
+      errorDiffFiltered = self.alpha * errorDiff + (1 - self.alpha) * self.lastErrorDiff
 
-        # PID control output
-        self.u = self.Kp * e + self.Ki * self.errorSum + self.Kd * errorDiffFiltered
+      # PID control output
+      self.u = self.Kp * e + self.Ki * self.errorSum + self.Kd * errorDiff
 
-        # Lead filter
-        # self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
-        
-        self.lineY = self.u
-      
-        if self.lineY > 4:
-          self.lineY = 4
-        elif self.lineY < -4:
-          self.lineY = -4
+      # Lead filter
+      # self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
+      self.lineY = self.u
+    
+      if self.lineY > 4:
+        self.lineY = 4
+      elif self.lineY < -4:
+        self.lineY = -4
 
-        # Save data for graphing
-        self.error_list.append(e)
-        self.time_list.append(currentTime - self.startingTime)
+      # Save data for graphing
+      self.error_list.append(e)
+      self.time_list.append(currentTime - self.startingTime)
 
-        # save old values
-        self.lineE1 = self.u
-        self.lineY1 = self.lineY
+      # save old values
+      self.lineE1 = self.u
+      self.lineY1 = self.lineY
 
-        # Save last values
-        self.lastError = e
-        self.lastTime = currentTime
+      # Save last values
+      self.lastError = e
+      self.lastErrorDiff = errorDiffFiltered
+      self.lastTime = currentTime
 
-        # make response
-        print("velocity edge: ", self.velocity)
-        par = f"{self.velocity:.3f} {self.lineY:.3f} {t.time()}"
-        service.send(self.topicRc, par) # send new turn command, maintaining velocity
+      # make response
+      #print("velocity edge: ", self.velocity)
+      par = f"{self.velocity:.3f} {self.lineY:.3f} {t.time()}"
+      service.send(self.topicRc, par) # send new turn command, maintaining velocity
 
-        # debug print
-        if self.edge_nUpdCnt % 20 == 0:
-          print(f"% Edge::followLine: ctrl: e={e:.3f}, u={self.u:.3f}, y={self.lineY:.3f} -> {par}")
+      # debug print
+      #if self.edge_nUpdCnt % 20 == 0:
+      #  print(f"% Edge::followLine: ctrl: e={e:.3f}, u={self.u:.3f}, y={self.lineY:.3f} -> {par}")
 
     ##########################################################
 
