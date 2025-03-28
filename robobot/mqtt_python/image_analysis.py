@@ -55,17 +55,14 @@ def ball(image, color):
         status = 1
 
     elif(n_labels == 0):
-        print('No ball found')
         status = 0
 
     else:
-        print("More than one ball found")
         if not pd_regions.empty:
             xy = (int(pd_regions.iloc[0]['centroid-1']), int(pd_regions.iloc[0]['centroid-0']))
             width = pd_regions.iloc[0]['axis_major_length']
         else:
             xy = (0,0)  # Or set a default value
-            print("Warning: No valid regions found after filtering")
         
         status = 2
 
@@ -103,28 +100,31 @@ def move_middle(xy):
 
 # move to the ball
 def move_straight(xy, width):
-    #the whole image is of the size 616x820x3
-    middle_x = 410
-    r = 10
-    arm_length = 20
+    arm_length = 200 #in mm
+    distance = 0
+    status = 0
 
-    if (abs(xy[0] - middle_x) < r):
-        if (width > 0):
+    if (width > 0):
         # calculate the distance to the ball
-            f_x = 794.25
-            real_width = 50 #mm
-            distance = f_x*real_width/width #in mm
+        f_x = 794.25
+        real_width = 50 #mm
+        distance = f_x*real_width/width #in mm
 
-        if ((distance - arm_length) > 0):
-            # move forward
-            velocity = (distance - arm_length)/750
-            service.send(service.topicCmd + "ti/rc", f"{velocity} 0")
-            status = 1
-        else:
-            # stop
-            service.send(service.topicCmd + "ti/rc", "0 0")
-            status = 0
-    
+    distance = distance - arm_length
+
+    if (distance  >  0):
+        # move forward
+        velocity = distance/1500 #in m/s
+        wait = distance*1000/velocity
+
+        service.send(service.topicCmd + "ti/rc", f"{velocity} 0")
+        time.sleep(wait)
+        service.send(service.topicCmd + "ti/rc", "0 0")
+        status = 1
+    else:
+        # stop
+        service.send(service.topicCmd + "ti/rc", "0 0")
+
     return status
 
 

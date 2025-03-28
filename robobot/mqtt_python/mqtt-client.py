@@ -173,7 +173,7 @@ def driveTurnPi():
 
 def loop():
   from ulog import flog
-  state = 20
+  state = 21
   state_ia = 0
   images = 0
   ledon = True
@@ -241,6 +241,7 @@ def loop():
 
       if state_ia == 0: # move ball to the middle
         if (stat_ball >= 1) & (xy != (0,0)): #just found one or more balls
+          print("Found one or more balls. Nearest ball:", xy)
           stat_middle = ia.move_middle(xy)
 
           if stat_middle == 0:
@@ -248,16 +249,19 @@ def loop():
             state_ia = 1
 
         else: # no ball found -> turn
+          print("No ball found. Turn to find the ball.")
           service.send(service.topicCmd + "ti/rc","0.05 -0.5")
           time.sleep(0.5)
           service.send(service.topicCmd + "ti/rc", "0 0")
 
       elif state_ia == 1: # ball in the middle
+        print("Ball in the middle. Move straight.")
         stat_straight = ia.move_straight(xy, width)
         
         if stat_straight == 0:
           # ball is in the middle
           state_ia = 2
+          print("Ball is ready for pickup.")
 
       if not gpio.onPi:
         cv.imshow('frame for analysis', image_ia)
@@ -321,7 +325,7 @@ if __name__ == "__main__":
       #service.setup('10.197.217.81') # Juniper
       #service.setup('10.197.217.80') # Newton
       #service.setup('bode.local') # Bode
-      service.setup('10.197.218.24')
+      service.setup('10.197.218.235')
       if service.connected:
         loop()
       service.terminate()
