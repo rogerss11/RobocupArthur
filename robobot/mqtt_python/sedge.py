@@ -27,11 +27,11 @@
 
 
 #TODO
-# test threshold values (should be okay when calibrated properly)s
+#! test if position -4 is left and 4 is right
 # test the values of switching navigatingIntersection with zero speed, just move it by hand
-# PID Tuning (Kp, Ki, Kd)
-# Derivative Filtering
-# Anti-Windup for Integral
+# test threshold values (should be okay when calibrated properly)
+# test navigateIntersection
+# improve PID (Kp, Ki, Kd)
 # Optional: Lead Compensator (if needed)
 
 
@@ -82,7 +82,7 @@ class SEdge:
     atIntersection = False # if the current reading suggests that we are at an intersection
     atIntersectionCnt = 0  # 20 = at Intersection
     passedIntersections = 0 # how many intersection have we passed
-    intersectionPath = ['r', 'r', 'l'] # l = choose left line, r = choose right line
+    intersectionPath = ['r', 'r', 'l'] # l = choose left line, r = choose right line, m = choose middle line
     navigatingIntersection = False # if we are currently navigating an intersection
 
     average = 0 # avarage edge_n[] value
@@ -408,30 +408,45 @@ class SEdge:
 
       # ignore or values under low
       values = [max(self.edge_n[i] - self.low, 0) for i in range(8)]
-      print("values: ", values)
+      #print("values: ", values)
+      ignoreFirst = False # ignore first line (from middle)
 
       # iterate from right to left or left to right depending on the intersectionPath
       if self.intersectionPath[self.passedIntersections] == 'l':
         start, end, step = 0, 8, 1
       elif self.intersectionPath[self.passedIntersections] == 'r':
         start, end, step = 8, 0, -1
+      elif self.intersectionPath[self.passedIntersections] == 'm':
+        start, end, step = 0, 8, 1
+        ignoreFirst = True
       else:
         print("Invalid intersectionPath")
         return
 
       sum = 0
       posSum = 0
-      found_nonzero = False  # flag to check if a nonzero value has been encountered
+      nonZeroCount = 0
       for i in range(start, end, step):
-
         if values[i] != 0:
-          found_nonzero = True  # Mark that we have seen a nonzero value
-        elif found_nonzero and values[i] == 0:
-          break  # Stop the loop when we hit 0 after a nonzero value
-          
-        sum += values[i]
-        posSum += (i + 1) * values[i]
-
+          sum += values[i]
+          posSum += (i + 1) * values[i]
+          nonZeroCount += 1
+        elif nonZeroCount != 0 and values[i] == 0:
+          if ignoreFirst: # ignore the first line and go for the second one (middle when theres 3)
+            ignoreFirst = False
+            sum = 0
+            posSum = 0
+          else:
+            break  # Stop the loop when we hit 0 after a nonzero value (if we turn l or r, just the first line is enough)
+      
+      if nonZeroCount == 8: # arrived at a 'horizontal' intersection
+        if self.intersectionPath[self.passedIntersections] == 'l':
+          self.position = -4
+        elif self.intersectionPath[self.passedIntersections] == 'r':
+          self.position = 4
+        elif self.intersectionPath[self.passedIntersections] == 'm':
+          print("straight at T intersection - Invalid intersectionPath")
+          return
 
       if sum > 0 and self.lineValid:
         """
