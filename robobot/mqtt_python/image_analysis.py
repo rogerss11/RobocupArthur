@@ -31,38 +31,46 @@ def ball(image, color):
     
     # clean up the picture
     image_ball_cl = remove_small_holes(image_ball, 100, 1)
-    mask = remove_small_objects(image_ball_cl, min_size=200, connectivity=1)
+    mask = remove_small_objects(image_ball_cl, min_size=100, connectivity=1)
 
     # find the middle of the ball from the up left corner
     labeled_image, n_labels = label(mask, background=0,return_num=True,connectivity=2)
     regions = regionprops(label_image=labeled_image)
 
+    # create a table with the properties of the regions
+    # centroid = (y,x) = (row, column)
+    region_table = regionprops_table(labeled_image, properties=['centroid', 'area', 'axis_major_length']) 
+    pd_regions = pd.DataFrame(region_table)
+    pd_regions = pd_regions[(pd_regions['centroid-0'] > 200) & 
+        (pd_regions['area'] < 10000)]
+    pd_regions = pd_regions.sort_values(by='centroid-0', ascending=False) 
+
     status = 99
     xy = []
+    width = 0
 
     if (n_labels == 1):
         xy = tuple(map(int, regions[0].centroid[::-1])) 
+        width = pd_regions.iloc[0]['axis_major_length']
         status = 1
+
     elif(n_labels == 0):
         print('No ball found')
         status = 0
+
     else:
         print("More than one ball found")
-        region_table = regionprops_table(labeled_image, properties=['centroid', 'area']) 
-        pd_regions = pd.DataFrame(region_table)
-        pd_regions = pd_regions[(pd_regions['centroid-0'] > 200) & 
-            (pd_regions['area'] > 200) & 
-            (pd_regions['area'] < 10000)]
-        pd_regions = pd_regions.sort_values(by='centroid-0', ascending=False) 
-
         if not pd_regions.empty:
             xy = (int(pd_regions.iloc[0]['centroid-1']), int(pd_regions.iloc[0]['centroid-0']))
+            width = pd_regions.iloc[0]['axis_major_length']
         else:
             xy = (0,0)  # Or set a default value
             print("Warning: No valid regions found after filtering")
         
         status = 2
-    return xy, status # gives back a tuple with the pixel position of the (roughly) middle of the ball and the result
+
+    # gives back a tuple with the pixel position of the (roughly) middle of the ball and the result
+    return xy, status, width 
 
 # drive the robot so that the object is in the middle of the picture
 def move_middle(xy):
@@ -70,6 +78,8 @@ def move_middle(xy):
     middle_x = 410
     range = 10
     status = 99
+    wait = 0.0
+    e = abs(xy[0] - middle_x)
 
     if(xy[0] > middle_x + range):
         #then turn left
@@ -84,11 +94,39 @@ def move_middle(xy):
         status = 0
         service.send(service.topicCmd + "ti/rc","0 0")
 
+    wait = (e/middle_x)*0.6+0.05
     #update the picture and the ball detection
-    time.sleep(0.2)
+    time.sleep(wait)
     service.send(service.topicCmd + "ti/rc", "0 0")
 
     return status
+
+# move to the ball
+def move_straight(xy, width):
+    #the whole image is of the size 616x820x3
+    middle_x = 410
+    r = 10
+    arm_length = 20
+
+    if (abs(xy[0] - middle_x) < r):
+        if (width > 0):
+        # calculate the distance to the ball
+            f_x = 794.25
+            real_width = 50 #mm
+            distance = f_x*real_width/width #in mm
+
+        if ((distance - arm_length) > 0):
+            # move forward
+            velocity = (distance - arm_length)/750
+            service.send(service.topicCmd + "ti/rc", f"{velocity} 0")
+            status = 1
+        else:
+            # stop
+            service.send(service.topicCmd + "ti/rc", "0 0")
+            status = 0
+    
+    return status
+
 
 # detect holes on black surface in the pictures
 def hole(image):

@@ -173,7 +173,8 @@ def driveTurnPi():
 
 def loop():
   from ulog import flog
-  state = 21
+  state = 20
+  state_ia = 0
   images = 0
   ledon = True
   tripTime = datetime.now()
@@ -214,8 +215,9 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0 0") # stop for images
       print(f"% --- state {state}, h = {pose.tripBh:.4f}, t={pose.tripBtimePassed():.3f}")
     elif state == 20: # image analysis
-      imageAnalysis(images == 2)
+      imageAnalysis(1)
       images += 1
+      t.sleep(2)
       # blink LED
       if ledon:
         service.send(service.topicCmd + "T0/leds","16 0 64 0")
@@ -225,27 +227,43 @@ def loop():
         gpio.set_value(20, 0)
       ledon = not ledon
       # finished?
-      if images >= 20 or (not cam.useCam) or stateTimePassed() > 100:
+      if images >= 30 or (not cam.useCam) or stateTimePassed() > 100:
         images = 0
         state = 99
       pass
     elif state == 21: #ball detection
       #while images <= 10:
       image_ia = imageAnalysis(0)
-      xy,stat = ia.ball(image_ia, 0) #detect blue ball
-      #images += 1
-      if (stat >= 1) & (xy != (0,0)): #just found one or more balls
-        #draw xy
-        image_ia = cv.circle(image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1)
-        ia.move_middle(xy)
-      else: #found no ball
-        service.send(service.topicCmd + "ti/rc","0 0")
-      #fn = f"image_{images}.jpg"
-      #cv.imwrite(fn, image_ia)
+      xy, stat_ball, width = ia.ball(image_ia, 0) #detect blue ball
+      image_ia = cv.circle(image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1) #draw xy
+      stat_middle = -1
+      stat_straight = -1
+
+      if state_ia == 0: # move ball to the middle
+        if (stat_ball >= 1) & (xy != (0,0)): #just found one or more balls
+          stat_middle = ia.move_middle(xy)
+
+          if stat_middle == 0:
+          # ball is in the middle
+            state_ia = 1
+
+        else: # no ball found -> turn
+          service.send(service.topicCmd + "ti/rc","0.05 -0.5")
+          time.sleep(0.5)
+          service.send(service.topicCmd + "ti/rc", "0 0")
+
+      elif state_ia == 1: # ball in the middle
+        stat_straight = ia.move_straight(xy, width)
+        
+        if stat_straight == 0:
+          # ball is in the middle
+          state_ia = 2
+
       if not gpio.onPi:
         cv.imshow('frame for analysis', image_ia)
       if stateTimePassed() >= 30:
           state = 99
+        
     elif state == 101:
       driveOneMeter();
       state = 100
