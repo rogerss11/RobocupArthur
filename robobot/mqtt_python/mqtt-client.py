@@ -308,7 +308,9 @@ def loop():
         # do not loop too fast
         # Print gyroscope values every 10 updates
         if imu.gyroUpdCnt % 10 == 0:
+            imu.setup()
             imu.print()
+        print(f"% IMU gyro {imu.gyro[0]} {imu.gyro[1]} {imu.gyro[2]}")
         t.sleep(0.1)
         pass  # end of while loop
     # end of mission, turn LEDs off and stop
@@ -335,6 +337,7 @@ if __name__ == "__main__":
         print("% Starting")
         # where is the MQTT data server:
         service.setup("localhost")  # localhost
+        # service.setup("10.197.218.235")
         # service.setup('10.197.217.81') # Juniper
         # service.setup('10.197.217.80') # Newton
         # service.setup("bode.local")  # Bode
@@ -342,3 +345,4 @@ if __name__ == "__main__":
             loop()
         service.terminate()
     print("% Main Terminated")
+eqw
