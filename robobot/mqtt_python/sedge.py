@@ -96,13 +96,13 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 1.2  # Proportional constant
-    Ki = 1.2  # Integral constant
-    Kd = 0.8  # Derivative constant
+    Kp = 0.5  # Proportional constant
+    Ki = 0.1  # Integral constant
+    Kd = 0.3  # Derivative constant
     
     # lead compensator
-    lineTauZ = 1.5
-    lineTauP = 0.5
+    lineTauZ = 0.0
+    lineTauP = 0.0
 
     # Low-pass filter for derivative term
     alpha = 0.1  # Choose a suitable alpha value
@@ -496,8 +496,7 @@ class SEdge:
       # so sign is OK
       
       # Time difference for derivative and integral calculations
-      currentTime = t.time()
-      deltaTime = currentTime - self.lastTime
+      deltaTime = max(self.edge_nInterval / 1000, 0.001)  # in seconds
 
       # Calculate the error between the desired position and the current position
       e = self.refPosition - self.position
@@ -507,20 +506,17 @@ class SEdge:
       errorDiffFiltered = self.alpha * errorDiff + (1 - self.alpha) * self.lastErrorDiff
 
       # PID control output
-      self.u = self.Kp * e + self.Ki * self.errorSum + self.Kd * errorDiff
-
+      self.u = self.Kp * e + min(max(self.Ki * self.errorSum, -10), 10) + self.Kd * errorDiff
+      
       # Lead filter
-      # self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT;
+      #self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT
       self.lineY = self.u
-    
-      if self.lineY > 4:
-        self.lineY = 4
-      elif self.lineY < -4:
-        self.lineY = -4
+
+      self.lineY = max(min(self.lineY, 4), -4)  # Limit the control signal to [-4, 4] rad/s
 
       # Save data for graphing
       self.error_list.append(e)
-      self.time_list.append(currentTime - self.startingTime)
+      self.time_list.append(self.edge_nTime.timestamp() - self.startingTime)
 
       # save old values
       self.lineE1 = self.u
@@ -529,7 +525,6 @@ class SEdge:
       # Save last values
       self.lastError = e
       self.lastErrorDiff = errorDiffFiltered
-      self.lastTime = currentTime
 
       # make response
       #print("velocity edge: ", self.velocity)
