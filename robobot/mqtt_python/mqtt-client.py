@@ -42,6 +42,7 @@ from sedge import edge
 from sgpio import gpio
 from scam import cam
 from uservice import service
+from simu import imu
 
 ############################################################
 
@@ -226,8 +227,8 @@ def loop():
         state = 101  # run 1m
     elif service.args.pi:
         state = 102  # run 1m
-    elif service.args.usestate > 0:
-        state = service.args.usestate
+    # elif service.args.usestate > 0:
+    #    state = service.args.usestate
     print(f"% Using state {state}")
     # elif not service.args.now:
     #   print("% Ready, press start button")
@@ -305,6 +306,9 @@ def loop():
             oldstate = state
             stateTime = datetime.now()
         # do not loop too fast
+        # Print gyroscope values every 10 updates
+        if imu.gyroUpdCnt % 10 == 0:
+            imu.print()
         t.sleep(0.1)
         pass  # end of while loop
     # end of mission, turn LEDs off and stop
@@ -330,10 +334,10 @@ if __name__ == "__main__":
         setproctitle("mqtt-client")
         print("% Starting")
         # where is the MQTT data server:
-        # service.setup('localhost') # localhost
+        service.setup("localhost")  # localhost
         # service.setup('10.197.217.81') # Juniper
         # service.setup('10.197.217.80') # Newton
-        service.setup("bode.local")  # Bode
+        # service.setup("bode.local")  # Bode
         if service.connected:
             loop()
         service.terminate()
