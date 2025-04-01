@@ -97,16 +97,59 @@ def driveUntilWall(d=0.2, ir_id=1):
     print("% Driving until wall ------------------------- end")
 
 
-def turnInPlace(rad=3.14, dir=0):
+def driveUntilgyro(acc=0.5, vel=0.5):
     """
-    NEEDS CALIBRATION (NOT ACCURATE)
-    "turnInPlace(rad=3.14) - turn in place rad radians"
-    rad = angle in radians to turn in place
-    dir = 0: counter-clockwise, 1: clockwise
+    driveUntilWall(d=0.2) - drive until a certain acceleration is detected
+    acc = acceleration in m/s^2 to stop at
     """
     state = 0
     pose.tripBreset()
-    print(f"% Turning {rad} rad -------------------------")
+    print(f"% Driving until acc spike of {acc} m/s2 -------------------------")
+    service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
+    while not (service.stop):
+        if state == 0:  # wait for start signal
+            service.send(
+                "robobot/cmd/ti/rc", f"{vel} 0.0"
+            )  # (forward m/s, turn-rate rad/sec)
+            state = 1
+        elif state == 1:
+            if min(imu.gyro) > acc or pose.tripBtimePassed() > 15:
+                service.send(
+                    "robobot/cmd/ti/rc", "0.0 0.0"
+                )  # (forward m/s, turn-rate rad/sec)
+                state = 2
+            pass
+        elif state == 2:
+            if abs(pose.velocity()) < 0.001:
+                state = 99
+        else:
+            print(
+                f"# drive drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
+            )
+            service.send(
+                "robobot/cmd/ti/rc", "0.0 0.0"
+            )  # (forward m/s, turn-rate rad/sec)
+            break
+        print(
+            f"# drive {state}, acc {imu.acc}, gyro {imu.gyro} now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
+        )
+        t.sleep(0.05)
+    pass
+    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
+    print("% Driving until wall ------------------------- end")
+
+
+def turnInPlace(deg=90, dir=0):
+    """
+    NEEDS CALIBRATION (NOT ACCURATE)
+    "turnInPlace(rad=3.14) - turn in place rad radians"
+    deg = angle in degrees to turn in place
+    dir = 0: counter-clockwise, 1: clockwise
+    """
+    rad = deg * 3.14 / 180.0
+    state = 0
+    pose.tripBreset()
+    print(f"% Turning {deg} degrees -------------------------")
     service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
     while not (service.stop):
         if state == 0:  # wait for start signal
@@ -116,7 +159,7 @@ def turnInPlace(rad=3.14, dir=0):
             )  # (forward m/s, turn-rate rad/sec)
             state = 1
         elif state == 1:
-            if pose.tripBh > rad or pose.tripBtimePassed() > 15:
+            if abs(pose.tripBh) > rad or pose.tripBtimePassed() > 15:
                 service.send(
                     "robobot/cmd/ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
@@ -142,55 +185,81 @@ def turnInPlace(rad=3.14, dir=0):
     print(f"% Truning {rad} rad ------------------------- end")
 
 
-def orientateToWall(d=0.3, ir_id=1, dir=0):
+from collections import deque
+
+
+def orientateToWall(ir_id=1, dir=0, tolerance=0.01, window=5, timeout=10):
     """
-    rotateToPositionWall(d=0.3) - rotate to wall at distance d
-    d = distance to the wall in meters to stop at
-    ir_id = IR sensor id (0 or 1), 0: right, 1: front
-    dir = 0: counter-clockwise, 1: clockwise
+    Rotate until the IR distance starts increasing (after decreasing), using a moving average.
+
+    ir_id: which IR sensor (0 = right, 1 = front)
+    dir: 0 = counter-clockwise, 1 = clockwise
+    tolerance: minimum increase to detect a trend reversal
+    window: number of samples for moving average
+    timeout: max time in seconds to attempt before stopping
     """
     state = 0
     pose.tripBreset()
-    print(f"% Rotating to wall at {d}m -------------------------")
-    service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
-    while not (service.stop):
-        if state == 0:  # wait for start signal
-            cmnd_msg = "0.0 0.5" if dir == 0 else "0.0 -0.5"
-            service.send(
-                "robobot/cmd/ti/rc", cmnd_msg
-            )  # (forward m/s, turn-rate rad/sec)
+    service.send(service.topicCmd + "T0/leds", "16 0 100 0")
+    print("% Starting orientation to wall with noise filtering")
+
+    ir_history = deque(maxlen=window)
+    min_avg = float("inf")
+
+    while not service.stop:
+        if state == 0:
+            turn_rate = 0.5 if dir == 0 else -0.5
+            service.send("robobot/cmd/ti/rc", f"0.0 {turn_rate}")
             state = 1
+
         elif state == 1:
-            if ir.ir[ir_id] < d or pose.tripBtimePassed() > 15:
-                service.send(
-                    "robobot/cmd/ti/rc", "0.0 0.0"
-                )  # (forward m/s, turn-rate rad/sec)
-                state = 2
-            pass
+            ir_value = ir.ir[ir_id]
+            ir_history.append(ir_value)
+
+            if len(ir_history) == window:
+                avg = sum(ir_history) / window
+                if avg < min_avg:
+                    min_avg = avg
+                elif avg > min_avg + tolerance:
+                    print(
+                        f"% Detected increase in IR avg: {avg:.3f} > {min_avg + tolerance:.3f}"
+                    )
+                    service.send("robobot/cmd/ti/rc", "0.0 0.0")
+                    state = 2
+
+                print(f"# IR avg: {avg:.3f}, min_avg: {min_avg:.3f}")
+
         elif state == 2:
             if abs(pose.velocity()) < 0.001 and abs(pose.turnrate()) < 0.001:
                 state = 99
+
         else:
             print(
-                f"# drive turned {pose.tripBh:.3f} rad in {pose.tripBtimePassed():.3f} seconds"
+                f"# Finished turning {pose.tripBh:.3f} rad in {pose.tripBtimePassed():.3f} sec, min IR avg: {min_avg:.3f}"
             )
-            service.send(
-                "robobot/cmd/ti/rc", "0.0 0.0"
-            )  # (forward m/s, turn-rate rad/sec)
             break
-        print(
-            f"# rotate {state}, IR:{ir.ir} now {pose.tripBh:.3f} rad in {pose.tripBtimePassed():.3f} seconds"
-        )
+
+        if pose.tripBtimePassed() > timeout:
+            print("% Timeout — stopping")
+            service.send("robobot/cmd/ti/rc", "0.0 0.0")
+            break
+
         t.sleep(0.05)
-    pass
-    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
-    print(f"% Rotating to wall at {d}m ------------------------- end")
+
+    service.send(service.topicCmd + "T0/leds", "16 0 0 0")
+    print("% Orientation to wall complete")
 
 
-def followWall(d=0.3, velocity=0.2, Kp=1.3, Ki=0.0, Kd=2.0):
+def followWall(d=0.3, velocity=0.2, time=60.0, d_front=0.1, Kp=1.3, Ki=0.0, Kd=2.0):
     """
     followWall(d=0.3) - follow wall on the right side at distance d
     Uses PID control and rotates in place to recover wall when lost.
+    d = distance to the wall in meters to follow
+    velocity = forward velocity in m/s
+    time = time in seconds to follow the wall
+    Kp = proportional gain
+    Ki = integral gain
+    Kd = derivative gain
     """
     state = 0
     pose.tripBreset()
@@ -201,7 +270,7 @@ def followWall(d=0.3, velocity=0.2, Kp=1.3, Ki=0.0, Kd=2.0):
     service.send(service.topicCmd + "T0/leds", "16 0 0 100")  # blue
 
     while not service.stop:
-        if ir.ir[1] < 0.01:
+        if ir.ir[1] < d_front:
             print("# Crash detected, stopping.")
             service.send("robobot/cmd/ti/rc", "0.0 0.0")
             break
@@ -246,7 +315,7 @@ def followWall(d=0.3, velocity=0.2, Kp=1.3, Ki=0.0, Kd=2.0):
             print(
                 f"# Wall follow: IR={distance:.3f}m, error={error:.3f}, turn={turn:.3f}"
             )
-            if pose.tripBtimePassed() > 20:
+            if pose.tripBtimePassed() > time:
                 state = 1
         elif state == 1:
             service.send("robobot/cmd/ti/rc", "0.0 0.0")

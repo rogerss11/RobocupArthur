@@ -225,6 +225,7 @@ def loop():
     tripTime = datetime.now()
     oldstate = -1
     service.send(service.topicCmd + "T0/leds", "16 30 30 0")  # LED 16: yellow - waiting
+    flog.write(state)
     # if service.args.meter:
     #     state = 101  # run 1m
     # elif service.args.pi:
@@ -290,9 +291,11 @@ def loop():
             state = 100
         elif state == 70:  # Mission 360
             # driveXMeters(0.5)
-            # driveUntilWall(0.2, ir_id=1)
-            followWall(0.3)
-            # orientateToWall(0.3, ir_id=0, dir=0)
+            # orientateToWall(ir_id=1, dir=0, tolerance=0.05, window=20)
+            # driveUntilWall(0.3, ir_id=1)
+            # followWall(0.5, d_front=0.3)
+            # turnInPlace(65, dir=1)  # turn counter-clockwise
+            driveUntilgyro(100, vel=0.5)
             state = 71
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
@@ -344,8 +347,8 @@ if __name__ == "__main__":
         setproctitle("mqtt-client")
         print("% Starting")
         # where is the MQTT data server:
-        service.setup("localhost")  # localhost
-        # service.setup("10.197.218.235")
+        # service.setup("localhost")  # localhost
+        service.setup("10.197.218.235")
         # service.setup('10.197.217.81') # Juniper
         # service.setup('10.197.217.80') # Newton
         # service.setup("bode.local")  # Bode
@@ -353,4 +356,3 @@ if __name__ == "__main__":
             loop()
         service.terminate()
     print("% Main Terminated")
-eqw
