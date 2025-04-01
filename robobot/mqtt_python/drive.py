@@ -97,7 +97,7 @@ def driveUntilWall(d=0.2, ir_id=1):
     print("% Driving until wall ------------------------- end")
 
 
-def driveUntilgyro(acc=0.5, vel=0.5):
+def climbCircle(acc=50, vel=0.5):
     """
     driveUntilWall(d=0.2) - drive until a certain acceleration is detected
     acc = acceleration in m/s^2 to stop at
@@ -113,10 +113,14 @@ def driveUntilgyro(acc=0.5, vel=0.5):
             )  # (forward m/s, turn-rate rad/sec)
             state = 1
         elif state == 1:
-            if min(imu.gyro) > acc or pose.tripBtimePassed() > 15:
+            gyro = [imu.gyro[0], imu.gyro[1], imu.gyro[2]]
+            gyro = [abs(g) for g in gyro]  # absolute value
+            gyro = max(gyro)  # max of all 3 axes
+            if gyro > acc or pose.tripBtimePassed() > 15:
                 service.send(
                     "robobot/cmd/ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
+                t.sleep(3)  # wait for stop
                 state = 2
             pass
         elif state == 2:
