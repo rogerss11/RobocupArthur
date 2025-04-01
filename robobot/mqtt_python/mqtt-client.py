@@ -227,20 +227,25 @@ def loop():
         gpio.set_value(20, 0)
       ledon = not ledon
       # finished?
-      if images >= 30 or (not cam.useCam) or stateTimePassed() > 100:
+      if images >= 1 or (not cam.useCam) or stateTimePassed() > 100:
         images = 0
         state = 99
       pass
     elif state == 21: #ball detection
-      #while images <= 10:
       image_ia = imageAnalysis(0)
       xy, stat_ball, width = ia.ball(image_ia, 0) #detect blue ball
-      image_ia = cv.circle(image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1) #draw xy
+      if (len(xy) == 2):
+        image_ia = cv.circle(image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1) #draw xy
+
       stat_middle = -1
       stat_straight = -1
 
-      if state_ia == 0: # move ball to the middle
-        if (stat_ball >= 1) & (xy != (0,0)): #just found one or more balls
+      if state_ia == 0: # find a ball
+
+        #starting position Servo
+        service.send(service.topicCmd + "T0/servo","1 -800 200")
+
+        if (stat_ball >= 1) & (xy != (0,0)): # found one or more balls
           print("Found one or more balls. Nearest ball:", xy)
           stat_middle = ia.move_middle(xy)
 
@@ -250,8 +255,8 @@ def loop():
 
         else: # no ball found -> turn
           print("No ball found. Turn to find the ball.")
-          service.send(service.topicCmd + "ti/rc","0.05 -0.5")
-          time.sleep(0.5)
+          service.send(service.topicCmd + "ti/rc","0.05 -0.25")
+          t.sleep(0.1)
           service.send(service.topicCmd + "ti/rc", "0 0")
 
       elif state_ia == 1: # ball in the middle
@@ -259,9 +264,9 @@ def loop():
         stat_straight = ia.move_straight(xy, width)
         
         if stat_straight == 0:
-          # ball is in the middle
+          # ball is captured
           state_ia = 2
-          print("Ball is ready for pickup.")
+          print("Ball is picked up.")
 
       if not gpio.onPi:
         cv.imshow('frame for analysis', image_ia)

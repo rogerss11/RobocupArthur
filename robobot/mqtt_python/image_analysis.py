@@ -1,4 +1,4 @@
-from skimage.morphology import binary_erosion, remove_small_holes, remove_small_objects
+from skimage.morphology import remove_small_holes, remove_small_objects, binary_closing, binary_opening, disk, binary_erosion
 from skimage.measure import label, regionprops, regionprops_table
 from scipy.ndimage import gaussian_filter
 import pandas as pd
@@ -11,59 +11,58 @@ from uservice import service
 def ball(image, color):
     # color thresholds element 0 = blue, 1 = red
     # Blue
-    b_high = [255,80]
-    b_low = [200,0]
+    b_low = [120,0]
 
     # Green
-    g_high = [245,20]
-    g_low = [160,0]
+    g_low = [60,0]
 
     # Red
-    r_high = [170,255]
-    r_low = [20,150]
+    r_low = [10,150]
 
     # color of the thresholds (for images in BGR)
-    image_ball = (
-        (image[:,:,0] >= b_low[color]) & (image[:,:,0] <= b_high[color]) & #blue 
-        (image[:,:,1] >= g_low[color]) & (image[:,:,1] <= g_high[color]) & #green
-        (image[:,:,2] >= r_low[color]) & (image[:,:,2] <= r_high[color])   #red
-    )
+    if (color == 0):
+        mask = (
+            (image[:,:,0] > image[:,:,1]) & (image[:,:,0] > image[:,:,2]) & # blue intensity is higher than green and red
+            (image[:,:,0] >= b_low[color]) & # blue 
+            (image[:,:,1] >= g_low[color]) & # green
+            (image[:,:,2] >= r_low[color]) & # red
+            ~((image[:, :, 0] >= 253) & (image[:, :, 1] >= 253) & (image[:, :, 2] >= 253)) # color is not whit
+        )
+    #elif (color == 1): 
     
-    # clean up the picture
-    image_ball_cl = remove_small_holes(image_ball, 100, 1)
-    mask = remove_small_objects(image_ball_cl, min_size=100, connectivity=1)
+    # clean up the picture   
+    mask = remove_small_holes(mask, 500)
+    mask = remove_small_objects(mask, 500)
+    mask = binary_opening(mask, disk(10))
+    mask = binary_closing(mask, disk(5))
+    mask[:200,:] = 0 # remove the upper part of the picture
+    
 
     # find the middle of the ball from the up left corner
-    labeled_image, n_labels = label(mask, background=0,return_num=True,connectivity=2)
-    regions = regionprops(label_image=labeled_image)
+    labeled_image, n_labels = label(mask, background=0,return_num=True,connectivity=1)
+    regions = regionprops(labeled_image)
 
     # create a table with the properties of the regions
     # centroid = (y,x) = (row, column)
     region_table = regionprops_table(labeled_image, properties=['centroid', 'area', 'axis_major_length']) 
     pd_regions = pd.DataFrame(region_table)
-    pd_regions = pd_regions[(pd_regions['centroid-0'] > 200) & 
-        (pd_regions['area'] < 10000)]
-    pd_regions = pd_regions.sort_values(by='centroid-0', ascending=False) 
+    pd_regions = pd_regions.sort_values(by='centroid-0', ascending=False) # sort by y coordinate
 
     status = 99
     xy = []
     width = 0
 
-    if (n_labels == 1):
+    if (len(pd_regions) == 1):
         xy = tuple(map(int, regions[0].centroid[::-1])) 
         width = pd_regions.iloc[0]['axis_major_length']
         status = 1
 
-    elif(n_labels == 0):
+    elif(pd_regions.empty):
         status = 0
 
     else:
-        if not pd_regions.empty:
-            xy = (int(pd_regions.iloc[0]['centroid-1']), int(pd_regions.iloc[0]['centroid-0']))
-            width = pd_regions.iloc[0]['axis_major_length']
-        else:
-            xy = (0,0)  # Or set a default value
-        
+        xy = (int(pd_regions.iloc[0]['centroid-1']), int(pd_regions.iloc[0]['centroid-0']))
+        width = pd_regions.iloc[0]['axis_major_length']
         status = 2
 
     # gives back a tuple with the pixel position of the (roughly) middle of the ball and the result
@@ -80,11 +79,11 @@ def move_middle(xy):
 
     if(xy[0] > middle_x + range):
         #then turn left
-        service.send(service.topicCmd + "ti/rc","0.05 -0.5")
+        service.send(service.topicCmd + "ti/rc","0.05 -0.25")
         status = 1
     elif(xy[0] < middle_x - range):
         #then turn right
-        service.send(service.topicCmd + "ti/rc","0.05 0.5")
+        service.send(service.topicCmd + "ti/rc","0.05 0.25")
         status = 2
     else:
         #ball is in the middle
@@ -92,38 +91,89 @@ def move_middle(xy):
         service.send(service.topicCmd + "ti/rc","0 0")
 
     wait = (e/middle_x)*0.6+0.05
-    #update the picture and the ball detection
+    #stop to update the picture and the ball detection
     time.sleep(wait)
     service.send(service.topicCmd + "ti/rc", "0 0")
 
     return status
 
+# calculate the distance to the ball
+def distance(xy, width):
+    # calculate the distance to the ball by the measurement of the width of the ball
+    a = 0.007494
+    b = -1.955569
+    c = 160.717271
+    #calibrated for distances between 30 and 85 cm
+
+    distance_width = (a*width**2 + b*width + c)*10 #in mm
+
+    #calculate the distance to the ball by the coordinates of the ball
+    a2 = 0.000668
+    b2 = -0.825487
+    c2 = 288.263289
+
+    distance_xy = (a2*xy[1]**2 + b2*xy[1] + c2)*10 #in mm
+
+    # if the difference between the two distances is small, use the average
+    if (abs(distance_xy - distance_width)  < 5):
+        distance = (distance_xy + distance_width)/2
+        status = 1
+    else:
+        print("Distance calculation error")
+        print("Distance xy: ", distance_xy, "Distance width: ", distance_width)
+        distance = distance_xy
+        status = 0
+
+    return distance, status
+
 # move to the ball
 def move_straight(xy, width):
-    arm_length = 200 #in mm
-    distance = 0
-    status = 0
+    arm_length = 300 #in mm
+    distance = 0.0
+    status = -1
+    wait = 0.0
+    velocity = 0.0
+    middle_x = 410
 
-    if (width > 0):
-        # calculate the distance to the ball
-        f_x = 794.25
-        real_width = 50 #mm
-        distance = f_x*real_width/width #in mm
+    if (xy != []):
+        if abs(xy[0] - middle_x) > 10:
+            #wrong ball
+            xy = []
+        else:
+            #calculate the distance to the ball
+            distance, status_d = distance(xy, width)
+            distance = distance - arm_length #in mm
 
-    distance = distance - arm_length
+    if (distance > 500.0): #out of calibration range
+        velocity = 0.1 #in m/s
+        wait = (distance-500.0)/1000/velocity
 
-    if (distance  >  0):
-        # move forward
-        velocity = distance/1500 #in m/s
-        wait = distance*1000/velocity
+        service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
+        time.sleep(wait)
+        service.send(service.topicCmd + "ti/rc", "0 0")
+        status = 3
+    elif (distance > 250.0):
+        velocity = 0.1 #in m/s
+        wait = (distance-250.0)/1000/velocity
 
-        service.send(service.topicCmd + "ti/rc", f"{velocity} 0")
+        service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
+        time.sleep(wait)
+        service.send(service.topicCmd + "ti/rc", "0 0")
+        status = 2
+    elif (distance > 0.0):
+        velocity = 0.1 #in m/s
+        wait = distance/1000/velocity
+
+        service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
         time.sleep(wait)
         service.send(service.topicCmd + "ti/rc", "0 0")
         status = 1
     else:
         # stop
         service.send(service.topicCmd + "ti/rc", "0 0")
+        # lowering the arm
+        service.send(service.topicCmd + "T0/servo", "1 -80 200")
+        status = 0
 
     return status
 
@@ -149,6 +199,6 @@ def hole(image):
     # calculate the middle
     labeled_image, n_labels = label(hole, background=0,return_num=True,connectivity=2)
     regions = regionprops(label_image=labeled_image)
-    xy = regions[0].centroid
-
+    xy = regions[0].centroid    
+    
     return xy # gives back a tuple with the pixel position of the (roughly) middle of the hole 
