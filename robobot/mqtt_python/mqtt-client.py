@@ -44,6 +44,8 @@ from scam import cam
 from uservice import service
 from simu import imu
 
+from drive import *
+
 ############################################################
 
 
@@ -223,10 +225,10 @@ def loop():
     tripTime = datetime.now()
     oldstate = -1
     service.send(service.topicCmd + "T0/leds", "16 30 30 0")  # LED 16: yellow - waiting
-    if service.args.meter:
-        state = 101  # run 1m
-    elif service.args.pi:
-        state = 102  # run 1m
+    # if service.args.meter:
+    #     state = 101  # run 1m
+    # elif service.args.pi:
+    #     state = 102  # run 1m
     # elif service.args.usestate > 0:
     #    state = service.args.usestate
     print(f"% Using state {state}")
@@ -244,8 +246,8 @@ def loop():
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
                 # follow line (at 0.25cm/s)
-                edge.lineControl(0.25, 0.0)  # m/s and position on line -2.0..2.0
-                state = 12  # until no more line
+                # edge.lineControl(0.25, 0.0)  # m/s and position on line -2.0..2.0
+                state = 70  # until no more line
                 pose.tripBreset()  # use trip counter/timer B
         elif state == 12:  # following line
             if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 10:
@@ -286,6 +288,12 @@ def loop():
         elif state == 103:
             driveToLine()
             state = 100
+        elif state == 70:  # Mission 360
+            # driveXMeters(0.5)
+            # driveUntilWall(0.2, ir_id=1)
+            followWall(0.3)
+            # orientateToWall(0.3, ir_id=0, dir=0)
+            state = 71
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
             break
