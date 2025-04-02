@@ -215,7 +215,7 @@ def loop():
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
-        edge.lineControl(0.35, 0.0) # m/s and position on line
+        edge.lineControl(0.25, 0.0) # m/s and position on line
         state = 110
         pose.tripBreset()
 
@@ -265,10 +265,11 @@ def loop():
     ###### MY TESTING STATES #######
     # line testing
     elif state == 110:
+      pass
       #print("% AtIntersectionCnt: ", edge.atIntersectionCnt, ", navigatingIntersection: ", edge.navigatingIntersection)
-      if edge.navigatingIntersection or pose.tripBtimePassed() > 10: # is at intersection
-        print("% at intersection")
-        state = 99 #end
+      #if edge.navigatingIntersection or pose.tripBtimePassed() > 10: # is at intersection
+      #  print("% at intersection")
+      #  state = 99 #end
 
     # color sensor printing
     elif state == 120:

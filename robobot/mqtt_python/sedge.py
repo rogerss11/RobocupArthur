@@ -27,9 +27,7 @@
 
 
 #TODO
-#! test if position -4 is left and 4 is right
-# test the values of switching navigatingIntersection with zero speed, just move it by hand
-# test threshold values (should be okay when calibrated properly)
+#! test lineValidThreshold
 # test navigateIntersection
 # improve PID (Kp, Ki, Kd)
 # Optional: Lead Compensator (if needed)
@@ -79,6 +77,7 @@ class SEdge:
     # start at 10 to avoid going to different mode at the start
     lineValidCnt = 10 # a value up to 20 for most confident line detect, 0 = line isnt valid
 
+    atIntersectionCntMaxValue = 3 #! test this value
     atIntersection = False # if the current reading suggests that we are at an intersection
     atIntersectionCnt = 0  # 20 = at Intersection
     passedIntersections = 0 # how many intersection have we passed
@@ -87,7 +86,6 @@ class SEdge:
 
     average = 0 # avarage edge_n[] value
     high = 0 # highest reflectivity
-    low = 0  # the darkest value found in latest sample
 
     topicLip = ""   
     sendCalibRequest = False # False = Calibrate
@@ -96,13 +94,13 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 0.5  # Proportional constant
+    Kp = 0.55 # Proportional constant
     Ki = 0.1  # Integral constant
-    Kd = 0.3  # Derivative constant
+    Kd = 0.4  # Derivative constant
     
     # lead compensator
-    lineTauZ = 0.0
-    lineTauP = 0.0
+    lineTauZ = 0.00
+    lineTauP = 0.00
 
     # Low-pass filter for derivative term
     alpha = 0.1  # Choose a suitable alpha value
@@ -337,152 +335,89 @@ class SEdge:
 
     ##########################################################
 
-    # Calculate current position, intersections and so on
+    # Calculate current position, intersections, and so on
     def LineDetect(self):
-      sum = 0
-      low = int(1000)
-      high = int(1)
+        high = 0
+        values = [0] * 8
+        valuesAboveZero = 0
 
-      # find levels (and average)
-      # using normalised readings (0 (no reflection) to 1000 (calibrated white)))
-      for i in range(8):
-        sum += self.edge_n[i] # for average
-        if self.edge_n[i] > high:
-          high = self.edge_n[i] # most bright value (floor level)
-      self.high = high # most white level
+        # Find lines above threshold, find highest value
+        for i in range(8):
+            currentValue = self.edge_n[i]
+            high = max(high, currentValue)  # Find highest value
 
-      # print(f"% Edge (sedge.py):: {low}, {high} - what")
+            thresholdedValue = max(currentValue - self.low, 0)  # Remove low values
+            values[i] = thresholdedValue  # Update value in list
+            valuesAboveZero += thresholdedValue > 0  # Count values above 0
 
-      # average white level
-      self.average = sum / 8.0
+        # Check if the line is valid (high above threshold)
+        self.lineValid = high >= self.lineValidThreshold
 
-      # is line valid (high above threshold)
-      self.lineValid = self.high >= self.lineValidThreshold
-      # updates lineValidCnt
-      # -1 if theres not a line
-      # +1 up to 20 if there is
-      if self.lineValid and self.lineValidCnt < 20:
-        self.lineValidCnt += 1
-      elif not self.lineValid:
-        if self.lineValidCnt > 0:
-          self.lineValidCnt -= 1  
+        # Update lineValidCnt
+        # -1 if there's no line, +1 up to 20 if there is
+        self.lineValidCnt = (
+            min(self.lineValidCnt + 1, 20)
+            if self.lineValid
+            else max(self.lineValidCnt - 1, 0)
+        )
+
+        # Detect if we have a crossing line
+        # Updates crossingValidCnt: -1 if there's no crossing, +1 up to atIntersectionCntMaxValue if there is
+        self.atIntersectionCnt = (
+            min(self.atIntersectionCnt + 1, self.atIntersectionCntMaxValue)
+            if self.atIntersection
+            else max(self.atIntersectionCnt - 1, 0)
+        )
+
+        if self.atIntersectionCnt == self.atIntersectionCntMaxValue:
+            self.navigatingIntersection = True
+        # If we have passed the intersection
+        elif self.atIntersectionCnt == 0 and self.navigatingIntersection:
+            self.navigatingIntersection = False
+            self.passedIntersections += 1
+
+        # If we are currently at an intersection
+        if self.navigatingIntersection:
+            path = self.intersectionPath[self.passedIntersections]
+
+            # If we arrived at a T intersection
+            #! Maybe I can make this work for a straight left or right as well
+            if valuesAboveZero == 8:
+                self.position = {'l': -4, 'r': 4}.get(path, 0)
+                if path == 'm':
+                    print("Straight at T intersection - Invalid intersectionPath")
+                return
+
+            # If we are navigating a normal intersection (split)
+            ignoreFirst = path == 'm'  # Ignore first line (if we want to go middle)
+            start, end, step = (0, 8, 1) if path != 'r' else (8, 0, -1)
+
+            # Calculate values for position calculation
+            sum_values, pos_sum = 0, 0
+            nonZeroCount = 0
+
+            for i in range(start, end, step):
+                if values[i] > 0:
+                    sum_values += values[i]
+                    pos_sum += (i + 1) * values[i]
+                    nonZeroCount += 1
+                elif nonZeroCount and values[i] == 0:
+                    if ignoreFirst:  # Ignore the first line and go for the second one (middle when there's 3)
+                        ignoreFirst = False
+                        sum_values, pos_sum = 0, 0
+                    else:
+                        break  # Stop the loop when we hit 0 after a nonzero value
+
+            # Using weighted average for position calculation
+            # position = [∑(sensor intensity) * ∑(sensor index)] / ∑(sensor intensity) - middle(4.5)
+            self.position = (pos_sum / sum_values - 4.5) if sum_values > 0 and self.lineValid else 0
+
+        # Normal line calculation
         else:
-          self.lineValidCnt = 0
-
-      # detect if we have a crossing line
-      self.atIntersection = self.average >= self.crossingThreshold
-      # updates crossingValidCnt
-      # -1 if theres not a crossing
-      # +1 up to 20 if there is
-      if self.atIntersection and self.atIntersectionCnt < 20:
-        self.atIntersectionCnt += 1
-      elif not self.atIntersection:
-        self.atIntersectionCnt -= 1
-        if self.atIntersectionCnt < 0:
-          self.atIntersectionCnt = 0
-
-      # if we have arrived at an intersection
-      if self.atIntersectionCnt == 20: 
-        self.navigatingIntersection = True
-      # if we have passed the intersection
-      elif self.atIntersectionCnt <= 2 and self.navigatingIntersection:
-        self.navigatingIntersection = False
-        self.passedIntersections += 0 #! change to 1 after testing
-
-      # find position of the line we want to follow
-      if self.navigatingIntersection: # if we are navigating an intersection, find the position of the line we want to follow
-        self.calculateIntersection()
-      else: # otherwise just average the values
-        self.calculateLine()
-
-
-      # print(f"% Edge (sedge.py):: ({self.edge_n[0]} {self.edge_n[1]} {self.edge_n[2]} {self.edge_n[3]} {self.edge_n[4]} {self.edge_n[5]} {self.edge_n[6]}), min={self.low}, high={self.high}, pos={self.position:.2f}.")
-
-    ##########################################################
-
-    #! just a thought, should probably find a better way to do this
-    # try and decipher the two lines from the 8 color sensors and follow the one defined in intersectionPath
-    def calculateIntersection(self):
-      #print("calculateIntersection callled")
-      return
-
-      # ignore or values under low
-      values = [max(self.edge_n[i] - self.low, 0) for i in range(8)]
-      #print("values: ", values)
-      ignoreFirst = False # ignore first line (from middle)
-
-      # iterate from right to left or left to right depending on the intersectionPath
-      if self.intersectionPath[self.passedIntersections] == 'l':
-        start, end, step = 0, 8, 1
-      elif self.intersectionPath[self.passedIntersections] == 'r':
-        start, end, step = 8, 0, -1
-      elif self.intersectionPath[self.passedIntersections] == 'm':
-        start, end, step = 0, 8, 1
-        ignoreFirst = True
-      else:
-        print("Invalid intersectionPath")
-        return
-
-      sum = 0
-      posSum = 0
-      nonZeroCount = 0
-      for i in range(start, end, step):
-        if values[i] != 0:
-          sum += values[i]
-          posSum += (i + 1) * values[i]
-          nonZeroCount += 1
-        elif nonZeroCount != 0 and values[i] == 0:
-          if ignoreFirst: # ignore the first line and go for the second one (middle when theres 3)
-            ignoreFirst = False
-            sum = 0
-            posSum = 0
-          else:
-            break  # Stop the loop when we hit 0 after a nonzero value (if we turn l or r, just the first line is enough)
-      
-      if nonZeroCount == 8: # arrived at a 'horizontal' intersection
-        if self.intersectionPath[self.passedIntersections] == 'l':
-          self.position = -4
-        elif self.intersectionPath[self.passedIntersections] == 'r':
-          self.position = 4
-        elif self.intersectionPath[self.passedIntersections] == 'm':
-          print("straight at T intersection - Invalid intersectionPath")
-          return
-
-      if sum > 0 and self.lineValid:
-        """
-        using weighted average 
-        position= [∑(sensor intensity) * ∑(sensor index)]/ ∑(sensor intensity) - middle(4.5)
-        """
-        self.position = posSum/sum - 4.5
-      else:
-        self.position = 0
-      
-      print("position: ", self.position)  
-
-
-    
-    ##########################################################
-
-    # find line position
-    def calculateLine(self):
-      sum = 0
-      posSum = 0
-      for i in range(8):
-        # everything more black than 'low' is ignored
-        v = self.edge_n[i] - self.low
-        if v > 0:
-          sum += v
-          posSum += (i+1) * v
-
-      if sum > 0 and self.lineValid:
-        """
-        using weighted average 
-        position= [∑(sensor intensity) * ∑(sensor index)]/ ∑(sensor intensity) - middle(4.5)
-        """
-        self.position = posSum/sum - 4.5
-      else:
-        self.position = 0
-
+            sum_values = sum(values)
+            pos_sum = sum((i + 1) * v for i, v in enumerate(values))
+            self.position = (pos_sum / sum_values - 4.5) if sum_values > 0 and self.lineValid else 0
+        
     ##########################################################
 
     def lineControl(self, velocity, refPosition):
@@ -492,7 +427,7 @@ class SEdge:
       # velocity 0 is turning off line control
       self.lineCtrl = velocity > 0.001 # is line control active
       if not self.lineCtrl:
-        service.send("robobot/cmd/ti/rc","0.0 0.0") # stop robot
+          service.send("robobot/cmd/ti/rc","0.0 0.0") # stop robot
       pass
 
     ##########################################################
