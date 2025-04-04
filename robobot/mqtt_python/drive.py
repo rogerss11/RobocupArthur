@@ -164,7 +164,7 @@ def climbCircle(acc=50, vel=0.5):
             gyro = max(gyro)  # max of all 3 axes
             if gyro > acc or pose.tripBtimePassed() > 15:
                 service.send("robobot/cmd/ti/rc", "0.1 0.0")
-                t.sleep(3)  # wait for stop
+                t.sleep(2.5)  # wait for stop
                 service.send(
                     "robobot/cmd/ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)

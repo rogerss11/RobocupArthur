@@ -242,7 +242,7 @@ def loop():
             turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
             service.send(service.topicCmd + "T0/servo", "1 -200 200")
             driveXMeters(0.6)
-            driveXMeters(-0.4)
+            driveXMeters(-0.30)
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
             turnInPlace(25, dir=1)
             climbCircle(40, vel=0.35)
