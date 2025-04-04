@@ -94,13 +94,19 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 0.7 # Proportional constant
+    Kp = 0.5 # Proportional constant
     Ki = 0.15  # Integral constant
-    Kd = 0.3  # Derivative constant
+    Kd = 0.35  # Derivative constant
+    #Kp = 0.55 # Proportional constant
+    #Ki = 0.1  # Integral constant
+    #Kd = 0.4  # Derivative constant
     
     # lead compensator
-    lineTauZ = 0.00
-    lineTauP = 0.00
+    #Kp = 0.6 # Proportional constant
+    #Ki = 0.12  # Integral constant
+    #Kd = 0.3  # Derivative constant
+    lineTauZ = 0.02
+    lineTauP = 0.1
 
     # Low-pass filter for derivative term
     alpha = 0.1  # Choose a suitable alpha value
@@ -307,9 +313,9 @@ class SEdge:
             # got new normalized values
             # debug save as a remark with timestamp
             # flog.writeDataString(f" {msg}");
-            self.LineDetect()
             # use to control, if active
             if self.lineCtrl:
+              self.LineDetect()
               self.followLine()
             # log relevant line sensor data
             flog.write()
@@ -361,10 +367,9 @@ class SEdge:
             else max(self.lineValidCnt - 1, 0)
         )
 
-        print(valuesAboveZero)
 
         # Detect if we have a crossing line
-        if valuesAboveZero >= 4:
+        if valuesAboveZero >= 3:
           self.atIntersection = True
         else:
           self.atIntersection = False
@@ -377,18 +382,22 @@ class SEdge:
 
         if self.atIntersectionCnt == self.atIntersectionCntMaxValue:
             self.navigatingIntersection = True
+            print("started navigatingIntersection")
         # If we have passed the intersection
         elif self.atIntersectionCnt == 0 and self.navigatingIntersection:
+            print("finised navigatingIntersection")
             self.navigatingIntersection = False
             self.passedIntersections += 1
+          
 
         # If we are currently at an intersection
         if self.navigatingIntersection:
-            path = self.intersectionPath[self.passedIntersections]
+            path = self.intersectionPath[self.passedIntersections] 
 
             # If we arrived at a T intersection
             #! Maybe I can make this work for a straight left or right as well
             if valuesAboveZero == 8:
+                print("arrived at T")
                 self.position = {'l': -4, 'r': 4}.get(path, 0)
                 if path == 'm':
                     print("Straight at T intersection - Invalid intersectionPath")
@@ -396,8 +405,10 @@ class SEdge:
 
             # If we are navigating a normal intersection (split)
             ignoreFirst = path == 'm'  # Ignore first line (if we want to go middle)
-            start, end, step = (0, 8, 1) if path != 'r' else (8, 0, -1)
-
+            if ignoreFirst:
+                print("ignore first line")
+            start, end, step = (0, 8, 1) if path != 'r' else (7, -1, -1)
+            print(start, end, step)
             # Calculate values for position calculation
             sum_values, pos_sum = 0, 0
             nonZeroCount = 0
@@ -417,6 +428,7 @@ class SEdge:
             # Using weighted average for position calculation
             # position = [∑(sensor intensity) * ∑(sensor index)] / ∑(sensor intensity) - middle(4.5)
             self.position = (pos_sum / sum_values - 4.5) if sum_values > 0 and self.lineValid else 0
+            print(f"position: {self.position:.2f}, path: {path}")
 
         # Normal line calculation
         else:

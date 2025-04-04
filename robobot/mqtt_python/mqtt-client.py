@@ -28,7 +28,7 @@ import numpy as np
 import cv2 as cv
 from datetime import *
 from setproctitle import setproctitle
-
+ 
 # robot function
 from spose import pose
 from sir import ir
@@ -215,8 +215,8 @@ def loop():
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
-        edge.lineControl(0.25, 0.0) # m/s and position on line
-        state = 110
+        edge.lineControl(0, 0.0) # m/s and position on line
+        state = 120
         pose.tripBreset()
 
     elif state == 12: # following line
@@ -282,21 +282,7 @@ def loop():
     elif state == 130:
       edge.printn()
       print("% AtIntersectionCnt: ", edge.atIntersectionCnt, ", navigatingIntersection: ", edge.navigatingIntersection)
-      t.sleep(0.5)
-
-    # after third intersection turn right towards finish and turn around, hard do navigate intersection otherwise
-    elif state == 140: # after third intersection turn right towards finish and turn around, hard do navigate intersection otherwise
-        state = 0
-        pose.tripBreset()
-        while not (service.stop):
-          if state == 0: # wait for start signal
-            service.send("robobot/cmd/ti/rc","0.2 0.5") # (forward m/s, turn-rate rad/sec)
-            state = 1
-          elif state == 1:
-            if pose.tripBh > 3.14 or pose.tripBtimePassed() > 15:
-              service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
-              state = 2
-      
+      t.sleep(0.5)    
 
     else: # abort
       print(f"% Mission finished/aborted; state={state}")
@@ -349,6 +335,7 @@ if __name__ == "__main__":
       # where is the MQTT data server:
       # service.setup('localhost') # localhost
       service.setup('10.197.218.235')
+      #service.setup('10.197.218.184') #gladnalf
       if service.connected:
         loop()
       service.terminate()
