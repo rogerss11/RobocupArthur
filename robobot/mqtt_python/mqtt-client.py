@@ -123,61 +123,6 @@ def driveOneMeter():
     print("% Driving 1m ------------------------- end")
 
 
-def driveToLine():
-    state = 0
-    pose.tripBreset()
-    dist_to_line = 0
-    print("% Driving to line ---------------------- right ir start ---")
-    service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
-    while not (service.stop):
-        if state == 0:  # forward towards line
-            if ir.ir[0] < 0.2:
-                service.send(
-                    "robobot/cmd/ti/rc", "0.2 0.0"
-                )  # (forward m/s, turn-rate rad/sec)
-                service.send("robobot/cmd/T0/lognow", "3")  # (start Teensy log)
-                state = 1
-        elif state == 1:
-            if pose.tripB > 1.0 or pose.tripBtimePassed() > 15:
-                service.send(
-                    "robobot/cmd/ti/rc", "0.0 0.0"
-                )  # (forward m/s, turn-rate rad/sec)
-                state = 2
-            if edge.lineValidCnt > 4:
-                # start follow line
-                edge.lineControl(0.2, 0)
-                dist_to_line = pose.tripB
-                pose.tripBreset()
-                print(" to state 10")
-                state = 10
-            pass
-        elif state == 2:
-            if abs(pose.velocity()) < 0.001:
-                print(" to state 99")
-                state = 99
-        elif state == 10:
-            if edge.lineValidCnt < 2:
-                edge.lineControl(0, 0)
-                service.send(
-                    "robobot/cmd/ti/rc", "0.0 0.0"
-                )  # (forward m/s, turn-rate rad/sec)
-                print(" to state 2")
-                state = 2
-        else:
-            print(
-                f"# drive to line {dist_to_line:.3f}m, then along line {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-            )
-            service.send(
-                "robobot/cmd/ti/rc", "0.0 0.0"
-            )  # (forward m/s, turn-rate rad/sec)
-            break
-        # print(f"# drive {state}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds, line valid cnt = {edge.lineValidCnt}")
-        t.sleep(0.01)
-    pass
-    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
-    print("% Driving to line ------------------------- end")
-
-
 def driveTurnPi():
     state = 0
     pose.tripBreset()
@@ -287,27 +232,30 @@ def loop():
         elif state == 102:
             driveTurnPi()
             state = 100
-        elif state == 103:
-            driveToLine()
-            state = 100
-        elif state == 70:  # Mission 360
+        elif state == 70:
+            # ------------- CLIMB CIRCLE MISSION -------------------------------------------
             # driveXMeters(0.5)
             # orientateToWall(ir_id=1, dir=0, tolerance=0.05, window=20)
-            service.send(service.topicCmd + "T0/servo", "1 -890 200")
+            service.send(service.topicCmd + "T0/servo", "1 -900 200")
             driveUntilWall(0.25, ir_id=1)
             # followWall(0.5, d_front=0.3)
-            turnInPlace(65, dir=1)  # turn counter-clockwise 65=90
-            driveUntilLine()
-            pose.tripBreset()
-            service.send(service.topicCmd + "T0/servo", "1 -130 200")
-            service.send(service.topicCmd + "T0/servo", "1 -890 200")
-            while pose.tripBtimePassed() < 10:
-                service.send(service.topicCmd + "ti/rc", "0.0 0.0")
-
-            driveXMeters(-0.2)
-            turnInPlace(25, dir=1)  # turn counter-clockwise 65=90
-            climbCircle(60, vel=0.3)
-            state = 71
+            turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
+            service.send(service.topicCmd + "T0/servo", "1 -200 200")
+            driveXMeters(0.6)
+            driveXMeters(-0.4)
+            service.send(service.topicCmd + "T0/servo", "1 -900 200")
+            turnInPlace(25, dir=1)
+            climbCircle(40, vel=0.35)
+            state = 72  # inside circle
+        elif state == 71:
+            # ------------- INSIDE CIRCLE MISSION -------------------------------------------
+            turnInPlace(30, dir=1)  # positions both wheels in the circle
+            driveXMeters(0.5)
+            turnInPlace(67, dir=0)
+            driveXMeters(0.4)
+            turnInPlace(67, dir=0)
+            driveXMeters(0.5)
+            state = 72
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
             break

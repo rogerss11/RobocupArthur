@@ -147,6 +147,7 @@ def climbCircle(acc=50, vel=0.5):
     driveUntilWall(d=0.2) - drive until a certain acceleration is detected
     acc = acceleration in m/s^2 to stop at
     """
+    max_acc = 0.0
     state = 0
     pose.tripBreset()
     print(f"% Driving until acc spike of {acc} m/s2 -------------------------")
@@ -162,18 +163,20 @@ def climbCircle(acc=50, vel=0.5):
             gyro = [abs(g) for g in gyro]  # absolute value
             gyro = max(gyro)  # max of all 3 axes
             if gyro > acc or pose.tripBtimePassed() > 15:
+                service.send("robobot/cmd/ti/rc", "0.1 0.0")
+                t.sleep(3)  # wait for stop
                 service.send(
                     "robobot/cmd/ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
-                t.sleep(3)  # wait for stop
                 state = 2
+                max_acc = gyro
             pass
         elif state == 2:
             if abs(pose.velocity()) < 0.001:
                 state = 99
         else:
             print(
-                f"# drive drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
+                f"# Max acc = {max_acc}, drive drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
             )
             service.send(
                 "robobot/cmd/ti/rc", "0.0 0.0"
