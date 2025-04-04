@@ -248,8 +248,8 @@ def loop():
                 )  # (forward m/s, turn-rate rad/sec)
 
                 # follow line (at 0.25cm/s)
-                edge.lineControl(0.25, 0.0)  # m/s and position on line -2.0..2.0
-                state = 12  # until no more line
+                # edge.lineControl(0.25, 0.0)  # m/s and position on line -2.0..2.0
+                state = 70  # until no more line
                 pose.tripBreset()  # use trip counter/timer B
         elif state == 12:  # following line
             if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 10:
@@ -293,10 +293,20 @@ def loop():
         elif state == 70:  # Mission 360
             # driveXMeters(0.5)
             # orientateToWall(ir_id=1, dir=0, tolerance=0.05, window=20)
-            driveUntilWall(0.3, ir_id=1)
+            service.send(service.topicCmd + "T0/servo", "1 -890 200")
+            driveUntilWall(0.25, ir_id=1)
             # followWall(0.5, d_front=0.3)
-            turnInPlace(90, dir=1)  # turn counter-clockwise 65=90
-            climbCircle(80, vel=0.3)
+            turnInPlace(65, dir=1)  # turn counter-clockwise 65=90
+            driveUntilLine()
+            pose.tripBreset()
+            service.send(service.topicCmd + "T0/servo", "1 -130 200")
+            service.send(service.topicCmd + "T0/servo", "1 -890 200")
+            while pose.tripBtimePassed() < 10:
+                service.send(service.topicCmd + "ti/rc", "0.0 0.0")
+
+            driveXMeters(-0.2)
+            turnInPlace(25, dir=1)  # turn counter-clockwise 65=90
+            climbCircle(60, vel=0.3)
             state = 71
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
@@ -350,7 +360,7 @@ if __name__ == "__main__":
         # where is the MQTT data server:
         # service.setup("localhost")  # localhost
         service.setup("10.197.218.235")  # Arthur
-        service.setup("10.197.218.184")
+        # service.setup("10.197.218.184")
         # service.setup('10.197.217.81') # Juniper
         # service.setup('10.197.217.80') # Newton
         # service.setup("bode.local")  # Bode

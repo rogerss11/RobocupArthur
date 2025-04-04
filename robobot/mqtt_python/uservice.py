@@ -80,36 +80,60 @@ class UService:
 
         flog.setup()
         self.host = mqtt_host
-        self.parser.add_argument(
-            "-w", "--white", action="store_true", help="Calibrate white tape level"
+
+        def _add_arg_once(parser, short_opt, long_opt, *args, **kwargs):
+            if short_opt not in parser._option_string_actions:
+                parser.add_argument(short_opt, long_opt, *args, **kwargs)
+
+        _add_arg_once(
+            self.parser,
+            "-w",
+            "--white",
+            action="store_true",
+            help="Calibrate white tape level",
         )
-        self.parser.add_argument(
-            "-g", "--gyro", action="store_true", help="Calibrate gyro"
+        _add_arg_once(
+            self.parser, "-g", "--gyro", action="store_true", help="Calibrate gyro"
         )
-        self.parser.add_argument(
+        _add_arg_once(
+            self.parser,
             "-l",
             "--level",
             action="store_true",
             help="Calibrate horizontal (not implemented, but maybe an idea)",
         )
-        self.parser.add_argument(
-            "-s", "--silent", action="store_true", help="Print less to console"
+        _add_arg_once(
+            self.parser,
+            "-s",
+            "--silent",
+            action="store_true",
+            help="Print less to console",
         )
-        self.parser.add_argument(
+        _add_arg_once(
+            self.parser,
             "-n",
             "--now",
             action="store_true",
             help="Start drive now (do not wait for the start button)",
         )
-        self.parser.add_argument(
-            "-m", "--meter", action="store_true", help="Drive 1 m and stop"
+        _add_arg_once(
+            self.parser, "-m", "--meter", action="store_true", help="Drive 1 m and stop"
         )
-        self.parser.add_argument(
-            "-p", "--pi", action="store_true", help="Turn 180 degrees (Pi) and stop"
+        _add_arg_once(
+            self.parser,
+            "-p",
+            "--pi",
+            action="store_true",
+            help="Turn 180 degrees (Pi) and stop",
         )
-        self.parser.add_argument(
-            "-u", "--usestate", type=int, help="set mission state to this value"
+        _add_arg_once(
+            self.parser,
+            "-u",
+            "--usestate",
+            type=int,
+            help="set mission state to this value",
         )
+
         self.args = self.parser.parse_args()
         self.args_parsed = True
         # print(f"% command line arguments: white {self.args.white}, gyro={self.args.gyro}, level={self.args.level}")
