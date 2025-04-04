@@ -332,9 +332,9 @@ def followWall(d=0.3, velocity=0.2, time=60.0, d_front=0.1, Kp=1.3, Ki=0.0, Kd=2
     print("% Wall following ------------------------- end")
 
 
-def Axe ():
+def Circle ():
     """
-    Axe() - drive in a circle with a radius of 1m
+    Circle() - drive in a circle with a radius of 1m
     """
     state = 0
     pose.tripBreset()
@@ -371,3 +371,58 @@ def Axe ():
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Driving axe ------------------------- end")
+
+def Axe():
+    """
+    Axe() - detects an object in front of the robot with the ir sensor[1],
+    approaches up to 10 cm, stops if object is present,
+    accelerates to pass the gate if the obstacle is no longer detected,
+    and stops permanently at the end.
+    """
+    state = 0
+    pose.tripBreset()
+    print("% Driving in an axe with object detection -------------------------")
+    service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
+
+    while not service.stop:
+        if state == 0:  # start moving forward
+            #service.send("robobot/cmd/ti/rc", "0.1 0.0")  # (linear velocity m/s, angular velocity rad/s)
+            edge.lineControl(0.1, 0.0)
+            state = 1
+
+        elif state == 1:  # Approaches the object
+            if ir.ir[1] < 0.15:  # if the object is detected less than 15 cm
+                print("# Object detected less than 15 cm, stops.")
+                #service.send("robobot/cmd/ti/rc", "0.0 0.0")  # stops the robot
+                edge.lineControl(0.0, 0.0)
+                state = 2
+            elif pose.tripBtimePassed() > 15:  # Security Timeout
+                print("# Timeout passed.")
+                service.send("robobot/cmd/ti/rc", "0.0 0.0")
+                break
+
+        elif state == 2:  # Waiting for the object to be removed
+            if ir.ir[1] > 0.5:  # if the object is not detected anymore
+                print("# Object not detected anymore, accelerate to pass the gate.")
+                #service.send("robobot/cmd/ti/rc", "0.3 0.0")  # Acceleration
+                edge.lineControl(0.3, 0.0)
+                state = 3
+
+        elif state == 3:  # Pass the gate axe and stop
+            if pose.tripBtimePassed() > 5:  # after 5 seconds of acceleration
+                print("# Gate passed, stop.")
+                #service.send("robobot/cmd/ti/rc", "0.0 0.0")  # robot stops
+                edge.lineControl(0.0, 0.0)
+                state = 99
+
+        else:  # Final state
+            print("% Axe completed -------------------------")
+            break
+
+        print(
+            f"# Axe state {state}, IR front: {ir.ir[1]:.3f}m, distance traveled: {pose.tripB:.3f}m, time: {pose.tripBtimePassed():.3f}s"
+        )
+        t.sleep(0.05)
+
+    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # 
+    print("% Driving axe ------------------------- end")    
