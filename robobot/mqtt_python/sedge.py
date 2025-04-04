@@ -133,6 +133,9 @@ class SEdge:
     lineY1 = 0.0 # old control output (rad/s)
     lineY = 0.0  # control output (rad/s)
 
+    shouldLineUp = False # if we should line up with white line in front of us
+    last_cmd = None # last command sent to the robot (used for lineUpWithLine)
+
     # management
     topicRc = ""
     lostLineCnt = 0
@@ -315,10 +318,13 @@ class SEdge:
             # flog.writeDataString(f" {msg}");
             # use to control, if active
             if self.lineCtrl:
-              self.LineDetect()
-              self.followLine()
-            # log relevant line sensor data
+                self.LineDetect()
+                self.followLine()
+            # if we want to line up with white line
+            if self.shouldLineUp:
+                self.lineUpWithLine()
             flog.write()
+            # log relevant line sensor data
             #self.printn()
         elif topic == "T0/liw": # get white level
           from uservice import service
@@ -381,11 +387,12 @@ class SEdge:
         )
 
         if self.atIntersectionCnt == self.atIntersectionCntMaxValue:
+            if not self.navigatingIntersection:
+                print("started navigating intersection", self.passedIntersections)
             self.navigatingIntersection = True
-            print("started navigatingIntersection")
         # If we have passed the intersection
         elif self.atIntersectionCnt == 0 and self.navigatingIntersection:
-            print("finised navigatingIntersection")
+            print("finised navigating intersection", self.passedIntersections)
             self.navigatingIntersection = False
             self.passedIntersections += 1
           
@@ -405,13 +412,11 @@ class SEdge:
 
             # If we are navigating a normal intersection (split)
             ignoreFirst = path == 'm'  # Ignore first line (if we want to go middle)
-            if ignoreFirst:
-                print("ignore first line")
             start, end, step = (0, 8, 1) if path != 'r' else (7, -1, -1)
-            print(start, end, step)
             # Calculate values for position calculation
             sum_values, pos_sum = 0, 0
             nonZeroCount = 0
+
 
             for i in range(start, end, step):
                 if values[i] > 0:
@@ -428,7 +433,7 @@ class SEdge:
             # Using weighted average for position calculation
             # position = [∑(sensor intensity) * ∑(sensor index)] / ∑(sensor intensity) - middle(4.5)
             self.position = (pos_sum / sum_values - 4.5) if sum_values > 0 and self.lineValid else 0
-            print(f"position: {self.position:.2f}, path: {path}")
+            print(f"values: {values} position: {self.position:.2f}, path: {path}")
 
         # Normal line calculation
         else:
@@ -515,6 +520,32 @@ class SEdge:
       # debug
       print(f"%% Lead: tauZ {self.lineTauZ:.3f} sec, tauP = {self.lineTauP:.3f} sec, T = {self.edge_nInterval:.3f} ms")
       print(f"%%       tauZ2pT = {self.tauZ2pT:.4f}, tauZ2mT = {self.tauZ2mT:.4f}, tauP2pT = {self.tauP2pT:.4f}, tauP2mT = {self.tauP2pT:.4f}")
+
+    ##########################################################
+
+    def lineUpWithLine(self):
+        # positive turnrate -> turn left
+        from uservice import service
+        speed = 0.8
+        left = self.edge_n[0] > self.crossingThreshold #! maybe replace with low
+        right = self.edge_n[7] > self.crossingThreshold
+
+        if left and right: # we have lined up
+            service.send("robobot/cmd/ti/rc","0 0")
+            self.shouldLineUp = False
+            return
+        elif left:
+            cmd = f"0 {speed:.3f}"  # turn left
+        elif right:
+            cmd = f"0 {-speed:.3f}"  # turn right
+        else:
+            cmd = f"{speed:.3f} 0"  # go straight
+
+        if cmd != self.last_cmd:
+            print("cmd changed")
+            service.send("robobot/cmd/ti/rc", cmd)
+            self.last_cmd = cmd
+
 
     ##########################################################
 
