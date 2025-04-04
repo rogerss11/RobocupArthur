@@ -181,10 +181,10 @@ def loop():
   tripTime = datetime.now()
   oldstate = -1
   service.send(service.topicCmd + "T0/leds","16 30 30 0") # LED 16: yellow - waiting
-  if service.args.meter:
-    state = 101 # run 1m
-  elif service.args.pi:
-    state = 102 # run 1m
+  #if service.args.meter:
+  #  state = 101 # run 1m
+  #elif service.args.pi:
+  #  state = 102 # run 1m
   #elif service.args.usestate > 0:
   #  state = service.args.usestate
   print(f"% Using state {state}")
@@ -200,28 +200,48 @@ def loop():
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turnrate rad/sec)
         # follow line (at 0.20cm/s)
-        edge.lineControl(0.2, 0.0) # m/s and position on line -2.0..2.0
-        state = 13 # until no more line
+        #edge.lineControl(0.2, 0.0) # m/s and position on line -2.0..2.0
+        state = 13# until no more line
         pose.tripBreset() # use trip counter/timer B
     elif state == 12: # following line
       if edge.lineValidCnt == 0 :#or pose.tripBtimePassed() > 20:
         # no more line
         edge.lineControl(0,0) # stop following line
         pose.tripBreset()
-        service.send(service.topicCmd + "ti/rc","0.1 0.5") # turn left
+        service.send(service.topicCmd + "ti/rc","0.1 0.5") # turn left, teensy interface/remote control, "m/s, rad/sec"
         state = 13 # turn left
     elif state == 13: # following line
-      ir.print()
-      t.sleep(0.2)
-      if ir.ir[1] > 0.3: #it decelerates if there is an object in front of him in less than 30 cm
-        print("far")
-        edge.lineControl(0.2, 0.0)
-      else:
-        print("close")
-        edge.lineControl(0.1, 0.0)
-    elif state == 14: # turning left
+        print("i'm in state 13")
+        while(pose.tripBtimePassed() < 25):
+          ir.print()
+          t.sleep(0.2)
+          if ir.ir[1] > 1: #it decelerates if there is an object in front of him in less than 50 cm
+            print("far")
+            service.send(service.topicCmd + "ti/rc","0.4 0.0") #making him go straight forward
+          if ir.ir[1] > 0.6 and ir.ir[1] < 1: #it decelerates if there is an object in front of him in less than 50 cm
+            print("less far")
+            service.send(service.topicCmd + "ti/rc","0.2 0.0") #making him go straight forward   
+          if ir.ir[1] > 0.4 and ir.ir[1] < 0.6: #it decelerates if there is an object in front of him in less than 50 cm
+            print("close")
+            service.send(service.topicCmd + "ti/rc","0.0 0.3") #he turns left
+        state = 14
+    elif state == 14: # following line
+        print("i'm in state 14")
+        while(pose.tripBtimePassed() > 25 and pose.tripBtimePassed() < 30):
+          ir.print()
+          t.sleep(0.2)
+          if ir.ir[0] < 0.3: 
+            service.send(service.topicCmd + "ti/rc","0.1 0.0") #making him go straight forward if it detects a lateral object
+          #else:
+          #  service.send(service.topicCmd + "ti/rc","0.0 0.0")   #making him stop if it doesn't detect a lateral object
+        state = 16
+    elif state == 16: # following line
+        print("i'm in state 16")
+        service.send(service.topicCmd + "ti/rc","0.05 0.1") #making him go straight forward if it detects a lateral object
+        state = 20   
+    elif state == 15: # turning left
       if pose.tripBh > np.pi/2 or pose.tripBtimePassed() > 10:
-        state = 20 # finished   =17 go look for line
+        state = 20 # finished
         service.send(service.topicCmd + "ti/rc","0 0") # stop for images
       print(f"% --- state {state}, h = {pose.tripBh:.4f}, t={pose.tripBtimePassed():.3f}")
     elif state == 20: # image analysis
@@ -294,7 +314,7 @@ if __name__ == "__main__":
       print("% Starting")
       # where is the MQTT data server:
       #service.setup('localhost') # localhost
-      service.setup('10.197.218.24') #Arthur
+      service.setup('10.197.218.235') #Arthur
       if service.connected:
         loop()
       service.terminate()
