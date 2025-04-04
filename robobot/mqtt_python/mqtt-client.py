@@ -349,7 +349,8 @@ if __name__ == "__main__":
         print("% Starting")
         # where is the MQTT data server:
         # service.setup("localhost")  # localhost
-        service.setup("10.197.218.235")
+        service.setup("10.197.218.235")  # Arthur
+        service.setup("10.197.218.184")
         # service.setup('10.197.217.81') # Juniper
         # service.setup('10.197.217.80') # Newton
         # service.setup("bode.local")  # Bode
