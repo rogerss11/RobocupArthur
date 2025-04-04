@@ -375,7 +375,7 @@ class SEdge:
 
 
         # Detect if we have a crossing line
-        if valuesAboveZero >= 3:
+        if valuesAboveZero >= 4:
           self.atIntersection = True
         else:
           self.atIntersection = False

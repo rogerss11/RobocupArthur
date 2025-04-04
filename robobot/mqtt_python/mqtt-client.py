@@ -216,7 +216,7 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
         edge.lineControl(0.0, 0.0) # m/s and position on line
-        state = 139
+        state = 150
         pose.tripBreset()
 
     elif state == 12: # following line
@@ -292,6 +292,15 @@ def loop():
       if not edge.shouldLineUp:
         print("Done lining up")
         state = 99
+    
+    elif state == 150: #axe testing
+        print("start axe")
+        edge.lineControl(0.2, 0.0) # stop following line
+        ir.axeActive = True
+        state = 151
+    elif state == 151:
+        if not ir.axeActive:
+          state = 99
       
 
     else: # abort
