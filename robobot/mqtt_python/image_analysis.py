@@ -4,8 +4,33 @@ from scipy.ndimage import gaussian_filter
 import pandas as pd
 import numpy as np
 import time 
+import cv2 as cv
+from scam import cam
+#from mqtt-client import imageAnalysis
 
 from uservice import service
+
+def imageAnalysis(save):
+  if cam.useCam:
+    ok, img, imgTime = cam.getImage()
+    if not ok: # size(img) == 0):
+      if cam.imageFailCnt < 5:
+        print("% Failed to get image.")
+    else:
+      h, w, ch = img.shape
+      if not service.args.silent:
+        # print(f"% At {imgTime}, got image {cam.cnt} of size= {w}x{h}")
+        pass
+      #edge.paint(img)
+      if save:
+        fn = f"image_{imgTime.strftime('%Y_%b_%d_%H%M%S_')}{cam.cnt:03d}.jpg"
+        cv.imwrite(fn, img)
+        if not service.args.silent:
+          print(f"% Saved image {fn}")
+      pass
+    pass
+  pass
+  return img
 
 # detection of the balls in the picture of a certain color
 def ball(image, color):
@@ -17,8 +42,9 @@ def ball(image, color):
     g_low = [60,0]
 
     # Red
-    r_low = [10,150]
+    r_low = [10,100]
 
+    mask = np.zeros_like(image[:,:,0]) # create a mask with the same size as the image
     # color of the thresholds (for images in BGR)
     if (color == 0):
         mask = (
@@ -26,16 +52,29 @@ def ball(image, color):
             (image[:,:,0] >= b_low[color]) & # blue 
             (image[:,:,1] >= g_low[color]) & # green
             (image[:,:,2] >= r_low[color]) & # red
-            ~((image[:, :, 0] >= 253) & (image[:, :, 1] >= 253) & (image[:, :, 2] >= 253)) # color is not whit
+            ~((image[:, :, 0] >= 253) & (image[:, :, 1] >= 253) & (image[:, :, 2] >= 253)) # color is not white
         )
-    #elif (color == 1): 
+    elif (color == 1): 
+       mask = (
+            (image[:,:,2] > image[:,:,0]) & (image[:,:,2] > image[:,:,1]) & # red intensity is higher than green and blue
+            ((image[:,:,1] + 10) > image[:,:,0]) & # green intensity is higher than blue
+            (image[:,:,0] >= b_low[color]) & # blue 
+            (image[:,:,1] >= g_low[color]) & # green
+            (image[:,:,2] >= r_low[color]) & # red
+            ~((image[:, :, 0] >= 253) & (image[:, :, 1] >= 253) & (image[:, :, 2] >= 253)) # color is not white
+        )
     
     # clean up the picture   
     mask = remove_small_holes(mask, 500)
+    mask = binary_closing(mask, disk(5))
     mask = remove_small_objects(mask, 500)
     mask = binary_opening(mask, disk(10))
-    mask = binary_closing(mask, disk(5))
-    mask[:200,:] = 0 # remove the upper part of the picture
+    
+
+    #prevent detecting the arm or the background
+    mask[:200,:] = 0      # remove the upper part of the picture
+    mask[:, :70] = 0      # Left side (0 to 70 pixels)
+    mask[:, 750:] = 0     # Right side (750 to 820 pixels)
     
 
     # find the middle of the ball from the up left corner
@@ -44,7 +83,7 @@ def ball(image, color):
 
     # create a table with the properties of the regions
     # centroid = (y,x) = (row, column)
-    region_table = regionprops_table(labeled_image, properties=['centroid', 'area', 'axis_major_length']) 
+    region_table = regionprops_table(labeled_image, properties=['centroid', 'axis_major_length']) 
     pd_regions = pd.DataFrame(region_table)
     pd_regions = pd_regions.sort_values(by='centroid-0', ascending=False) # sort by y coordinate
 
@@ -72,25 +111,25 @@ def ball(image, color):
 def move_middle(xy):
     #the whole image is of the size 616x820x3
     middle_x = 410
-    range = 10
+    range = 5
     status = 99
     wait = 0.0
     e = abs(xy[0] - middle_x)
 
     if(xy[0] > middle_x + range):
         #then turn left
-        service.send(service.topicCmd + "ti/rc","0.05 -0.25")
+        service.send(service.topicCmd + "ti/rc","0.05 -0.30")
         status = 1
     elif(xy[0] < middle_x - range):
         #then turn right
-        service.send(service.topicCmd + "ti/rc","0.05 0.25")
+        service.send(service.topicCmd + "ti/rc","0.05 0.30")
         status = 2
     else:
         #ball is in the middle
         status = 0
         service.send(service.topicCmd + "ti/rc","0 0")
 
-    wait = (e/middle_x)*0.6+0.05
+    wait = (e/middle_x)*0.6+0.1
     #stop to update the picture and the ball detection
     time.sleep(wait)
     service.send(service.topicCmd + "ti/rc", "0 0")
@@ -98,7 +137,7 @@ def move_middle(xy):
     return status
 
 # calculate the distance to the ball
-def distance(xy, width):
+def distance_calc(xy, width):
     # calculate the distance to the ball by the measurement of the width of the ball
     a = 0.007494
     b = -1.955569
@@ -119,7 +158,6 @@ def distance(xy, width):
         distance = (distance_xy + distance_width)/2
         status = 1
     else:
-        print("Distance calculation error")
         print("Distance xy: ", distance_xy, "Distance width: ", distance_width)
         distance = distance_xy
         status = 0
@@ -129,8 +167,8 @@ def distance(xy, width):
 # move to the ball
 def move_straight(xy, width):
     arm_length = 300 #in mm
-    distance = 0.0
-    status = -1
+    distance = 1.0
+    status = 99
     wait = 0.0
     velocity = 0.0
     middle_x = 410
@@ -138,11 +176,22 @@ def move_straight(xy, width):
     if (xy != []):
         if abs(xy[0] - middle_x) > 10:
             #wrong ball
-            xy = []
+            move_middle(xy)
         else:
             #calculate the distance to the ball
-            distance, status_d = distance(xy, width)
+            distance, status_d = distance_calc(xy, width)
             distance = distance - arm_length #in mm
+    else:
+        img = imageAnalysis(False)
+        xy, status_b, width = ball(img, 0)
+
+        if xy != []:
+            distance, status_d = distance_calc(xy, width)
+            distance = distance - arm_length #in mm
+        else:
+           distance = 0
+            
+    print("Distance: ", distance)
 
     if (distance > 500.0): #out of calibration range
         velocity = 0.1 #in m/s
@@ -167,12 +216,13 @@ def move_straight(xy, width):
         service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
         time.sleep(wait)
         service.send(service.topicCmd + "ti/rc", "0 0")
+        #service.send(service.topicCmd + "T0/servo", "1 -80 200")
         status = 1
     else:
         # stop
         service.send(service.topicCmd + "ti/rc", "0 0")
         # lowering the arm
-        service.send(service.topicCmd + "T0/servo", "1 -80 200")
+        #service.send(service.topicCmd + "T0/servo", "1 -80 200")
         status = 0
 
     return status

@@ -173,8 +173,7 @@ def driveTurnPi():
 
 def loop():
   from ulog import flog
-  state = 21
-  state_ia = 0
+  state = 20
   images = 0
   ledon = True
   tripTime = datetime.now()
@@ -227,7 +226,7 @@ def loop():
         gpio.set_value(20, 0)
       ledon = not ledon
       # finished?
-      if images >= 1 or (not cam.useCam) or stateTimePassed() > 100:
+      if images >= 10 or (not cam.useCam) or stateTimePassed() > 100:
         images = 0
         state = 99
       pass
@@ -243,7 +242,7 @@ def loop():
       if state_ia == 0: # find a ball
 
         #starting position Servo
-        service.send(service.topicCmd + "T0/servo","1 -800 200")
+        service.send(service.topicCmd + "T0/servo","1 -900 200")
 
         if (stat_ball >= 1) & (xy != (0,0)): # found one or more balls
           print("Found one or more balls. Nearest ball:", xy)
@@ -265,12 +264,13 @@ def loop():
         
         if stat_straight == 0:
           # ball is captured
+          service.send(service.topicCmd + "T0/servo", "1 -150 200")
           state_ia = 2
           print("Ball is picked up.")
 
       if not gpio.onPi:
         cv.imshow('frame for analysis', image_ia)
-      if stateTimePassed() >= 30:
+      if stateTimePassed() >= 45:
           state = 99
         
     elif state == 101:
@@ -327,10 +327,8 @@ if __name__ == "__main__":
       print("% Starting")
       # where is the MQTT data server:
       #service.setup('localhost') # localhost
-      #service.setup('10.197.217.81') # Juniper
-      #service.setup('10.197.217.80') # Newton
-      #service.setup('bode.local') # Bode
-      service.setup('10.197.218.235')
+      #service.setup('10.197.218.235') #Arthur
+      service.setup('10.197.218.184') #Gandalf
       if service.connected:
         loop()
       service.terminate()
