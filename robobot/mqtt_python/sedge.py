@@ -94,9 +94,9 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 0.7 # Proportional constant
+    Kp = 0.5 # Proportional constant
     Ki = 0.15  # Integral constant
-    Kd = 0.3  # Derivative constant
+    Kd = 0.35  # Derivative constant
     
     # lead compensator
     lineTauZ = 0.00
