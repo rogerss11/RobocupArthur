@@ -248,8 +248,8 @@ def loop():
                 )  # (forward m/s, turn-rate rad/sec)
 
                 # follow line (at 0.25cm/s)
-                edge.lineControl(0.25, 0.0)  # m/s and position on line -2.0..2.0
-                state = 12  # until no more line
+                #edge.lineControl(0.25, 0.0)  # m/s and position on line -2.0..2.0
+                state = 71  
                 pose.tripBreset()  # use trip counter/timer B
         elif state == 12:  # following line
             if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 10:
@@ -298,6 +298,9 @@ def loop():
             turnInPlace(90, dir=1)  # turn counter-clockwise 65=90
             climbCircle(80, vel=0.3)
             state = 71
+        elif state == 71:  # Mission 360
+            Axe()
+            state = 99
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
             break
@@ -350,7 +353,7 @@ if __name__ == "__main__":
         # where is the MQTT data server:
         # service.setup("localhost")  # localhost
         service.setup("10.197.218.235")  # Arthur
-        service.setup("10.197.218.184")
+        #service.setup("10.197.218.184")
         # service.setup('10.197.217.81') # Juniper
         # service.setup('10.197.217.80') # Newton
         # service.setup("bode.local")  # Bode
