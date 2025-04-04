@@ -284,14 +284,19 @@ def loop():
       print("% AtIntersectionCnt: ", edge.atIntersectionCnt, ", navigatingIntersection: ", edge.navigatingIntersection)
       t.sleep(0.5)
 
-    elif state == 140: # following line
-      print(edge.velocity)
-      if ir.ir[1] > 0.3: #it decelerates if there is an object in front of him in less than 30 cm
-        print("far")
-        edge.lineControl(0.25, 0.0)
-      else:
-        print("close")
-        edge.lineControl(0.0, 0.0)
+    # after third intersection turn right towards finish and turn around, hard do navigate intersection otherwise
+    elif state == 140: # after third intersection turn right towards finish and turn around, hard do navigate intersection otherwise
+        state = 0
+        pose.tripBreset()
+        while not (service.stop):
+          if state == 0: # wait for start signal
+            service.send("robobot/cmd/ti/rc","0.2 0.5") # (forward m/s, turn-rate rad/sec)
+            state = 1
+          elif state == 1:
+            if pose.tripBh > 3.14 or pose.tripBtimePassed() > 15:
+              service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
+              state = 2
+      
 
     else: # abort
       print(f"% Mission finished/aborted; state={state}")

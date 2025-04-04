@@ -81,7 +81,7 @@ class SEdge:
     atIntersection = False # if the current reading suggests that we are at an intersection
     atIntersectionCnt = 0  # 20 = at Intersection
     passedIntersections = 0 # how many intersection have we passed
-    intersectionPath = ['r', 'r', 'l'] # l = choose left line, r = choose right line, m = choose middle line
+    intersectionPath = ['r', 'r', 'r', 'r'] # l = choose left line, r = choose right line, m = choose middle line
     navigatingIntersection = False # if we are currently navigating an intersection
 
     average = 0 # avarage edge_n[] value
@@ -94,9 +94,9 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 0.55 # Proportional constant
-    Ki = 0.1  # Integral constant
-    Kd = 0.4  # Derivative constant
+    Kp = 0.7 # Proportional constant
+    Ki = 0.15  # Integral constant
+    Kd = 0.3  # Derivative constant
     
     # lead compensator
     lineTauZ = 0.00
