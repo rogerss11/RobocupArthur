@@ -117,25 +117,28 @@ def loop():
         state = 20 # finished   =17 go look for line
         service.send(service.topicCmd + "ti/rc","0 0") # stop for images
       print(f"% --- state {state}, h = {pose.tripBh:.4f}, t={pose.tripBtimePassed():.3f}")
+    
     elif state == 20: # image analysis
-      img = imageAnalysis(0) #getting the image
-      print("first part fail")
-      if img is not None: 
-        print("second part fail")
-        #detect the aruco markers
-        marker_ids, marker_positions, img = aruco_detector.detect_markers(img)
-        if marker_ids:
-          print("third part fail")
-          for i, marker_id in enumerate(marker_ids):
-            position = marker_positions[i][0].tolist()
-            print(f"Detected ArUco Marker ID: {marker_id} at {position}")
-            service.send(service.topicCmd + "robot/arucode", f"{marker_id} {position}")
-            # Show the image with detected markers
-          if not gpio.onPi:
-            cv.imshow('Live ArUco Detection', img)
-      if not cam.useCam or stateTimePassed() > 20:
-         state = 99
-      
+      img = imageAnalysis(0)  # get the image
+      if img is not None:
+          ids, corners, centers, angles, img = aruco_detector.detect_markers(img)
+          if ids:
+              for i, marker_id in enumerate(ids):
+                  center = centers[i]
+                  angle = angles[i]
+                  print(f"ID: {marker_id} | Center: {center} | Angle: {angle:.2f} deg")
+                  # --- Stop if close enough ---
+                  if estimated_distance < 20:
+                      print("Stopping, marker is within 20 cm")
+                      service.send(service.topicCmd + "ti/rc", "0 0")
+                      state = 99
+
+              if not gpio.onPi:
+                  cv.imshow('Live ArUco Detection', img)
+
+      if not cam.useCam or stateTimePassed() > 40:
+          state = 99
+
       # blink LED
       if ledon:
         service.send(service.topicCmd + "T0/leds","16 0 64 0")
@@ -183,10 +186,29 @@ if __name__ == "__main__":
     print("% Starting")
     # where is the MQTT data server:
     #service.setup('localhost') # localhost
-    #service.setup('10.197.217.81') # Juniper
-    #service.setup('10.197.217.80') # Newton
-    service.setup('10.197.218.24') #Arthur
+    service.setup('localhost') #Arthur
     if service.connected:
       loop()
       service.terminate()
     print("% Main Terminated")
+
+""""
+    elif state == 20: # image analysis
+      img = imageAnalysis(0) #getting the image
+      #print("first part fail")
+      if img is not None: 
+        #print("second part fail")
+        #detect the aruco markers
+        marker_ids, marker_positions, img = aruco_detector.detect_markers(img)
+        if marker_ids:
+          #print("third part fail")
+          for i, marker_id in enumerate(marker_ids):
+            position = marker_positions[i][0].tolist()
+            print(f"Detected ArUco Marker ID: {marker_id} at {position}")
+            service.send(service.topicCmd + "robot/arucode", f"{marker_id} {position}")
+            # Show the image with detected markers
+          if not gpio.onPi:
+            cv.imshow('Live ArUco Detection', img)
+      if not cam.useCam or stateTimePassed() > 20:
+         state = 99"
+    """
