@@ -246,15 +246,11 @@ def loop():
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
             turnInPlace(25, dir=1)
             climbCircle(40, vel=0.35)
-            state = 72  # inside circle
+            state = 71  # inside circle
         elif state == 71:
             # ------------- INSIDE CIRCLE MISSION -------------------------------------------
-            turnInPlace(30, dir=1)  # positions both wheels in the circle
-            driveXMeters(0.5)
-            turnInPlace(67, dir=0)
-            driveXMeters(0.4)
-            turnInPlace(67, dir=0)
-            driveXMeters(0.5)
+            turnInPlace(30, dir=0, ang_speed=0.4)
+            driveUntilWall(0.5, ir_id=0)
             state = 72
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")

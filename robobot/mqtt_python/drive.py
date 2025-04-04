@@ -191,7 +191,7 @@ def climbCircle(acc=50, vel=0.5):
     print("% Driving until wall ------------------------- end")
 
 
-def turnInPlace(deg=90, dir=0):
+def turnInPlace(deg=90, dir=0, ang_speed=0.8):
     """
     NEEDS CALIBRATION (NOT ACCURATE)
     "turnInPlace(rad=3.14) - turn in place rad radians"
@@ -205,7 +205,8 @@ def turnInPlace(deg=90, dir=0):
     service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
     while not (service.stop):
         if state == 0:  # wait for start signal
-            cmnd_msg = "0.0 0.8" if dir == 0 else "0.0 -0.8"
+            ang_speed = ang_speed if dir == 0 else -ang_speed
+            cmnd_msg = f"0.0 {ang_speed:.2f}"
             service.send(
                 "robobot/cmd/ti/rc", cmnd_msg
             )  # (forward m/s, turn-rate rad/sec)
