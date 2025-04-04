@@ -361,7 +361,13 @@ class SEdge:
             else max(self.lineValidCnt - 1, 0)
         )
 
+        print(valuesAboveZero)
+
         # Detect if we have a crossing line
+        if valuesAboveZero >= 4:
+          self.atIntersection = True
+        else:
+          self.atIntersection = False
         # Updates crossingValidCnt: -1 if there's no crossing, +1 up to atIntersectionCntMaxValue if there is
         self.atIntersectionCnt = (
             min(self.atIntersectionCnt + 1, self.atIntersectionCntMaxValue)
