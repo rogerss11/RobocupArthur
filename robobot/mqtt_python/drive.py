@@ -382,3 +382,56 @@ def followWall(d=0.3, velocity=0.2, time=60.0, d_front=0.1, Kp=1.3, Ki=0.0, Kd=2
 
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")
     print("% Wall following ------------------------- end")
+
+
+def rotateCircle(r=0.5, deg=360, dir=0):
+    """
+    rotateCircle() - Drive in a circle with a specified radius.
+    r = radius in meters
+    deg = angle to rotate in degrees (default 360 for full circle)
+    dir = 0: counter-clockwise, 1: clockwise
+    """
+    from spose import pose
+    from uservice import service
+    import time as t
+
+    state = 0
+    rotation = 0.0
+    pose.tripBreset()
+    print(f"% Driving in a circle with radius {r}m -------------------------")
+    service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green LED
+
+    while not service.stop:
+        if state == 0:
+            # Send circular movement command: forward speed = 0.2 m/s, angular speed = 0.2 / r
+            r = r if dir == 0 else -r  # Adjust radius based on direction
+            vel_cmd = f"0.2 {0.2 / r:.2f}"
+            service.send("robobot/cmd/ti/rc", vel_cmd)
+            state = 1
+
+        elif state == 1:
+            # Compute rotated angle in degrees
+            rotation = (pose.tripB / r) * (180 / 3.1416)
+            if abs(rotation) > deg or pose.tripBtimePassed() > 30:
+                # Stop if completed circle or timeout
+                service.send("robobot/cmd/ti/rc", "0.0 0.0")
+                state = 2
+
+        elif state == 2:
+            # Wait until the robot fully stops
+            if abs(pose.velocity()) < 0.001:
+                state = 99
+
+        elif state == 99:
+            break
+
+        # Logging for debugging
+        print(
+            f"# drive {state}, rot {rotation:.3f}, dist {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} sec"
+        )
+        t.sleep(0.05)
+
+    # Stop everything and reset LED
+    service.send("robobot/cmd/ti/rc", "0.0 0.0")
+    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # turn LED off
+    print(f"% Driving in a circle ------------------------- end")

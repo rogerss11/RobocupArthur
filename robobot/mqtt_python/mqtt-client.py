@@ -195,6 +195,7 @@ def loop():
                 # follow line (at 0.25cm/s)
                 # edge.lineControl(0.25, 0.0)  # m/s and position on line -2.0..2.0
                 state = 70  # until no more line
+
                 pose.tripBreset()  # use trip counter/timer B
         elif state == 12:  # following line
             if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 10:
@@ -252,7 +253,16 @@ def loop():
             turnInPlace(30, dir=0, ang_speed=0.4)
             min_d = driveUntilWall(0.5, ir_id=0)
             print(f"% min_d = {min_d:.2f}")
+            turn_rad = min_d + 0.14  # 0.15 is approx min_d+12·sin(16.6)+10
+            rotateCircle(r=0.35, deg=340, dir=1)
+            driveUntilWall(0.3, ir_id=1)
             state = 72
+
+        elif (
+            state == 80
+        ):  # ------ TESTS --------------------------------------------------------
+            rotateCircle(r=0.5, deg=200, dir=0)
+            state = 81
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
             break
