@@ -61,6 +61,7 @@ def driveUntilWall(d=0.2, ir_id=1):
     d = distance to the wall in meters to stop at
     ir_id = IR sensor id (0 or 1), 0: right, 1: front
     """
+    min_d = 1.5
     state = 0
     pose.tripBreset()
     print(f"% Driving until wall is at {d}m -------------------------")
@@ -77,6 +78,7 @@ def driveUntilWall(d=0.2, ir_id=1):
                     "robobot/cmd/ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
                 state = 2
+                min_d = ir.ir[ir_id]
             pass
         elif state == 2:
             if abs(pose.velocity()) < 0.001:
@@ -96,6 +98,7 @@ def driveUntilWall(d=0.2, ir_id=1):
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Driving until wall ------------------------- end")
+    return min_d
 
 
 def driveUntilLine(threshold=300):

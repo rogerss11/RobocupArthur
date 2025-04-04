@@ -250,7 +250,8 @@ def loop():
         elif state == 71:
             # ------------- INSIDE CIRCLE MISSION -------------------------------------------
             turnInPlace(30, dir=0, ang_speed=0.4)
-            driveUntilWall(0.5, ir_id=0)
+            min_d = driveUntilWall(0.5, ir_id=0)
+            print(f"% min_d = {min_d:.2f}")
             state = 72
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
