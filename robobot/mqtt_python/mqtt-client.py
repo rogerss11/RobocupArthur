@@ -246,16 +246,17 @@ def loop():
             driveXMeters(-0.30)
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
             turnInPlace(25, dir=1)
-            climbCircle(40, vel=0.35)
+            climbCircle(40, vel=0.45)
             state = 71  # inside circle
         elif state == 71:
             # ------------- INSIDE CIRCLE MISSION -------------------------------------------
-            turnInPlace(30, dir=0, ang_speed=0.4)
+            turnInPlace(35, dir=0, ang_speed=0.4)
             min_d = driveUntilWall(0.5, ir_id=0)
             print(f"% min_d = {min_d:.2f}")
-            turn_rad = min_d + 0.14  # 0.15 is approx min_d+12·sin(16.6)+10
-            rotateCircle(r=0.35, deg=340, dir=1)
-            driveUntilWall(0.3, ir_id=1)
+            turn_rad = min_d + 0.1  # 0.1 is the 1/2 of the wheel base
+            rotateCircle(r=turn_rad, deg=340, dir=1)
+            driveXMeters(1.7, vel=0.45)
+            driveUntilLine(700)
             state = 72
 
         elif (

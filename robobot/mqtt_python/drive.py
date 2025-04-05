@@ -12,7 +12,7 @@ from uservice import service
 from simu import imu
 
 
-def driveXMeters(x=1.0):
+def driveXMeters(x=1.0, vel=0.2):
     """
     driveXMeters(x=1.0) - drive x meters forward
     x = distance in meters to drive forward
@@ -23,7 +23,8 @@ def driveXMeters(x=1.0):
     service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
     while not (service.stop):
         if state == 0:  # wait for start signal
-            vel_cmd = "0.2 0.0" if x > 0 else "-0.2 0.0"
+            vel = vel if x > 0 else -vel
+            vel_cmd = f"{vel:.2f} 0.0"  # (forward m/s, turn-rate rad/sec)
             service.send(
                 "robobot/cmd/ti/rc", vel_cmd
             )  # (forward m/s, turn-rate rad/sec)
