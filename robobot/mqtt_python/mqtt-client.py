@@ -40,6 +40,7 @@ from sgpio import gpio
 from scam import cam
 from uservice import service
 import image_analysis as ia
+import drive
 
 ############################################################
 
@@ -173,7 +174,8 @@ def driveTurnPi():
 
 def loop():
   from ulog import flog
-  state = 20
+  state = 22
+  state_ia = 0
   images = 0
   ledon = True
   tripTime = datetime.now()
@@ -213,7 +215,7 @@ def loop():
         state = 20 # finished   =17 go look for line
         service.send(service.topicCmd + "ti/rc","0 0") # stop for images
       print(f"% --- state {state}, h = {pose.tripBh:.4f}, t={pose.tripBtimePassed():.3f}")
-    elif state == 20: # image analysis
+    elif state == 20: # take images
       imageAnalysis(1)
       images += 1
       t.sleep(2)
@@ -230,49 +232,96 @@ def loop():
         images = 0
         state = 99
       pass
-    elif state == 21: #ball detection
+    elif state == 21: #blue ball detection
       image_ia = imageAnalysis(0)
       xy, stat_ball, width = ia.ball(image_ia, 0) #detect blue ball
       if (len(xy) == 2):
         image_ia = cv.circle(image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1) #draw xy
 
-      stat_middle = -1
-      stat_straight = -1
-
-      if state_ia == 0: # find a ball
-
-        #starting position Servo
-        service.send(service.topicCmd + "T0/servo","1 -900 200")
-
-        if (stat_ball >= 1) & (xy != (0,0)): # found one or more balls
-          print("Found one or more balls. Nearest ball:", xy)
-          stat_middle = ia.move_middle(xy)
-
-          if stat_middle == 0:
-          # ball is in the middle
-            state_ia = 1
-
-        else: # no ball found -> turn
-          print("No ball found. Turn to find the ball.")
-          service.send(service.topicCmd + "ti/rc","0.05 -0.25")
-          t.sleep(0.1)
-          service.send(service.topicCmd + "ti/rc", "0 0")
-
-      elif state_ia == 1: # ball in the middle
-        print("Ball in the middle. Move straight.")
-        stat_straight = ia.move_straight(xy, width)
-        
-        if stat_straight == 0:
-          # ball is captured
-          service.send(service.topicCmd + "T0/servo", "1 -150 200")
-          state_ia = 2
-          print("Ball is picked up.")
+      state_ia = ia.drive2ball(xy, stat_ball, width, state_ia)    #drive to ball  
 
       if not gpio.onPi:
         cv.imshow('frame for analysis', image_ia)
       if stateTimePassed() >= 45:
           state = 99
-        
+      pass
+
+    elif state == 22: #golf ball 
+      '''
+      Problems:
+      + the yellow gates are detected as golf balls 
+      +? golf ball is other size as the blue ball -> distance calc by width is wrong
+      - drive afterwards to the hole
+      '''
+
+      image_ia = imageAnalysis(0)
+
+      if state_ia < 2:
+        xy, stat_ball, width = ia.ball(image_ia, 1) #detect golf ball
+
+      state_ia = ia.drive2ball(xy, stat_ball, width, state_ia, 1)    #drive to ball
+
+      if state_ia == 2:
+        #drive to hole
+        drive.turnInPlace(deg=90, dir=1)  #turn right
+        state_ia = 3
+        state_hole = 0
+      elif state_ia == 3:
+        #detect hole
+        xy, state_h, width_hole = ia.hole(image_ia) #detect hole
+        state_hole = ia.drive2ball(xy, state_h, width_hole, state_hole, 1) #drive to hole
+
+      if (len(xy) == 2):
+        image_ia = cv.circle(image_ia, xy, radius=10, color=(255, 0, 0), thickness=-1) #draw xy
+
+      if not gpio.onPi:
+        cv.imshow('frame for analysis', image_ia)
+
+      if stateTimePassed() >= 45:
+          state = 99
+      pass
+    elif state == 23: #orange ball on seasaw (with line)
+      image_ia = imageAnalysis(0)
+      xy, stat_ball, width = ia.ball(image_ia, 1) #detect orange ball
+      distance = ia.distance_calc(xy, width, 1) #calculate distance to ball
+
+      arm_length = 300
+      distance = distance - arm_length #distance to ball - arm length
+
+      if distance != 0.0:
+        velocity = 0.1 #in m/s
+        if distance > 500:
+          wait = (distance-500.0)/1000/velocity
+
+          edge.lineControl(velocity, 0.0) #follow line
+          t.sleep(wait) 
+          edge.lineControl(0.0, 0.0) #stop
+        elif (distance > 250.0):
+          wait = (distance-250.0)/1000/velocity
+
+          edge.lineControl(velocity, 0.0) #follow line
+          t.sleep(wait) 
+          edge.lineControl(0.0, 0.0) #stop
+        elif (distance > 0.0):
+          wait = distance/1000/velocity
+
+          edge.lineControl(velocity, 0.0) #follow line
+          t.sleep(wait) 
+          edge.lineControl(0.0, 0.0) #stop
+          #lower the arm
+          service.send(service.topicCmd + "T0/servo", "1 -150 200")
+
+
+      if (len(xy) == 2): #xy detected
+        image_ia = cv.circle(image_ia, xy, radius=10, color=(255, 0, 0), thickness=-1)
+
+      if not gpio.onPi:
+        cv.imshow('frame for analysis', image_ia)
+
+      if stateTimePassed() >= 45:
+          state = 99
+      pass
+
     elif state == 101:
       driveOneMeter();
       state = 100
@@ -327,8 +376,8 @@ if __name__ == "__main__":
       print("% Starting")
       # where is the MQTT data server:
       #service.setup('localhost') # localhost
-      #service.setup('10.197.218.235') #Arthur
-      service.setup('10.197.218.184') #Gandalf
+      service.setup('10.197.218.235') #Arthur
+      #service.setup('10.197.218.184') #Gandalf
       if service.connected:
         loop()
       service.terminate()
