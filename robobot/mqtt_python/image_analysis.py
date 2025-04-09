@@ -3,38 +3,22 @@ from skimage.measure import label, regionprops, regionprops_table
 from scipy.ndimage import gaussian_filter
 import pandas as pd
 import numpy as np
-import time 
 import cv2 as cv
-from scam import cam
-#from mqtt-client import imageAnalysis
+import time 
+import drive
 
+from mqtt_client import imageAnalysis
 from uservice import service
+from sedge import edge
+from sgpio import gpio
 
-def imageAnalysis(save):
-  if cam.useCam:
-    ok, img, imgTime = cam.getImage()
-    if not ok: # size(img) == 0):
-      if cam.imageFailCnt < 5:
-        print("% Failed to get image.")
-    else:
-      h, w, ch = img.shape
-      if not service.args.silent:
-        # print(f"% At {imgTime}, got image {cam.cnt} of size= {w}x{h}")
-        pass
-      #edge.paint(img)
-      if save:
-        fn = f"image_{imgTime.strftime('%Y_%b_%d_%H%M%S_')}{cam.cnt:03d}.jpg"
-        cv.imwrite(fn, img)
-        if not service.args.silent:
-          print(f"% Saved image {fn}")
-      pass
-    pass
-  pass
-  return img
-
-# detection of the balls in the picture of a certain color
-def ball(image, color):
-    # color thresholds element 0 = blue, 1 = red
+def ball(image, color: int):
+    """
+    Detects a ball of a certain color in the image.
+     image: the image to be analyzed
+     color: the color of the ball (0 = blue, 1 = orange)
+    """
+    # color thresholds element 0 = blue, 1 = orange
     # Blue
     b_low = [120,0]
     b_high = [255, 30]
@@ -47,6 +31,7 @@ def ball(image, color):
     r_low = [10,80]
 
     mask = np.zeros_like(image[:,:,0], dtype=bool) # create a mask with the same size as the image
+
     # color of the thresholds (for images in BGR)
     if (color == 0): #blue
         mask = (
@@ -72,12 +57,10 @@ def ball(image, color):
     mask = remove_small_objects(mask, 500)
     mask = binary_opening(mask, disk(10))
     
-
     #prevent detecting the arm or the background
     mask[:200,:] = 0      # remove the upper part of the picture
     mask[:, :70] = 0      # Left side (0 to 70 pixels)
     mask[:, 750:] = 0     # Right side (750 to 820 pixels)
-    
 
     # find the middle of the ball from the up left corner
     labeled_image, n_labels = label(mask, background=0,return_num=True,connectivity=1)
@@ -107,24 +90,30 @@ def ball(image, color):
         status = 2
 
     # gives back a tuple with the pixel position of the (roughly) middle of the ball and the result
-    return xy, status, width 
+    return xy, width 
 
-# drive the robot so that the object is in the middle of the picture
 def move_middle(xy):
+    """
+    Moves the robot so that the object is in the middle of the picture.
+     xy: the coordinates of the object in the picture
+    """
     #the whole image is of the size 616x820x3
     middle_x = 410
     range = 5
     status = 99
     wait = 0.0
+    velocity = 0.30
+
+    # distance of the object to the middle of the picture
     e = abs(xy[0] - middle_x)
 
     if(xy[0] > middle_x + range):
         #then turn left
-        service.send(service.topicCmd + "ti/rc","0.05 -0.30")
+        service.send(service.topicCmd + "ti/rc",f"0.0 -{velocity:.2f}")
         status = 1
     elif(xy[0] < middle_x - range):
         #then turn right
-        service.send(service.topicCmd + "ti/rc","0.05 0.30")
+        service.send(service.topicCmd + "ti/rc",f"0.0 {velocity:.2f}")
         status = 2
     else:
         #ball is in the middle
@@ -140,7 +129,12 @@ def move_middle(xy):
 
 # calculate the distance to the ball
 def distance_calc(xy, width, type):
-    # type = 0 for oval balls, 1 for others (golf ball, holes, etc.)
+    """
+    Calculate the distance to the ball based on its width and coordinates.
+     xy: the coordinates of the ball in the picture
+     width: the width of the ball in pixels (will just be used for the oval ball)
+     type: the type of the ball (0 = oval, 1 = others)
+    """
 
     distance = 0.0
     
@@ -161,78 +155,82 @@ def distance_calc(xy, width, type):
         distance_xy = (a2*xy[1]**2 + b2*xy[1] + c2)*10 #in mm
 
     # if the difference between the two distances is small, use the average
-    if (type == 0) &(abs(distance_xy - distance_width)  < 5):
+    if (type == 0) & (abs(distance_xy - distance_width)  < 5):
         distance = (distance_xy + distance_width)/2
         status = 1
-    elif (type == 1):
+    elif (type == 1): # use the xy coordinates for the distance for non-oval balls
         distance = distance_xy
         status = 1
     else:
-        print("Distance xy: ", distance_xy, "Distance width: ", distance_width)
         distance = distance_xy
         status = 0
+    
+    arm_length = 300 #in mm
+
+    distance = distance - arm_length #in mm
+    print("Distance: ", distance)
 
     return distance, status
 
 # move to the ball
-def move_straight(xy, width, type):
-    arm_length = 300 #in mm
-    distance = 1.0
-    status = 99
-    wait = 0.0
-    velocity = 0.0
-    middle_x = 410
+def move_straight(xy, distance, state:int, line:int):
+    """
+    Moves the robot straight to the ball.
+        xy: the coordinates of the ball in the picture
+        distance: the distance to the object in mm
+        state: start with 3 to remove obstacles, then use the state of the function
+        line: 0 = normal drive, 1 = line following
+    """
 
-    if (xy != []):
-        if (abs(xy[0] - middle_x) > 10):
-            #adjust the position of the ball in the middle of the picture
-            move_middle(xy)
-        else:
-            #calculate the distance to the ball
-            distance, status_d = distance_calc(xy, width, type)
-            distance = distance - arm_length #in mm
-    else:
-        img = imageAnalysis(False)
-        xy, status_b, width = ball(img, 0)
+    if (distance > 250.0):
+        if state == 3:
+            #remove obstacles in the way
+            drive.turnInPlace(deg = 90, dir = 0)
+            service.send(service.topicCmd + "T0/servo", "1 -150 200")
+            drive.turnInPlace(deg = 180, dir = 1)
+            service.send(service.topicCmd + "T0/servo", "1 -900 200")
+            drive.turnInPlace(deg = 90, dir = 0)
+            state = 2
+        elif state == 2:
+        #adjust the position of the ball in the middle of the picture
+            stat_m = move_middle(xy)
+            if stat_m == 0:
+                # ball is in the middle
+                state = 1
+        elif state == 1:
+            #move for 20 cm
+            velocity = 0.1 #in m/s
+            wait = (distance-200.0)/1000/velocity 
 
-        if xy != []:
-            distance, status_d = distance_calc(xy, width)
-            distance = distance - arm_length #in mm
-        else:
-           distance = 0
-            
-    print("Distance: ", distance)
+            if line == 0:
+                service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
+                time.sleep(wait)
+                service.send(service.topicCmd + "ti/rc", "0 0")
+            else:
+                edge.lineControl(velocity, 0.0)
+                time.sleep(wait)
+                edge.lineControl(0.0, 0.0)
 
-    if (distance > 500.0): #out of calibration range
-        velocity = 0.1 #in m/s
-        wait = (distance-500.0)/1000/velocity
-
-        service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
-        time.sleep(wait)
-        service.send(service.topicCmd + "ti/rc", "0 0")
-        status = 3
-    elif (distance > 250.0):
-        velocity = 0.1 #in m/s
-        wait = (distance-250.0)/1000/velocity
-
-        service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
-        time.sleep(wait)
-        service.send(service.topicCmd + "ti/rc", "0 0")
-        status = 2
     elif (distance > 0.0):
+        state = 0
+        #move for the distance to the ball
         velocity = 0.1 #in m/s
         wait = distance/1000/velocity
+        if line == 0:
+            service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
+            time.sleep(wait)
+            service.send(service.topicCmd + "ti/rc", "0 0")
+        else:
+            edge.lineControl(velocity, 0.0)
+            time.sleep(wait)
+            edge.lineControl(0.0, 0.0)
+        #move the arm to the ball
+        service.send(service.topicCmd + "T0/servo", "1 -150 200")
 
-        service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
-        time.sleep(wait)
-        service.send(service.topicCmd + "ti/rc", "0 0")
-        status = 1
-    else:
-        # stop
-        service.send(service.topicCmd + "ti/rc", "0 0")
-        status = 0
+    else :
+        state = -1
 
-    return status
+    return state
 
 
 # detect holes on black surface in the pictures
@@ -266,37 +264,71 @@ def hole(image):
     return xy, state, width # gives back a tuple with the pixel position of the (roughly) middle of the hole 
 
 # drive to the ball
-def drive2ball(xy, stat_ball, width, state_ia, type):
-    stat_middle = -1
-    stat_straight = -1
+def drive2ball(case:int):
+    """
+    Drive to the ball and pick it up.
+        case: the type of the object (0 = oval blue ball, 1 = orange golf ball without line, 2 = orange golf ball with line, 3 = hole)
+    """
 
-    if state_ia == 0: # find a ball
+    # decode the cases
+    if case == 0:
+        state_straight = 3 # remove obstacles
+        color = 0 # blue
+    elif case == 1:
+        state_straight = 2 # move object to middle first
+        color = 1 # orange
+    elif case == 2:
+        state_straight = 1 # just move straight
+        color = 1 # orange
+    elif case == 3:
+        state_straight = 2
+        color = -1 # hole
+    
+    state = 0 # start with the first state
 
-        #starting position Servo
-        service.send(service.topicCmd + "T0/servo","1 -900 200")
+    while (state != 2):
+        #Take a picture, until taking a picture is successful
+        ok = False
+        while not ok:
+            img,ok = imageAnalysis(0)
 
-        if (stat_ball >= 1) & (xy != (0,0)): # found one or more balls
-          print("Found one or more balls. Nearest ball:", xy)
-          stat_middle = move_middle(xy)
+        #find ball in the picture
+        xy = []
+        if case != 3:
+            xy, width = ball(img, color)
+        else:
+            xy, state, width = hole(img)
 
-          if stat_middle == 0:
-          # ball is in the middle
-            state_ia = 1
+        #Visualize the ball in the picture
+        if (len(xy) == 2):
+            img = cv.circle(img, xy, radius=10, color=(0, 0, 255), thickness=-1) 
 
-        else: # no ball found -> turn
-          print("No ball found. Turn to find the ball.")
-          service.send(service.topicCmd + "ti/rc","0.05 -0.25")
-          time.sleep(0.1)
-          service.send(service.topicCmd + "ti/rc", "0 0")
+        #Show the image for debugging
+        if not gpio.onPi:
+            cv.imshow('frame for analysis', img)
 
-    elif state_ia == 1: # ball in the middle
-        print("Ball in the middle. Move straight.")
-        stat_straight = move_straight(xy, width, type)
-        
-        if stat_straight == 0:
-          # ball is captured
-          service.send(service.topicCmd + "T0/servo", "1 -150 200")
-          state_ia = 2
-          print("Ball is picked up.")
+        if (state == 0):
+            #starting position Servo
+            service.send(service.topicCmd + "T0/servo","1 -900 200")
 
-    return state_ia
+            if xy != []: # found one or more balls
+                print("Found one or more balls. Nearest ball:", xy)
+                status_middle = move_middle(xy)
+
+                if status_middle == 0:
+                    # ball is in the middle
+                    state = 1
+                    print("Ball in the middle. Move straight.")
+        elif (state == 1):
+            # move straight to the ball
+
+            # calculate the distance to the ball
+            distance, status_d = distance_calc(xy, width, case != 0)
+            state_straight = move_straight(xy, distance, state_straight, case == 2)
+            
+            if state_straight == 0:
+                # ball is captured
+                state = 2
+                print("Ball is picked up.")
+            
+    pass    

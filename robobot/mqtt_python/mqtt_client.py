@@ -64,7 +64,7 @@ def imageAnalysis(save):
       pass
     pass
   pass
-  return img
+  return img, ok
 ############################################################
 
 stateTime = datetime.now()
@@ -173,6 +173,7 @@ def driveTurnPi():
   print("% Driving a Pi turn ------------------------- end")
 
 def loop():
+  #INITIALIZE
   from ulog import flog
   state = 22
   state_ia = 0
@@ -232,94 +233,74 @@ def loop():
         images = 0
         state = 99
       pass
+
     elif state == 21: #blue ball detection
-      image_ia = imageAnalysis(0)
-      xy, stat_ball, width = ia.ball(image_ia, 0) #detect blue ball
-      if (len(xy) == 2):
-        image_ia = cv.circle(image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1) #draw xy
+      state_ia = 0
+      
+      #find the blue ball
+      while state_ia == 0:
+        image_ia = imageAnalysis(0)
+        xy, width = ia.ball(image_ia, 0) #detect blue ball
+        if xy == []: # no ball detected
+          #turn right
+          service.send(service.topicCmd + "ti/rc","0.0 0.3") #turn right
+          t.sleep(0.1)
+          service.send(service.topicCmd + "ti/rc","0.0 0.0") #stop
+        else:
+          state_ia = 1 # ball detected
 
-      state_ia = ia.drive2ball(xy, stat_ball, width, state_ia)    #drive to ball  
+      ia.drive2ball(0) #drive to the blue oval ball
 
-      if not gpio.onPi:
-        cv.imshow('frame for analysis', image_ia)
       if stateTimePassed() >= 45:
           state = 99
       pass
 
-    elif state == 22: #golf ball 
-      '''
-      Problems:
-      + the yellow gates are detected as golf balls 
-      +? golf ball is other size as the blue ball -> distance calc by width is wrong
-      - drive afterwards to the hole
-      '''
+    elif state == 22: #orange golf ball 
+      state_ia = 0
+      
+      #find the orange ball
+      while state_ia == 0:
+        image_ia = imageAnalysis(0)
+        xy, width = ia.ball(image_ia, 1) #detect orange ball
 
-      image_ia = imageAnalysis(0)
+        #Visualize the ball in the picture
+        if (len(xy) == 2):
+            img = cv.circle(img, xy, radius=10, color=(0, 0, 255), thickness=-1) 
 
-      if state_ia < 2:
-        xy, stat_ball, width = ia.ball(image_ia, 1) #detect golf ball
+        #Show the image for debugging
+        if not gpio.onPi:
+            cv.imshow('frame for analysis', img)
 
-      state_ia = ia.drive2ball(xy, stat_ball, width, state_ia, 1)    #drive to ball
+        if xy == []: # no ball detected
+          #turn right
+          service.send(service.topicCmd + "ti/rc","0.0 0.3") #turn right
+          t.sleep(0.1)
+          service.send(service.topicCmd + "ti/rc","0.0 0.0") #stop
+        else:
+          state_ia = 1 # ball detected
 
-      if state_ia == 2:
-        #drive to hole
+      if state_ia == 1:
+        #drive to orange ball
+        ia.drive2ball(1) #drive to the blue oval ball
         drive.turnInPlace(deg=90, dir=1)  #turn right
-        state_ia = 3
-        state_hole = 0
-      elif state_ia == 3:
-        #detect hole
-        xy, state_h, width_hole = ia.hole(image_ia) #detect hole
-        state_hole = ia.drive2ball(xy, state_h, width_hole, state_hole, 1) #drive to hole
+        state_ia = 2 # ball detected
+      
+      while state_ia == 2:
+        image_ia = imageAnalysis(0)
+        xy, state, width = ia.hole(image_ia) #detect hole
 
-      if (len(xy) == 2):
-        image_ia = cv.circle(image_ia, xy, radius=10, color=(255, 0, 0), thickness=-1) #draw xy
-
-      if not gpio.onPi:
-        cv.imshow('frame for analysis', image_ia)
+        if state:
+          state_ia = 3 # hole detected
+      
+      if state_ia == 3:
+        ia.drive2ball(3) #drive to hole
 
       if stateTimePassed() >= 45:
           state = 99
       pass
+
     elif state == 23: #orange ball on seasaw (with line)
-      image_ia = imageAnalysis(0)
-      xy, stat_ball, width = ia.ball(image_ia, 1) #detect orange ball
-      distance = ia.distance_calc(xy, width, 1) #calculate distance to ball
-
-      arm_length = 300
-      distance = distance - arm_length #distance to ball - arm length
-
-      if distance != 0.0:
-        velocity = 0.1 #in m/s
-        if distance > 500:
-          wait = (distance-500.0)/1000/velocity
-
-          edge.lineControl(velocity, 0.0) #follow line
-          t.sleep(wait) 
-          edge.lineControl(0.0, 0.0) #stop
-        elif (distance > 250.0):
-          wait = (distance-250.0)/1000/velocity
-
-          edge.lineControl(velocity, 0.0) #follow line
-          t.sleep(wait) 
-          edge.lineControl(0.0, 0.0) #stop
-        elif (distance > 0.0):
-          wait = distance/1000/velocity
-
-          edge.lineControl(velocity, 0.0) #follow line
-          t.sleep(wait) 
-          edge.lineControl(0.0, 0.0) #stop
-          #lower the arm
-          service.send(service.topicCmd + "T0/servo", "1 -150 200")
-
-
-      if (len(xy) == 2): #xy detected
-        image_ia = cv.circle(image_ia, xy, radius=10, color=(255, 0, 0), thickness=-1)
-
-      if not gpio.onPi:
-        cv.imshow('frame for analysis', image_ia)
-
-      if stateTimePassed() >= 45:
-          state = 99
+      ia.drive2ball(2) #drive to the orange ball
       pass
 
     elif state == 101:
