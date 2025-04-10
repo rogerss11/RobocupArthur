@@ -10,38 +10,43 @@ class ULog:
         self.f.flush()
 
     def write(self, state=-1):
-        from spose import pose
-        from scam import cam
-        from srobot import robot
-        from spose import pose as spose
-        from sir import ir
-        from simu import imu
-        from sedge import edge
+        if hasattr(self, "f") and not self.f.closed:
+            from spose import pose
+            from scam import cam
+            from srobot import robot
+            from spose import pose as spose
+            from sir import ir
+            from simu import imu
+            from sedge import edge
 
-        self.f.write(
-            f"{time.time():.2f},{state},{pose.pose[0]:.3f},{pose.pose[1]:.3f},{pose.pose[2]:.3f},"
-        )
-        self.f.write(
-            f"{cam.cnt},{edge.position:.3f},{edge.u:.3f},{spose.turnrate():.3f},{edge.lineValidCnt},"
-        )
-        self.f.write(
-            f"{spose.tripA:.3f},{spose.tripAh:.3f},{spose.tripB:.3f},{spose.tripBh:.3f},"
-        )
-        self.f.write(f"{ir.ir[0]:.2f},{ir.ir[1]:.2f},")
-        self.f.write(f"{imu.acc[0]:.3f},{imu.acc[1]:.3f},{imu.acc[2]:.3f},")
-        self.f.write(f"{imu.gyro[0]:.3f},{imu.gyro[1]:.3f},{imu.gyro[2]:.3f}\n")
-        self.f.flush()
+            self.f.write(
+                f"{time.time():.2f},{state},{pose.pose[0]:.3f},{pose.pose[1]:.3f},{pose.pose[2]:.3f},"
+            )
+            self.f.write(
+                f"{cam.cnt},{edge.position:.3f},{edge.u:.3f},{spose.turnrate():.3f},{edge.lineValidCnt},"
+            )
+            self.f.write(
+                f"{spose.tripA:.3f},{spose.tripAh:.3f},{spose.tripB:.3f},{spose.tripBh:.3f},"
+            )
+            self.f.write(f"{ir.ir[0]:.2f},{ir.ir[1]:.2f},")
+            self.f.write(f"{imu.acc[0]:.3f},{imu.acc[1]:.3f},{imu.acc[2]:.3f},")
+            self.f.write(f"{imu.gyro[0]:.3f},{imu.gyro[1]:.3f},{imu.gyro[2]:.3f}\n")
+            self.f.flush()
 
     def writeRemark(self, txt):
-        self.f.write(f"# remark: {txt}\n")
-        self.f.flush()
+        if hasattr(self, "f") and not self.f.closed:
+            self.f.write(f"# remark: {txt}\n")
+            self.f.flush()
 
     def writeDataString(self, txt):
-        self.f.write(f"# data: {txt}\n")
-        self.f.flush()
+        if hasattr(self, "f") and not self.f.closed:
+            self.f.write(f"# data: {txt}\n")
+            self.f.flush()
 
     def terminate(self):
-        self.f.close()
+        if hasattr(self, "f") and not self.f.closed:
+            self.f.close()
+            print("% logfile closed")
 
 
 # create a global instance

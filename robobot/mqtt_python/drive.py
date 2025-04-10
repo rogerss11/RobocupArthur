@@ -56,7 +56,7 @@ def driveXMeters(x=1.0, vel=0.2):
     print(f"% Driving {x}m ------------------------- end")
 
 
-def driveUntilWall(d=0.2, ir_id=1):
+def driveUntilWall(d=0.2, ir_id=1, vel=0.2):
     """
     driveUntilWall(d=0.2) - drive until wall is detected
     d = distance to the wall in meters to stop at
@@ -70,7 +70,7 @@ def driveUntilWall(d=0.2, ir_id=1):
     while not (service.stop):
         if state == 0:  # wait for start signal
             service.send(
-                "robobot/cmd/ti/rc", "0.2 0.0"
+                "robobot/cmd/ti/rc", f"{vel} 0.0"
             )  # (forward m/s, turn-rate rad/sec)
             state = 1
         elif state == 1:
@@ -168,7 +168,7 @@ def climbCircle(acc=50, vel=0.5):
             gyro = max(gyro)  # max of all 3 axes
             if gyro > acc or pose.tripBtimePassed() > 15:
                 service.send("robobot/cmd/ti/rc", "0.1 0.0")
-                t.sleep(2.5)  # wait for stop
+                t.sleep(2)  # wait for stop
                 service.send(
                     "robobot/cmd/ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
@@ -436,3 +436,50 @@ def rotateCircle(r=0.5, deg=360, dir=0):
     service.send("robobot/cmd/ti/rc", "0.0 0.0")
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # turn LED off
     print(f"% Driving in a circle ------------------------- end")
+
+
+def driveUntilWall_measure_gate_dist(d=0.2, ir_id=1, vel=0.2):
+    """
+    driveUntilWall(d=0.2) - drive until wall is detected in front, retun horizontal distance to gate
+    d = distance to the wall in meters to stop at
+    ir_id = IR sensor id (0 or 1), 0: right, 1: front
+    """
+    min_d = 1.5
+    ir_id_other = 0 if ir_id == 1 else 1
+    state = 0
+    pose.tripBreset()
+    print(f"% Driving until wall is at {d}m -------------------------")
+    service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
+    while not (service.stop):
+        if state == 0:  # wait for start signal
+            service.send(
+                "robobot/cmd/ti/rc", f"{vel} 0.0"
+            )  # (forward m/s, turn-rate rad/sec)
+            state = 1
+        elif state == 1:
+            min_d = min(min_d, ir.ir[ir_id_other])
+            if ir.ir[ir_id] < d or pose.tripBtimePassed() > 15:
+                service.send(
+                    "robobot/cmd/ti/rc", "0.0 0.0"
+                )  # (forward m/s, turn-rate rad/sec)
+                state = 2
+            pass
+        elif state == 2:
+            if abs(pose.velocity()) < 0.001:
+                state = 99
+        else:
+            print(
+                f"# drive drove {pose.tripB:.3f}m. Stopped at {ir.ir[ir_id]:.3f}m from the wall. {pose.tripBtimePassed():.3f} seconds"
+            )
+            service.send(
+                "robobot/cmd/ti/rc", "0.0 0.0"
+            )  # (forward m/s, turn-rate rad/sec)
+            break
+        print(
+            f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
+        )
+        t.sleep(0.05)
+    pass
+    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
+    print("% Driving until wall ------------------------- end")
+    return min_d
