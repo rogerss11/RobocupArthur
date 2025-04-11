@@ -189,7 +189,7 @@ def loop():
 
         # missing step from hole to being on the curved line at the top
 
-        elif state == 520: # START OF DOWNRAMP.
+        elif state == 520:  # START OF DOWNRAMP.
             # assuming it's already on the line at the top of the ramp
             # code works best when starting in the middle of the curve
             edge.lineControl(0.2, 0)
@@ -197,79 +197,83 @@ def loop():
                 edge.lineControl(0, 0)
                 pose.tripBreset()
                 state = 525
-        
-        elif state == 525: # go straight to skip the trident intersection next to the end
-            service.send(service.topicCmd + "ti/rc","0.2    0.0")
+
+        elif (
+            state == 525
+        ):  # go straight to skip the trident intersection next to the end
+            service.send(service.topicCmd + "ti/rc", "0.2    0.0")
             if pose.tripBtimePassed() > 6:
-                service.send(service.topicCmd + "ti/rc","0 0")
+                service.send(service.topicCmd + "ti/rc", "0 0")
                 pose.tripBreset()
                 state = 530
 
-        elif state == 530: # turn to have the line somewhere in front after the intersection
-            service.send(service.topicCmd + "ti/rc","0 0.5")
+        elif (
+            state == 530
+        ):  # turn to have the line somewhere in front after the intersection
+            service.send(service.topicCmd + "ti/rc", "0 0.5")
             if pose.tripBtimePassed() > 3:
-                service.send(service.topicCmd + "ti/rc","0 0")
+                service.send(service.topicCmd + "ti/rc", "0 0")
                 pose.tripBreset()
                 state = 535
 
-        elif state == 535: # driveUntilLine
+        elif state == 535:  # driveUntilLine
             driveUntilLine()
             pose.tripBreset()
             state = 540
 
         elif state == 545:
-            service.send(service.topicCmd + "ti/rc","0 -0.5")
+            service.send(service.topicCmd + "ti/rc", "0 -0.5")
             if pose.tripBtimePassed() > 2:
-                service.send(service.topicCmd + "ti/rc","0 0")
+                service.send(service.topicCmd + "ti/rc", "0 0")
                 pose.tripBreset()
                 state = 550
-        
-        elif state == 550: # slooooowly follow line so that it has time to align itself
+
+        elif state == 550:  # slooooowly follow line so that it has time to align itself
             edge.lineControl(0.05, 0)
             if pose.tripBtimePassed() > 2:
-                state = 600 # go to axe section
-
-                
+                state = 600  # go to axe section
 
         ############################### AXE SECTION (600-699) ###################################
 
         # Vojta + Arnau + Andrea
-        elif state == 600: # follow line until end
+        elif state == 600:  # follow line until end
             edge.lineControl(0.1, 0)
             state = 605
             pose.tripBreset()
 
         elif state == 605:
-            if edge.lineValidCnt == 0: #when line finishes, stop
-                    edge.lineControl(0, 0)
-                    state = 610
-                    pose.tripBreset()
+            if edge.lineValidCnt == 0:  # when line finishes, stop
+                edge.lineControl(0, 0)
+                state = 610
+                pose.tripBreset()
 
         elif state == 610:
-            service.send(service.topicCmd + "ti/rc","0 0.2") # turn slightly to not miss the axe line
+            service.send(
+                service.topicCmd + "ti/rc", "0 0.2"
+            )  # turn slightly to not miss the axe line
             if pose.tripBtimePassed() > 1:
-                service.send(service.topicCmd + "ti/rc","0 0")
+                service.send(service.topicCmd + "ti/rc", "0 0")
                 state = 615
                 pose.tripBreset()
 
         elif state == 615:
-            service.send(service.topicCmd + "ti/rc","0.1 0") # drive towards axe line
+            service.send(service.topicCmd + "ti/rc", "0.1 0")  # drive towards axe line
             if pose.tripBtimePassed() > 2:
-                service.send(service.topicCmd + "ti/rc","0 0.5")
+                service.send(service.topicCmd + "ti/rc", "0 0.5")
                 driveUntilLine()
                 state = 620
                 pose.tripBreset()
 
-        elif state == 625: # turn towards axe
-            service.send(service.topicCmd + "ti/rc","0.0 1")
+        elif state == 625:  # turn towards axe
+            service.send(service.topicCmd + "ti/rc", "0.0 1")
             if pose.tripBtimePassed() > 1.5:
-                service.send(service.topicCmd + "ti/rc","0.0 0")
+                service.send(service.topicCmd + "ti/rc", "0.0 0")
                 pose.tripBreset()
-                state = 630 #
+                state = 630  #
 
-        elif state == 630: # start of Andrea + Vojta's code
+        elif state == 630:  # start of Andrea + Vojta's code
             pass
-        
+
         ####################### FIGURE-8 + ROUNDABOUT SECTION (700-799) #########################
 
         elif state == 700:  # Roger
@@ -312,7 +316,7 @@ def loop():
             driveXMeters(1, vel=0.2)
             driveUntilLine(400)
             turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
-            state = 800 # go to blue ball sorting section
+            state = 800  # go to blue ball sorting section
 
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
 
@@ -326,7 +330,6 @@ def loop():
             t.sleep(30)
             state = 9100
 
-
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
             break
@@ -339,17 +342,18 @@ def loop():
             key = cv.waitKey(100)  # ms
             if key > 0:  # e.g. Esc (key=27) pressed with focus on image
                 break
-        #
+
         # note state change and reset state timer
         if state != oldstate:
-            # flog.write(state)
             flog.writeRemark(f"% State change from {oldstate} to {state}")
             print(f"% State change from {oldstate} to {state}")
             oldstate = state
             stateTime = datetime.now()
+
         # do not loop too fast
         t.sleep(0.1)
         pass  # end of while loop
+
     # end of mission, turn LEDs off and stop
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")
     gpio.set_value(20, 0)
@@ -377,6 +381,7 @@ if __name__ == "__main__":
         # service.setup("localhost")  # localhost
         service.setup("10.197.218.235")  # Arthur
         # service.setup("10.197.218.184") # Gandalf
+
         if service.connected:
             loop()
         service.terminate()
