@@ -108,6 +108,7 @@ class SEdge:
     lineCtrl = False  # private
 
     # my PID values
+<<<<<<< HEAD
     Kp = 0.5  # Proportional constant
     Ki = 0.15  # Integral constant
     Kd = 0.35  # Derivative constant
@@ -115,6 +116,12 @@ class SEdge:
     # Ki = 0.1  # Integral constant
     # Kd = 0.4  # Derivative constant
 
+=======
+    Kp = 0.5 # Proportional constant
+    Ki = 0.15  # Integral constant
+    Kd = 0.35  # Derivative constant
+    
+>>>>>>> ae491438e061a0c2f4ae95d6b2b971b8a6e51ee0
     # lead compensator
     # Kp = 0.6 # Proportional constant
     # Ki = 0.12  # Integral constant

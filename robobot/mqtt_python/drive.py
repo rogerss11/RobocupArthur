@@ -4,10 +4,10 @@ import time as t
 from spose import pose
 from sir import ir
 from srobot import robot
-from scam import cam
+from robobot.mqtt_python.scam import cam
 from sedge import edge
 from sgpio import gpio
-from scam import cam
+from robobot.mqtt_python.scam import cam
 from uservice import service
 from simu import imu
 
@@ -23,8 +23,12 @@ def driveXMeters(x=1.0, vel=0.2):
     service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
     while not (service.stop):
         if state == 0:  # wait for start signal
+<<<<<<< HEAD
             vel = vel if x > 0 else -vel
             vel_cmd = f"{vel:.2f} 0.0"  # (forward m/s, turn-rate rad/sec)
+=======
+            vel_cmd = "0.2 0.0" if x > 0 else "-0.2 0.0"
+>>>>>>> ae491438e061a0c2f4ae95d6b2b971b8a6e51ee0
             service.send(
                 "robobot/cmd/ti/rc", vel_cmd
             )  # (forward m/s, turn-rate rad/sec)
@@ -100,6 +104,50 @@ def driveUntilWall(d=0.2, ir_id=1, vel=0.2):
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Driving until wall ------------------------- end")
     return min_d
+
+
+def driveUntilLine(threshold=300):
+    """
+    driveUntilLine() - drive until line is detected
+    """
+    state = 0
+    pose.tripBreset()
+    print(f"% Driving until line -------------------------")
+    service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
+    while not (service.stop):
+        if state == 0:  # wait for start signal
+            service.send(
+                "robobot/cmd/ti/rc", "0.2 0.0"
+            )  # (forward m/s, turn-rate rad/sec)
+            state = 1
+        elif state == 1:
+            line_sensor = edge.edge_n
+            line_sensor = [abs(s) for s in line_sensor]  # absolute value
+            line_sensor = max(line_sensor)  # max of all 3 axes
+            if line_sensor > threshold or pose.tripBtimePassed() > 30:
+                service.send(
+                    "robobot/cmd/ti/rc", "0.0 0.0"
+                )  # (forward m/s, turn-rate rad/sec)
+                state = 2
+            pass
+        elif state == 2:
+            if abs(pose.velocity()) < 0.001:
+                state = 99
+        else:
+            print(
+                f"# drive drove {pose.tripB:.3f}m. Stopped at line values {edge.edge_n}. {pose.tripBtimePassed():.3f} seconds"
+            )
+            service.send(
+                "robobot/cmd/ti/rc", "0.0 0.0"
+            )  # (forward m/s, turn-rate rad/sec)
+            break
+        print(
+            f"# drive {state}, line: {edge.edge_n}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
+        )
+        t.sleep(0.05)
+    pass
+    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
+    print("% Driving until line ------------------------- end")
 
 
 def driveUntilLine(threshold=300):
@@ -307,7 +355,7 @@ def orientateToWall(ir_id=1, dir=0, tolerance=0.01, window=5, timeout=10):
     print("% Orientation to wall complete")
 
 
-def followWall(d=0.3, velocity=0.2, time=60.0, d_front=0.1, Kp=1.3, Ki=0.0, Kd=2.0):
+def followWall(d=0.6, velocity=0.2, time=60.0, d_front=0.1, Kp=1.3, Ki=0.0, Kd=2.0):
     """
     followWall(d=0.3) - follow wall on the right side at distance d
     Uses PID control and rotates in place to recover wall when lost.
