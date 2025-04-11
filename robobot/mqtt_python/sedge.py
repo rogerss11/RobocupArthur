@@ -27,8 +27,10 @@
 
 
 #TODO
-#! test lineValidThreshold
-# test navigateIntersection
+#! recalibrate -w and test line following and intersections with lowered color sensor
+#! speed based on error
+#! navigating of straight and right angle intersections doesnt work
+#! line up with line
 # improve PID (Kp, Ki, Kd)
 # Optional: Lead Compensator (if needed)
 
@@ -77,12 +79,15 @@ class SEdge:
     # start at 10 to avoid going to different mode at the start
     lineValidCnt = 10 # a value up to 20 for most confident line detect, 0 = line isnt valid
 
+    ignoreIntersections = False # if we should ignore intersections
     atIntersectionCntMaxValue = 3 #! test this value
     atIntersection = False # if the current reading suggests that we are at an intersection
     atIntersectionCnt = 0  # 20 = at Intersection
     passedIntersections = 0 # how many intersection have we passed
     intersectionPath = ['r', 'r', 'r', 'r'] # l = choose left line, r = choose right line, m = choose middle line
     navigatingIntersection = False # if we are currently navigating an intersection
+
+    adjustSpeed = False # if we should adjust speed based on error
 
     average = 0 # avarage edge_n[] value
     high = 0 # highest reflectivity
@@ -374,66 +379,94 @@ class SEdge:
         )
 
 
+        if not self.ignoreIntersections:
         # Detect if we have a crossing line
-        if valuesAboveZero >= 4:
-          self.atIntersection = True
-        else:
-          self.atIntersection = False
-        # Updates crossingValidCnt: -1 if there's no crossing, +1 up to atIntersectionCntMaxValue if there is
-        self.atIntersectionCnt = (
-            min(self.atIntersectionCnt + 1, self.atIntersectionCntMaxValue)
-            if self.atIntersection
-            else max(self.atIntersectionCnt - 1, 0)
-        )
+          if valuesAboveZero >= 4:
+            self.atIntersection = True
+          else:
+            self.atIntersection = False
+          # Updates crossingValidCnt: -1 if there's no crossing, +1 up to atIntersectionCntMaxValue if there is
+          self.atIntersectionCnt = (
+              min(self.atIntersectionCnt + 1, self.atIntersectionCntMaxValue)
+              if self.atIntersection
+              else max(self.atIntersectionCnt - 1, 0)
+          )
 
-        if self.atIntersectionCnt == self.atIntersectionCntMaxValue:
-            if not self.navigatingIntersection:
-                print("started navigating intersection", self.passedIntersections)
-            self.navigatingIntersection = True
-        # If we have passed the intersection
-        elif self.atIntersectionCnt == 0 and self.navigatingIntersection:
-            print("finised navigating intersection", self.passedIntersections)
-            self.navigatingIntersection = False
-            self.passedIntersections += 1
+          if self.atIntersectionCnt == self.atIntersectionCntMaxValue:
+              if not self.navigatingIntersection:
+                  print("started navigating intersection", self.passedIntersections)
+              self.navigatingIntersection = True
+          # If we have passed the intersection
+          elif self.atIntersectionCnt == 0 and self.navigatingIntersection:
+              print("finised navigating intersection", self.passedIntersections)
+              self.navigatingIntersection = False
+              self.passedIntersections += 1
           
 
         # If we are currently at an intersection
-        if self.navigatingIntersection:
+        if self.navigatingIntersection and not self.ignoreIntersections:
             path = self.intersectionPath[self.passedIntersections] 
 
             # If we arrived at a T intersection
-            #! Maybe I can make this work for a straight left or right as well
             if valuesAboveZero == 8:
                 print("arrived at T")
                 self.position = {'l': -4, 'r': 4}.get(path, 0)
                 if path == 'm':
                     print("Straight at T intersection - Invalid intersectionPath")
                 return
+            
+            #! maybe adjust the 4 to 5?
+            # if we arrived at a straight and left intersection
+            elif all(value > 0 for value in values[:4]): 
+                print("arrived at left and straight intersection")
+                if path == 'l':
+                    self.position = -4
+                elif path == 'r':
+                    self.position = 0
+                elif path == 'm':
+                    print("invalid intersectionPath")
+                    self.position = 0
+                return
+              
+            # if we arrived at a straight and right intersection
+            elif all(value > 0 for value in values[-4:]):
+                print("arrived at right and straight intersection")
+                if path == 'l':
+                    self.position = 0
+                elif path == 'r':
+                    self.position = 4
+                elif path == 'm':
+                    print("invalid intersectionPath")
+                    self.position = 0
+                return
+               
 
-            # If we are navigating a normal intersection (split)
-            ignoreFirst = path == 'm'  # Ignore first line (if we want to go middle)
-            start, end, step = (0, 8, 1) if path != 'r' else (7, -1, -1)
-            # Calculate values for position calculation
-            sum_values, pos_sum = 0, 0
-            nonZeroCount = 0
+            # normal split intersection
+            else:
+                # If we are navigating a normal intersection (split)
+                ignoreFirst = path == 'm'  # Ignore first line (if we want to go middle)
+                start, end, step = (0, 8, 1) if path != 'r' else (7, -1, -1)
+                # Calculate values for position calculation
+                sum_values, pos_sum = 0, 0
+                nonZeroCount = 0
 
 
-            for i in range(start, end, step):
-                if values[i] > 0:
-                    sum_values += values[i]
-                    pos_sum += (i + 1) * values[i]
-                    nonZeroCount += 1
-                elif nonZeroCount and values[i] == 0:
-                    if ignoreFirst:  # Ignore the first line and go for the second one (middle when there's 3)
-                        ignoreFirst = False
-                        sum_values, pos_sum = 0, 0
-                    else:
-                        break  # Stop the loop when we hit 0 after a nonzero value
-
-            # Using weighted average for position calculation
-            # position = [∑(sensor intensity) * ∑(sensor index)] / ∑(sensor intensity) - middle(4.5)
-            self.position = (pos_sum / sum_values - 4.5) if sum_values > 0 and self.lineValid else 0
-            print(f"values: {values} position: {self.position:.2f}, path: {path}")
+                for i in range(start, end, step):
+                    if values[i] > 0:
+                        sum_values += values[i]
+                        pos_sum += (i + 1) * values[i]
+                        nonZeroCount += 1
+                    elif nonZeroCount and values[i] == 0:
+                        if ignoreFirst:  # Ignore the first line and go for the second one (middle when there's 3)
+                            ignoreFirst = False
+                            sum_values, pos_sum = 0, 0
+                        else:
+                            break  # Stop the loop when we hit 0 after a nonzero value
+                
+                # Using weighted average for position calculation
+                # position = [∑(sensor intensity) * ∑(sensor index)] / ∑(sensor intensity) - middle(4.5)
+                self.position = (pos_sum / sum_values - 4.5) if sum_values > 0 and self.lineValid else 0
+                #print(f"values: {values} position: {self.position:.2f}, path: {path}")
 
         # Normal line calculation
         else:
@@ -499,9 +532,21 @@ class SEdge:
       self.lastError = e
       self.lastErrorDiff = errorDiffFiltered
 
+      if self.adjustSpeed:
+          # Adjust speed based on error
+          # Linear scaling based on error where:
+          # error = 0 -> 150% of velocity
+          # error > 1 -> 50% of velocity
+          scale_factor = 1.5 - (self.error * 1.0) #! linear - maybe improve
+
+          scale_factor = max(0.5, min(1.5, scale_factor))  # limit the range
+
+          adjusted_speed = self.velocity * scale_factor
+      else:
+          adjusted_speed = self.velocity
+      
       # make response
-      #print("velocity edge: ", self.velocity)
-      par = f"{self.velocity:.3f} {self.lineY:.3f} {t.time()}"
+      par = f"{adjusted_speed:.3f} {self.lineY:.3f} {t.time()}"
       service.send(self.topicRc, par) # send new turn command, maintaining velocity
 
       # debug print
@@ -526,7 +571,7 @@ class SEdge:
     def lineUpWithLine(self):
         # positive turnrate -> turn left
         from uservice import service
-        speed = 0.8
+        speed = 1
         left = self.edge_n[0] > self.crossingThreshold #! maybe replace with low
         right = self.edge_n[7] > self.crossingThreshold
 
@@ -545,7 +590,15 @@ class SEdge:
             print("cmd changed")
             service.send("robobot/cmd/ti/rc", cmd)
             self.last_cmd = cmd
+    
+    ##########################################################
 
+    def setIgnoreIntersections(self, ignore):
+        self.ignoreIntersections = ignore
+        if ignore:
+            self.atIntersection = False
+            self.atIntersectionCnt = 0
+            self.navigatingIntersection = False
 
     ##########################################################
 

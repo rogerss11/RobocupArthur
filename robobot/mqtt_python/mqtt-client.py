@@ -73,111 +73,6 @@ def stateTimePassed(): # how much time has passed since last state change
 
 ############################################################
 
-def driveOneMeter():
-  state = 0
-  pose.tripBreset()
-  print("% Driving 1m -------------------------")
-  service.send(service.topicCmd + "T0/leds","16 0 100 0") # green
-  while not (service.stop):
-    if state == 0: # wait for start signal
-      service.send("robobot/cmd/ti/rc","0.2 0.0") # (forward m/s, turn-rate rad/sec)
-      state = 1
-    elif state == 1:
-      if pose.tripB > 1.0 or pose.tripBtimePassed() > 15:
-        service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
-        state = 2
-      pass
-    elif state == 2:
-      if abs(pose.velocity()) < 0.001:
-        state = 99
-    else:
-      print(f"# drive 1m drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
-      service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
-      break
-    print(f"# drive {state}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
-    t.sleep(0.05)
-  pass
-  service.send(service.topicCmd + "T0/leds","16 0 0 0") # end
-  print("% Driving 1m ------------------------- end")
-
-############################################################
-
-def driveToLine():
-  state = 0
-  pose.tripBreset()
-  dist_to_line = 0
-  print("% Driving to line ---------------------- right ir start ---")
-  service.send(service.topicCmd + "T0/leds","16 0 100 0") # green
-  while not (service.stop):
-    if state == 0: # forward towards line
-      if ir.ir[0] < 0.2:
-        service.send("robobot/cmd/ti/rc","0.2 0.0") # (forward m/s, turn-rate rad/sec)
-        service.send("robobot/cmd/T0/lognow","3") # (start Teensy log)
-        state = 1
-    elif state == 1:
-      if pose.tripB > 1.0 or pose.tripBtimePassed() > 15:
-        service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
-        state = 2
-      if edge.lineValidCnt > 4:
-        # start follow line
-        edge.lineControl(0.2, 0)
-        dist_to_line = pose.tripB
-        pose.tripBreset()
-        print(" to state 10")
-        state = 10
-      pass
-    elif state == 2:
-      if abs(pose.velocity()) < 0.001:
-        print(" to state 99")
-        state = 99
-    elif state == 10:
-      if edge.lineValidCnt < 2:
-        edge.lineControl(0, 0)
-        service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
-        print(" to state 2")
-        state = 2
-    else:
-      print(f"# drive to line {dist_to_line:.3f}m, then along line {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
-      service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
-      break
-    # print(f"# drive {state}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds, line valid cnt = {edge.lineValidCnt}")
-    t.sleep(0.01)
-  pass
-  service.send(service.topicCmd + "T0/leds","16 0 0 0") # end
-  print("% Driving to line ------------------------- end")
-
-
-############################################################
-
-def driveTurnPi():
-  state = 0
-  pose.tripBreset()
-  print("% Driving a Pi turn -------------------------")
-  service.send(service.topicCmd + "T0/leds","16 0 100 0") # green
-  while not (service.stop):
-    if state == 0: # wait for start signal
-      service.send("robobot/cmd/ti/rc","0.2 0.5") # (forward m/s, turn-rate rad/sec)
-      state = 1
-    elif state == 1:
-      if pose.tripBh > 3.14 or pose.tripBtimePassed() > 15:
-        service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
-        state = 2
-      pass
-    elif state == 2:
-      if abs(pose.velocity()) < 0.001 and abs(pose.turnrate()) < 0.001:
-        state = 99
-    else:
-      print(f"# drive turned {pose.tripBh:.3f} rad in {pose.tripBtimePassed():.3f} seconds")
-      service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
-      break
-    print(f"# turn {state}, now {pose.tripBh:.3f} rad in {pose.tripBtimePassed():.3f} seconds")
-    t.sleep(0.05)
-  pass
-  service.send(service.topicCmd + "T0/leds","16 0 0 0") # end
-  print("% Driving a Pi turn ------------------------- end")
-
-############################################################
-
 def loop():
   state = 0 # current state
   images = 0 # number of images taken
@@ -249,19 +144,6 @@ def loop():
         state = 99
       pass
 
-    ###### TESTING STATES #######
-    elif state == 101:
-      driveOneMeter()
-      state = 100
-
-    elif state == 102:
-      driveTurnPi()
-      state = 100
-
-    elif state == 103:
-      driveToLine()
-      state = 100
-
     ###### MY TESTING STATES #######
     # line testing
     elif state == 110:
@@ -284,21 +166,20 @@ def loop():
       print("% AtIntersectionCnt: ", edge.atIntersectionCnt, ", navigatingIntersection: ", edge.navigatingIntersection)
       t.sleep(0.5)    
 
-    elif state == 139:
+    elif state == 139: # start lining up with white line
       edge.shouldLineUp = True
       state = 140
-
-    elif state == 140:
+    elif state == 140: # wait for it to line up with white line
       if not edge.shouldLineUp:
         print("Done lining up")
         state = 99
     
-    elif state == 150: #axe testing
+    elif state == 150: # pass axe
         print("start axe")
         edge.lineControl(0.2, 0.0) # stop following line
         ir.axeActive = True
         state = 151
-    elif state == 151:
+    elif state == 151: # wait for axe to pass
         if not ir.axeActive:
           state = 99
       
