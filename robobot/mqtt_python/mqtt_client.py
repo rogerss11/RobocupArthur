@@ -217,6 +217,7 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0 0") # stop for images
       print(f"% --- state {state}, h = {pose.tripBh:.4f}, t={pose.tripBtimePassed():.3f}")
     elif state == 20: # take images
+      ia.servo_up()
       imageAnalysis(1)
       images += 1
       t.sleep(2)
@@ -229,7 +230,7 @@ def loop():
         gpio.set_value(20, 0)
       ledon = not ledon
       # finished?
-      if images >= 10 or (not cam.useCam) or stateTimePassed() > 100:
+      if images >= 1 or (not cam.useCam) or stateTimePassed() > 100:
         images = 0
         state = 99
       pass

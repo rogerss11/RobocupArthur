@@ -23,7 +23,7 @@ def driveXMeters(x=1.0):
     service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
     while not (service.stop):
         if state == 0:  # wait for start signal
-            vel_cmd = "0.2 0.0" if x > 0 else "-0.2 0.0"
+            vel_cmd = "0.1 0.0" if x > 0 else "-0.2 0.0"
             service.send(
                 "robobot/cmd/ti/rc", vel_cmd
             )  # (forward m/s, turn-rate rad/sec)

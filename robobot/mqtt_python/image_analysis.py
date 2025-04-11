@@ -49,7 +49,7 @@ def ball(image, color: int):
             (image[:,:,0] >= b_low[color]) & # blue 
             (image[:,:,1] >= g_low[color]) & # green
             (image[:,:,2] >= r_low[color]) & # red
-            (image[:, :, 0] + image[:, :, 1] + image[:, :, 2] < 650) # color is not whit
+            ((image[:, :, 0].astype(np.int32) + image[:, :, 1].astype(np.int32)  + image[:, :, 2].astype(np.int32) ) < 650) # color is not whit
         )
     elif (color == 1): #orange
         mask = (
@@ -140,54 +140,38 @@ def move_middle(xy, range):
     return status
 
 # calculate the distance to the ball
-def distance_calc(xy, width, type):
+def distance_calc(xy):
     """
     Calculate the distance to the ball based on its width and coordinates.
      xy: the coordinates of the ball in the picture
-     width: the width of the ball in pixels (will just be used for the oval ball)
      type: the type of the ball (0 = oval, 1 = others)
     """
 
     distance = 0.0
-    
-    # calculate the distance to the ball by the measurement of the width of the ball
-    a = 0.006915
-    b = -1.831395
-    c = 154.02956
-    #calibrated for distances between 30 and 85 cm
-
-    distance_width = (a*width**2 + b*width + c)*10 #in mm
-
-    #calculate the distance to the ball by the coordinates of the ball
-    a2 = 0.000668
-    b2 = -0.825487
-    c2 = 288.263289
 
     if xy != []:
-        distance_xy = (a2*xy[1]**2 + b2*xy[1] + c2)*10 #in mm
-    else: 
-        distance_xy = 0.0
+    #calculate the distance to the ball by the coordinates of the ball
+        if xy[1] < 400:
+            a = 0.006183
+            b = -5.472149
+            c = 1265.259
+        else:
+            a = 0.001078
+            b = -1.279013
+            c = 405.12
 
-    # if the difference between the two distances is small, use the average
-    if (type == 0) & (abs(distance_xy - distance_width)  < 5):
-        distance = (distance_xy + distance_width)/2
-        status = 1
-    elif (type == 1): # use the xy coordinates for the distance for non-oval balls
-        distance = distance_xy
-        status = 1
-    else:
-        distance = distance_xy
-        status = 0
-    
-    arm_length = 300 #in mm
+        distance = (a*xy[1]**2 + b*xy[1] + c)*10 #in mm
 
-    if distance > 300:
+    print("Distance: ", distance)
+
+    arm_length = 220 #in mm
+
+    if distance > arm_length:
         distance = distance - arm_length #in mm
+        status = 1
     else:
         distance = 0.0
         status = -1
-
-    print("Distance: ", distance)
 
     return distance, status
 
@@ -216,11 +200,9 @@ def move_straight(xy, distance, state:int, line:int):
             
     elif state == 2:
     #adjust the position of the ball in the middle of the picture
-        if state_init != 3:
-            state_init = 2
             
         print("MS: Move to the middle")
-        if distance > 200.0:
+        if distance > 150.0:
             stat_m = move_middle(xy, 10)
         else:
             stat_m = move_middle(xy, 5)
@@ -229,33 +211,48 @@ def move_straight(xy, distance, state:int, line:int):
             # ball is in the middle
             state = 1
     elif state == 1:
-        if state_init < 2:
-            state_init = 1
-
-        state = state_init
         #move for 20 cm
         velocity = 0.1 #in m/s
-        if distance > 200.0:
-            wait = (distance-200.0)/1000/velocity 
-        else:
-            wait = distance/1000/velocity
 
+        state = 0
+        
         if line == 0:
             print("MS: Move straight")
-            service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
-            time.sleep(wait)
-            service.send(service.topicCmd + "ti/rc", "0 0")
+
+            if distance > 500.0:
+                drive.driveXMeters(x = 0.10)
+            elif distance > 150.0:
+                drive.driveXMeters(x = 0.05)
+            else:
+                
+                drive.driveXMeters(x = (distance-15)/1000)
+
         else:
+            #wait = 100.0/1000/velocity 
+            #wait = distance/1000/velocity
             print("MS: Move straight on line")
             edge.lineControl(velocity, 0.0)
             time.sleep(wait)
             edge.lineControl(0.0, 0.0)
         
-        if distance > 200.0:
+        if distance < 150.0:
             #move the arm up
             print("MS: Pick up ball")
             state = 100
-        servo_down()
+            servo_down()
+            for i in range(3):
+                print("MS: Shaking")
+                service.send(service.topicCmd + "ti/rc","0.1 0.6")
+                time.sleep(0.1)
+                service.send(service.topicCmd + "ti/rc","0 0")  
+                time.sleep(0.1)
+                service.send(service.topicCmd + "ti/rc","0.1 -0.6")
+                time.sleep(0.1)
+                service.send(service.topicCmd + "ti/rc","0 0")
+                time.sleep(0.1)
+            service.send(service.topicCmd + "ti/rc","0 0")     
+        
+        
 
     else :
         state = -1
@@ -314,20 +311,22 @@ def drive2ball(case:int):
     # decode the cases
     if case == 0:
         #state_straight = 3 # remove obstacles
-        state_straight = 2 #move object to middle first
+        state_straight_init = 2 #move object to middle first
         color = 0 # blue
         state = 0 # start with the first state
     elif case == 1:
-        state_straight = 2 # move object to middle first
+        state_straight_init = 2 # move object to middle first
         color = 1 # orange
         state = 0 # start with the first state
     elif case == 2:
-        state_straight = 1 # just move straight
+        state_straight_init = 1 # just move straight
         color = 1 # orange
         state = 1 # start with the first state
     elif case == 3:
-        state_straight = 2
+        state_straight_init = 2
         color = -1 # hole
+    
+    state_straight = state_straight_init # state of the straight movement
 
     while (state != 2):
         #Take a picture, until taking a picture is successful
@@ -337,7 +336,7 @@ def drive2ball(case:int):
 
         servo_up()
         while not ok:
-            img,ok = imageAnalysis(1)
+            img,ok = imageAnalysis(0)
             img_num += 1
 
         #find ball in the picture
@@ -375,10 +374,15 @@ def drive2ball(case:int):
             # move straight to the ball
 
             # calculate the distance to the ball
-            distance, status_d = distance_calc(xy, width, case != 0)
+            distance, status_d = distance_calc(xy)
             print("DB: Distance to ball:", distance)
             if status_d != -1:
+                if state_straight == 0:
+                    state_straight = state_straight_init
+
+                print("DB: State straight:", state_straight)
                 state_straight = move_straight(xy, distance, state_straight, case == 2)
+        
             else:
                 #stop
                 service.send(service.topicCmd + "ti/rc", "0 0")
