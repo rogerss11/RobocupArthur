@@ -123,61 +123,6 @@ def driveOneMeter():
     print("% Driving 1m ------------------------- end")
 
 
-def driveToLine():
-    state = 0
-    pose.tripBreset()
-    dist_to_line = 0
-    print("% Driving to line ---------------------- right ir start ---")
-    service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
-    while not (service.stop):
-        if state == 0:  # forward towards line
-            if ir.ir[0] < 0.2:
-                service.send(
-                    "robobot/cmd/ti/rc", "0.2 0.0"
-                )  # (forward m/s, turn-rate rad/sec)
-                service.send("robobot/cmd/T0/lognow", "3")  # (start Teensy log)
-                state = 1
-        elif state == 1:
-            if pose.tripB > 1.0 or pose.tripBtimePassed() > 15:
-                service.send(
-                    "robobot/cmd/ti/rc", "0.0 0.0"
-                )  # (forward m/s, turn-rate rad/sec)
-                state = 2
-            if edge.lineValidCnt > 4:
-                # start follow line
-                edge.lineControl(0.2, 0)
-                dist_to_line = pose.tripB
-                pose.tripBreset()
-                print(" to state 10")
-                state = 10
-            pass
-        elif state == 2:
-            if abs(pose.velocity()) < 0.001:
-                print(" to state 99")
-                state = 99
-        elif state == 10:
-            if edge.lineValidCnt < 2:
-                edge.lineControl(0, 0)
-                service.send(
-                    "robobot/cmd/ti/rc", "0.0 0.0"
-                )  # (forward m/s, turn-rate rad/sec)
-                print(" to state 2")
-                state = 2
-        else:
-            print(
-                f"# drive to line {dist_to_line:.3f}m, then along line {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-            )
-            service.send(
-                "robobot/cmd/ti/rc", "0.0 0.0"
-            )  # (forward m/s, turn-rate rad/sec)
-            break
-        # print(f"# drive {state}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds, line valid cnt = {edge.lineValidCnt}")
-        t.sleep(0.01)
-    pass
-    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
-    print("% Driving to line ------------------------- end")
-
-
 def driveTurnPi():
     state = 0
     pose.tripBreset()
@@ -219,6 +164,8 @@ def driveTurnPi():
 def loop():
     from ulog import flog
 
+    gate_dist = 99999
+    min_d = 99999
     state = 0
     images = 0
     ledon = True
@@ -247,10 +194,10 @@ def loop():
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
 
-                # follow line (at 0.25cm/s)
-                edge.lineControl(0.25, 0.0)  # m/s and position on line -2.0..2.0
-                state = 12  # until no more line
+                state = 69  # ========== START STATE ===============
+
                 pose.tripBreset()  # use trip counter/timer B
+
         elif state == 12:  # following line
             if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 10:
                 # no more line
@@ -287,17 +234,55 @@ def loop():
         elif state == 102:
             driveTurnPi()
             state = 100
-        elif state == 103:
-            driveToLine()
-            state = 100
-        elif state == 70:  # Mission 360
-            # driveXMeters(0.5)
-            # orientateToWall(ir_id=1, dir=0, tolerance=0.05, window=20)
-            driveUntilWall(0.3, ir_id=1)
-            # followWall(0.5, d_front=0.3)
-            turnInPlace(90, dir=1)  # turn counter-clockwise 65=90
-            climbCircle(80, vel=0.3)
-            state = 71
+
+        elif state == 69:
+            # ------------- PASS BIRTLE (start from line) -------------------------------------------
+            service.send(service.topicCmd + "T0/servo", "1 -900 200")
+            driveXMeters(0.3, vel=0.3)
+            driveUntilWall(0.30, ir_id=1, vel=0.0)
+            t.sleep(3)
+            driveXMeters(1.3, vel=0.3)
+            state = 70
+
+        elif state == 70:
+            # ------------- CLIMB CIRCLE MISSION -------------------------------------------
+            gate_dist = driveUntilWall_measure_gate_dist(0.25, ir_id=1)
+            print(f"% gate_dist = {gate_dist:.2f}")
+            turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
+            service.send(service.topicCmd + "T0/servo", "1 -200 200")
+            driveXMeters(gate_dist + 0.25)  # drive to extra time
+            driveXMeters(-0.30)
+            service.send(service.topicCmd + "T0/servo", "1 -900 200")
+            turnInPlace(25, dir=1)
+            climbCircle(40, vel=0.45)
+            state = 71  # inside circle
+
+        elif state == 71:
+            # ------------- INSIDE CIRCLE MISSION -------------------------------------------
+            turnInPlace(38, dir=0, ang_speed=0.4)  # position tangent to the circle
+            min_d = driveUntilWall(0.3, ir_id=0, vel=0.1)
+            print(f"% min_d = {min_d:.2f}")
+            turn_rad = min_d + 0.125  # 0.1 is the 1/2 of the wheel base
+            turnInPlace(8, dir=1, ang_speed=0.3)  # Adjust position
+            rotateCircle(r=turn_rad, deg=333, dir=1)
+            state = 72
+
+        elif state == 72:
+            # ------------- LEAVE CIRCLE -------------------------------------------
+            driveXMeters(0.3 + min_d, vel=0.3)
+            driveUntilWall(0.3, ir_id=1, vel=0.0)
+            t.sleep(7)
+            driveXMeters(1, vel=0.2)
+            # driveXMeters(1.5, vel=0.45)
+            driveUntilLine(400)
+            turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
+            # driveXMeters(2, vel=0.45)
+            state = 73
+
+        elif state == 80:
+            # ------ TESTS --------------------------------------------------------
+            t.sleep(30)
+            state = 81
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
             break
@@ -331,6 +316,7 @@ def loop():
     edge.lineControl(0, 0)  # stop following line
     service.send(service.topicCmd + "ti/rc", "0 0")
     t.sleep(0.05)
+    print(f"gate_dist = {gate_dist:.2f}, min_d = {min_d:.2f}")
     pass
 
 
@@ -350,7 +336,7 @@ if __name__ == "__main__":
         # where is the MQTT data server:
         # service.setup("localhost")  # localhost
         service.setup("10.197.218.235")  # Arthur
-        service.setup("10.197.218.184")
+        # service.setup("10.197.218.184")
         # service.setup('10.197.217.81') # Juniper
         # service.setup('10.197.217.80') # Newton
         # service.setup("bode.local")  # Bode
