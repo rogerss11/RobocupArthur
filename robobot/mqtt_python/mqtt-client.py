@@ -40,6 +40,7 @@ from sedge import edge
 from sgpio import gpio
 from scam import cam
 from uservice import service
+from eva_drive import turnInPlace
 
 from arucode import ArucoDetector  # Import ArucoDetector
 aruco_detector = ArucoDetector()
@@ -66,12 +67,7 @@ def imageAnalysis(save):
     edge.paint(img)
     if not gpio.onPi:
       cv.imshow('frame for analysis', img)
-      # cv.waitKey(1)
-    if save:
-      fn = f"image_{imgTime.strftime('%Y_%b_%d_%H%M%S_')}{cam.cnt:03d}.jpg"
-      cv.imwrite(fn, img)
-      if not service.args.silent:
-        print(f"% Saved image {fn}")
+      cv.waitKey(1)
     return img
 
 ############################################################
@@ -102,9 +98,9 @@ def loop():
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turnrate rad/sec)
         # follow line (at 0.25cm/s)
-        edge.lineControl(0.25, 0.0) # m/s and position on line -2.0..2.0
-        state = 12 # until no more line
-        pose.tripBreset() # use trip counter/timer B
+        #edge.lineControl(0.25, 0.0) # m/s and position on line -2.0..2.0
+        state = 20 # until no more line
+        #pose.tripBreset() # use trip counter/timer B
     elif state == 12: # following line
       if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 20:
         # no more line
@@ -122,21 +118,21 @@ def loop():
       img = imageAnalysis(0)  # get the image
       if img is not None:
           ids, corners, centers, angles, img = aruco_detector.detect_markers(img)
+          #print("Hello there")
           if ids:
               for i, marker_id in enumerate(ids):
                   center = centers[i]
                   angle = angles[i]
                   print(f"ID: {marker_id} | Center: {center} | Angle: {angle:.2f} deg")
                   # --- Stop if close enough ---
-                  if estimated_distance < 20:
-                      print("Stopping, marker is within 20 cm")
-                      service.send(service.topicCmd + "ti/rc", "0 0")
-                      state = 99
+                  #state = 99
+                  aruco_detector.orient_and_turn_to_B(img, ids, centers)
+                  state = 99 
+          if not gpio.onPi:
+              cv.imshow('Live ArUco Detection', img)
+              cv.waitKey(1)
 
-              if not gpio.onPi:
-                  cv.imshow('Live ArUco Detection', img)
-
-      if not cam.useCam or stateTimePassed() > 40:
+      if not cam.useCam or stateTimePassed() > 120:
           state = 99
 
       # blink LED
