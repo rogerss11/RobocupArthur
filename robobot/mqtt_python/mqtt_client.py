@@ -252,9 +252,9 @@ def loop():
         else:
           state_ia = 1 # ball detected
 
-      ia.drive2ball(0) #drive to the blue oval ball
+      status = ia.drive2ball(0) #drive to the blue oval ball
 
-      if stateTimePassed() >= 45:
+      if (stateTimePassed() >= 45) or status == 2:
           state = 99
       pass
 
@@ -321,6 +321,15 @@ def loop():
     elif state == 103:
       driveToLine()
       state = 100
+    elif state == 104:
+      img, ok = imageAnalysis(0)
+      if ok:
+        xy, width = ia.ball(img, 0) #detect blue ball	
+      if xy != []:
+        ia.move_middle(xy, 10)
+
+      if stateTimePassed() >= 45:
+          state = 99
     else: # abort
       print(f"% Mission finished/aborted; state={state}")
       break

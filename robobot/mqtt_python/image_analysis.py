@@ -13,13 +13,13 @@ from sedge import edge
 from sgpio import gpio
 
 def servo_up():
-    service.send(service.topicCmd + "T0/servo", "1 -900 200")
-    time.sleep(0.5)
+    service.send(service.topicCmd + "T0/servo", "1 -900 0")
+    time.sleep(0.1)
     pass
 
 def servo_down():
-    service.send(service.topicCmd + "T0/servo", "1 -150 200")
-    time.sleep(0.5)
+    service.send(service.topicCmd + "T0/servo", "1 -150 0")
+    time.sleep(0.1)
     pass
 
 def ball(image, color: int):
@@ -30,7 +30,7 @@ def ball(image, color: int):
     """
     # color thresholds element 0 = blue, 1 = orange
     # Blue
-    b_low = [120,0]
+    b_low = [190,0]
     b_high = [255, 30]
 
     # Green
@@ -45,11 +45,11 @@ def ball(image, color: int):
     # color of the thresholds (for images in BGR)
     if (color == 0): #blue
         mask = (
-            (image[:,:,0] > image[:,:,1]) & (image[:,:,0] > image[:,:,2]) & # blue intensity is higher than green and red
+            (image[:,:,0] > image[:,:,1]) & (image[:,:,0] > image[:,:,2] + 20) & # blue intensity is higher than green and red
             (image[:,:,0] >= b_low[color]) & # blue 
             (image[:,:,1] >= g_low[color]) & # green
             (image[:,:,2] >= r_low[color]) & # red
-            ~((image[:, :, 0] >= 253) & (image[:, :, 1] >= 253) & (image[:, :, 2] >= 253)) # color is not white
+            (image[:, :, 0] + image[:, :, 1] + image[:, :, 2] < 650) # color is not whit
         )
     elif (color == 1): #orange
         mask = (
@@ -66,9 +66,10 @@ def ball(image, color: int):
     mask = binary_closing(mask, disk(5))
     mask = remove_small_objects(mask, 200)
     mask = binary_opening(mask, disk(5))
+    mask = remove_small_objects(mask, 300)
     
     #prevent detecting the arm or the background
-    mask[:200,:] = 0      # remove the upper part of the picture
+    mask[:300,:] = 0      # remove the upper part of the picture
     mask[:, :70] = 0      # Left side (0 to 70 pixels)
     mask[:, 700:] = 0     # Right side (750 to 820 pixels)
 
@@ -112,18 +113,19 @@ def move_middle(xy, range):
     #range = 5
     status = 99
     wait = 0.0
-    velocity = 0.50
+    velocity = 0.6
 
     # distance of the object to the middle of the picture
     e = abs(xy[0] - middle_x)
+    print("MM: Distance to middle: ", e)
 
     if(xy[0] > middle_x + range):
         #then turn left
-        service.send(service.topicCmd + "ti/rc",f"0.0 -{velocity:.2f}")
+        service.send(service.topicCmd + "ti/rc",f"0.01 -{velocity:.2f}")
         status = 1
     elif(xy[0] < middle_x - range):
         #then turn right
-        service.send(service.topicCmd + "ti/rc",f"0.0 {velocity:.2f}")
+        service.send(service.topicCmd + "ti/rc",f"0.01 {velocity:.2f}")
         status = 2
     else:
         #ball is in the middle
@@ -149,9 +151,9 @@ def distance_calc(xy, width, type):
     distance = 0.0
     
     # calculate the distance to the ball by the measurement of the width of the ball
-    a = 0.007494
-    b = -1.955569
-    c = 160.717271
+    a = 0.006915
+    b = -1.831395
+    c = 154.02956
     #calibrated for distances between 30 and 85 cm
 
     distance_width = (a*width**2 + b*width + c)*10 #in mm
@@ -200,73 +202,59 @@ def move_straight(xy, distance, state:int, line:int):
     """
     state_init = 0
 
-    if (distance > 250.0):
-        if state == 3:
-            state_init = 3
-
-            print("Remove obstacles")
-            #remove obstacles in the way
-            drive.turnInPlace(deg = 30, dir = 0)
-            servo_down()
-            drive.turnInPlace(deg = 60, dir = 1)
-            servo_up()
-            drive.turnInPlace(deg = 30, dir = 0)
-            state = 2
+    
+    if state == 3:
+        state_init = 3
+        print("MS: Remove obstacles")
+        #remove obstacles in the way
+        drive.turnInPlace(deg = 30, dir = 0)
+        servo_down()
+        drive.turnInPlace(deg = 60, dir = 1)
+        servo_up()
+        drive.turnInPlace(deg = 30, dir = 0)
+        state = 2
             
-        elif state == 2:
-        #adjust the position of the ball in the middle of the picture
-            if state_init != 3:
-                state_init = 2
+    elif state == 2:
+    #adjust the position of the ball in the middle of the picture
+        if state_init != 3:
+            state_init = 2
             
-            print("Move to the middle")
+        print("MS: Move to the middle")
+        if distance > 200.0:
             stat_m = move_middle(xy, 10)
-            if stat_m == 0:
-                # ball is in the middle
-                state = 1
-        elif state == 1:
-            if state_init < 2:
-                state_init = 1
-
-            state = state_init
-            #move for 20 cm
-            velocity = 0.1 #in m/s
-            wait = (distance-200.0)/1000/velocity 
-
-            if line == 0:
-                print("Move straight")
-                service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
-                time.sleep(wait)
-                service.send(service.topicCmd + "ti/rc", "0 0")
-            else:
-                print("Move straight on line")
-                edge.lineControl(velocity, 0.0)
-                time.sleep(wait)
-                edge.lineControl(0.0, 0.0)
-            
-
-    elif (distance > 0.0):
-        print("Move to the middle")
-        stat_m = 1
-        while (stat_m != 0):
+        else:
             stat_m = move_middle(xy, 5)
-            if stat_m == 0:
-                # ball is in the middle
-                state = 1
 
-        state = 0
-        #move for the distance to the ball
+        if stat_m == 0:
+            # ball is in the middle
+            state = 1
+    elif state == 1:
+        if state_init < 2:
+            state_init = 1
+
+        state = state_init
+        #move for 20 cm
         velocity = 0.1 #in m/s
-        wait = distance/1000/velocity
+        if distance > 200.0:
+            wait = (distance-200.0)/1000/velocity 
+        else:
+            wait = distance/1000/velocity
+
         if line == 0:
+            print("MS: Move straight")
             service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
             time.sleep(wait)
             service.send(service.topicCmd + "ti/rc", "0 0")
         else:
+            print("MS: Move straight on line")
             edge.lineControl(velocity, 0.0)
             time.sleep(wait)
             edge.lineControl(0.0, 0.0)
-        #move the arm to the ball
-        print("Pick up ball")
+        
+        if distance > 200.0:
+            #move the arm up
+            print("MS: Pick up ball")
+            state = 100
         servo_down()
 
     else :
@@ -321,9 +309,12 @@ def drive2ball(case:int):
         case: the type of the object (0 = oval blue ball, 1 = orange golf ball without line, 2 = orange golf ball with line, 3 = hole)
     """
 
+    img_num = 0
+
     # decode the cases
     if case == 0:
-        state_straight = 3 # remove obstacles
+        #state_straight = 3 # remove obstacles
+        state_straight = 2 #move object to middle first
         color = 0 # blue
         state = 0 # start with the first state
     elif case == 1:
@@ -339,59 +330,62 @@ def drive2ball(case:int):
         color = -1 # hole
 
     while (state != 2):
-        print("State: ", state)
         #Take a picture, until taking a picture is successful
         ok = False
         img = np.zeros((616, 820, 3), dtype=np.uint8) # create an empty image
         
+
         servo_up()
         while not ok:
-            img,ok = imageAnalysis(0)
+            img,ok = imageAnalysis(1)
+            img_num += 1
 
         #find ball in the picture
         xy = []
         if case != 3:
             xy, width = ball(img, color)
-            print("Ball found:", xy)
+            print("DB: Ball found:", xy)
         else:
             xy, state, width = hole(img)
-            print("Hole found:", xy)
+            print("DB: Hole found:", xy)
 
         #Visualize the ball in the picture
         if (len(xy) == 2):
             img = cv.circle(img, xy, radius=10, color=(0, 0, 255), thickness=-1) 
-
-        #Show the image for debugging
-        if not gpio.onPi:
-            cv.imshow('frame for analysis', img)
+            #Show the image for debugging
+            if not gpio.onPi:
+                print("DB: Show image")
+                cv.imshow('frame for analysis', img)
+                fn = f"{img_num}_analyzed.jpg"
+                cv.imwrite(fn, img)
 
         if (state == 0):
-            print("State 0")
+            print("DB: State 0")
 
             if xy != []: # found one or more balls
-                print("Found one or more balls. Nearest ball:", xy)
+                print("DB: Found one or more balls. Nearest ball:", xy)
                 status_middle = move_middle(xy, 10)
 
                 if status_middle == 0:
                     # ball is in the middle
                     state = 1
-                    print("Ball in the middle. Move straight.")
+                    print("DB: Ball in the middle. Move straight.")
         elif (state == 1):
-            print("State 1")
+            print("DB: State 1")
             # move straight to the ball
 
-            print("Move straight to the ball.")
             # calculate the distance to the ball
             distance, status_d = distance_calc(xy, width, case != 0)
+            print("DB: Distance to ball:", distance)
             if status_d != -1:
                 state_straight = move_straight(xy, distance, state_straight, case == 2)
             else:
                 #stop
                 service.send(service.topicCmd + "ti/rc", "0 0")
 
-            if state_straight == 0:
+            if state_straight == 100:
                 # ball is captured
                 state = 2
-                print("Ball is picked up.")
+                print("DB: Ball is picked up.")
             
-    pass    
+    return state    
