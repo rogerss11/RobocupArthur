@@ -154,7 +154,7 @@ def loop():
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
 
-                state = 100  # ========== START STATE ===============
+                state = 600  # ========== START STATE ===============
                 # should be 100
                 pose.tripBreset()  # use trip counter/timer B
 
@@ -261,7 +261,7 @@ def loop():
             if pose.tripBtimePassed() > 2:
                 service.send(service.topicCmd + "ti/rc", "0 0.5")
                 driveUntilLine()
-                state = 620
+                state = 625
                 pose.tripBreset()
 
         elif state == 625:  # turn towards axe
@@ -271,8 +271,31 @@ def loop():
                 pose.tripBreset()
                 state = 630  #
 
-        elif state == 630:  # start of Andrea + Vojta's code
+        elif state == 630:  # set it to drive through the axe
+            ir.axeActive = True
+            state = 635
+        
+        elif state == 635: # wait for it to get past the axe
+            if not ir.axeActive :
+                state = 99
+        
+        elif state == 640: # drive to second intersection from this point
+            if edge.atIntersectionCnt == 7: #! idk the exact count yet
+                edge.setIgnoreIntersection(1)
+                state = 650
+        
+        elif state == 650: #! drive to desired location for lining up
+            state = 670
             pass
+
+        elif state == 670: # start lining up with white line
+            edge.shouldLineUp = True
+            state = 675
+            
+        elif state == 675: # wait for it to line up with white line
+            if not edge.shouldLineUp:
+                state = 700
+
 
         ####################### FIGURE-8 + ROUNDABOUT SECTION (700-799) #########################
 

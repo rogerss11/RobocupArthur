@@ -124,7 +124,7 @@ class SIr:
                 self.passed = True
 
         elif self.axeState == 5:  # Pass the gate axe and stop
-            if t.time() - self.timeout > 2: # 2 seconds have passed, should be past gate
+            if t.time() - self.timeout > 1.1: # 1.5 seconds have passed, should be past gate
                 print("# Gate passed, stop.")
                 #service.send("robobot/cmd/ti/rc", "0.0 0.0")  # robot stops
                 edge.lineControl(0.0, 0.0)
