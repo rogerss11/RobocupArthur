@@ -117,6 +117,8 @@ def loop():
     State 105: turn left
     State 110: raise arm
 
+    Or see Roger's figure-8 + roundabout
+
     This way, if you have to add an extra step in between 100 and 105, you have 4 steps and everything
     is correctly labeled
 
@@ -158,7 +160,7 @@ def loop():
 
         ############################### START FUNCTIONS (100-199) ###############################
 
-        elif state == 100:  # VOJTA
+        elif state == 100:  # Vojta
             pass
 
         ######################### SEESAW + SEESAW GOLF BALL (200-299) ###########################
@@ -174,8 +176,10 @@ def loop():
         ############################## STAIRS SECTION (400-499) #################################
         #                *** might be skipped to implement 5 instead
 
-        elif state == 400:  # Roger
+        elif state == 400:  # Roger + Arnau
             pass
+
+        # once down the stairs, code can be adapted from the downramp section
 
         ############################# DOWNRAMP SECTION (500-599) ################################
         #                *** might be skipped to implement 4 instead
@@ -183,11 +187,89 @@ def loop():
         elif state == 500:  # Arnau
             pass
 
+        # missing step from hole to being on the curved line at the top
+
+        elif state == 520: # START OF DOWNRAMP.
+            # assuming it's already on the line at the top of the ramp
+            # code works best when starting in the middle of the curve
+            edge.lineControl(0.2, 0)
+            if pose.tripBtimePassed() > 11:
+                edge.lineControl(0, 0)
+                pose.tripBreset()
+                state = 525
+        
+        elif state == 525: # go straight to skip the trident intersection next to the end
+            service.send(service.topicCmd + "ti/rc","0.2    0.0")
+            if pose.tripBtimePassed() > 6:
+                service.send(service.topicCmd + "ti/rc","0 0")
+                pose.tripBreset()
+                state = 530
+
+        elif state == 530: # turn to have the line somewhere in front after the intersection
+            service.send(service.topicCmd + "ti/rc","0 0.5")
+            if pose.tripBtimePassed() > 3:
+                service.send(service.topicCmd + "ti/rc","0 0")
+                pose.tripBreset()
+                state = 535
+
+        elif state == 535: # driveUntilLine
+            driveUntilLine()
+            pose.tripBreset()
+            state = 540
+
+        elif state == 545:
+            service.send(service.topicCmd + "ti/rc","0 -0.5")
+            if pose.tripBtimePassed() > 2:
+                service.send(service.topicCmd + "ti/rc","0 0")
+                pose.tripBreset()
+                state = 550
+        
+        elif state == 550: # slooooowly follow line so that it has time to align itself
+            edge.lineControl(0.05, 0)
+            if pose.tripBtimePassed() > 2:
+                state = 600 # go to axe section
+
+                
+
         ############################### AXE SECTION (600-699) ###################################
 
-        elif state == 600:  # Vojta + Arnau + Andrea
-            pass
+        # Vojta + Arnau + Andrea
+        elif state == 600: # follow line until end
+            edge.lineControl(0.1, 0)
+            state = 605
+            pose.tripBreset()
 
+        elif state == 605:
+            if edge.lineValidCnt == 0: #when line finishes, stop
+                    edge.lineControl(0, 0)
+                    state = 610
+                    pose.tripBreset()
+
+        elif state == 610:
+            service.send(service.topicCmd + "ti/rc","0 0.2") # turn slightly to not miss the axe line
+            if pose.tripBtimePassed() > 1:
+                service.send(service.topicCmd + "ti/rc","0 0")
+                state = 615
+                pose.tripBreset()
+
+        elif state == 615:
+            service.send(service.topicCmd + "ti/rc","0.1 0") # drive towards axe line
+            if pose.tripBtimePassed() > 2:
+                service.send(service.topicCmd + "ti/rc","0 0.5")
+                driveUntilLine()
+                state = 620
+                pose.tripBreset()
+
+        elif state == 625: # turn towards axe
+            service.send(service.topicCmd + "ti/rc","0.0 1")
+            if pose.tripBtimePassed() > 1.5:
+                service.send(service.topicCmd + "ti/rc","0.0 0")
+                pose.tripBreset()
+                state = 630 #
+
+        elif state == 630: # start of Andrea + Vojta's code
+            pass
+        
         ####################### FIGURE-8 + ROUNDABOUT SECTION (700-799) #########################
 
         elif state == 700:  # Roger
@@ -230,7 +312,7 @@ def loop():
             driveXMeters(1, vel=0.2)
             driveUntilLine(400)
             turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
-            state = 720
+            state = 800 # go to blue ball sorting section
 
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
 
@@ -243,6 +325,7 @@ def loop():
             # ------ TESTS --------------------------------------------------------
             t.sleep(30)
             state = 9100
+
 
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
