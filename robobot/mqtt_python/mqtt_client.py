@@ -153,7 +153,7 @@ def driveTurnPi():
   while not (service.stop):
     if state == 0: # wait for start signal
       service.send("robobot/cmd/ti/rc","0.2 0.5") # (forward m/s, turn-rate rad/sec)
-      state = 1
+      state = 1                   
     elif state == 1:
       if pose.tripBh > 3.14 or pose.tripBtimePassed() > 15:
         service.send("robobot/cmd/ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
