@@ -81,6 +81,7 @@ def stateTimePassed():
 
 ############################################################
 
+
 def loop():
     """
     Please talk to Arnau or Roger before touching other things. When in doubt, ask.
@@ -155,62 +156,50 @@ def loop():
                 # should be 100
                 pose.tripBreset()  # use trip counter/timer B
 
-
         ############################### START FUNCTIONS (100-199) ###############################
 
-        elif state == 100: # VOJTA
+        elif state == 100:  # VOJTA
             pass
 
         ######################### SEESAW + SEESAW GOLF BALL (200-299) ###########################
 
-        elif state == 200: # Arnau + Leona
+        elif state == 200:  # Arnau + Leona
             pass
 
         ############################ TOP GOLF BALL (300-399) ####################################
 
-        elif state == 300: # Leona
+        elif state == 300:  # Leona
             pass
 
         ############################## STAIRS SECTION (400-499) #################################
-        #                *** might be skipped to implement 5 instead   
+        #                *** might be skipped to implement 5 instead
 
-        elif state == 400: # Roger
+        elif state == 400:  # Roger
             pass
 
         ############################# DOWNRAMP SECTION (500-599) ################################
-        #                *** might be skipped to implement 4 instead                            
+        #                *** might be skipped to implement 4 instead
 
-        elif state == 500: # Arnau
+        elif state == 500:  # Arnau
             pass
 
         ############################### AXE SECTION (600-699) ###################################
 
-        elif state == 600: # Vojta + Arnau + Andrea
+        elif state == 600:  # Vojta + Arnau + Andrea
             pass
 
         ####################### FIGURE-8 + ROUNDABOUT SECTION (700-799) #########################
 
-        elif state == 700: # Roger
-            pass
-
-        ######################### BLUE BALL SORTING SECTION (800-899) ###########################
-
-        elif state == 800: # Eva + Leona
-            pass
-
-        #################################### TESTS (9000-9999) ###################################
-
-
-        elif state == 69:
+        elif state == 700:  # Roger
             # ------------- PASS BIRTLE (start from line) -------------------------------------------
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
             driveXMeters(0.3, vel=0.3)
             driveUntilWall(0.30, ir_id=1, vel=0.0)
             t.sleep(3)
             driveXMeters(1.3, vel=0.3)
-            state = 70
+            state = 705
 
-        elif state == 70:
+        elif state == 705:
             # ------------- CLIMB CIRCLE MISSION -------------------------------------------
             gate_dist = driveUntilWall_measure_gate_dist(0.25, ir_id=1)
             print(f"% gate_dist = {gate_dist:.2f}")
@@ -221,9 +210,9 @@ def loop():
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
             turnInPlace(25, dir=1)
             climbCircle(40, vel=0.45)
-            state = 71  # inside circle
+            state = 710  # inside circle
 
-        elif state == 71:
+        elif state == 710:
             # ------------- INSIDE CIRCLE MISSION -------------------------------------------
             turnInPlace(38, dir=0, ang_speed=0.4)  # position tangent to the circle
             min_d = driveUntilWall(0.3, ir_id=0, vel=0.1)
@@ -231,27 +220,34 @@ def loop():
             turn_rad = min_d + 0.125  # 0.1 is the 1/2 of the wheel base
             turnInPlace(8, dir=1, ang_speed=0.3)  # Adjust position
             rotateCircle(r=turn_rad, deg=333, dir=1)
-            state = 72
+            state = 715
 
-        elif state == 72:
+        elif state == 715:
             # ------------- LEAVE CIRCLE -------------------------------------------
             driveXMeters(0.3 + min_d, vel=0.3)
             driveUntilWall(0.3, ir_id=1, vel=0.0)
             t.sleep(7)
             driveXMeters(1, vel=0.2)
-            # driveXMeters(1.5, vel=0.45)
             driveUntilLine(400)
             turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
-            # driveXMeters(2, vel=0.45)
-            state = 73
+            state = 720
 
-        elif state == 10:
+        ######################### BLUE BALL SORTING SECTION (800-899) ###########################
+
+        elif state == 800:  # Eva + Leona
+            pass
+
+        #################################### TESTS (9000-9999) ###################################
+
+        elif state == 9000:
             # ------ TESTS --------------------------------------------------------
             t.sleep(30)
-            state = 81
+            state = 9100
+
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
             break
+
         # allow openCV to handle imshow (if in use)
         # images are almost useless while turning, but
         # used here to illustrate some image processing (painting)
