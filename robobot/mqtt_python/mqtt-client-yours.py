@@ -33,10 +33,10 @@ from setproctitle import setproctitle
 from spose import pose
 from sir import ir
 from srobot import robot
-from scam import cam
+from robobot.mqtt_python.scam import cam
 from sedge import edge
 from sgpio import gpio
-from scam import cam
+from robobot.mqtt_python.scam import cam
 from uservice import service
 from ulog import flog
 

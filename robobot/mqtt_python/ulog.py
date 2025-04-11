@@ -11,7 +11,7 @@ class ULog:
 
     def write(self, state=-1):
         from spose import pose
-        from scam import cam
+        from robobot.mqtt_python.scam import cam
         from srobot import robot
         from spose import pose as spose
         from sir import ir

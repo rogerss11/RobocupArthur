@@ -2,7 +2,7 @@
 
 import cv2 as cv
 import numpy as np
-from scam import cam  # Use the robot's existing camera system
+from robobot.mqtt_python.scam import cam  # Use the robot's existing camera system
 
 class ArucoDetector:
     def __init__(self):

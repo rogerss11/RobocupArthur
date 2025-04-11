@@ -246,7 +246,7 @@ def loop():
                 service.send(
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
-                state = 401
+                state = 600
                 pose.tripBreset()  # use trip counter/timer B
 
         elif state == 800: # TURNING TEST
@@ -286,8 +286,15 @@ def loop():
 
         elif state == 403: # driveUntilLine
             driveUntilLine()
-            state = 404
+            state = 4031
             pose.tripBreset()
+
+        elif state == 4031:
+            service.send(service.topicCmd + "ti/rc","0 -0.5")
+            if pose.tripBtimePassed() > 2:
+                service.send(service.topicCmd + "ti/rc","0 0")
+                state = 404
+                pose.tripBreset()
         
         elif state == 404: # slooooowly follow line so that it has time to align itself
             edge.lineControl(0.05, 0)
@@ -299,8 +306,16 @@ def loop():
         elif state == 4041:
             if edge.lineValidCnt == 0:
                     edge.lineControl(0, 0)
-                    state = 405
-                    pose.tripBreset
+                    state = 4042
+                    pose.tripBreset()
+
+        elif state == 4042:
+            service.send(service.topicCmd + "ti/rc","0 0.2")
+            if pose.tripBtimePassed() > 1:
+                service.send(service.topicCmd + "ti/rc","0 0")
+                state = 405
+                pose.tripBreset()
+
 
         elif state == 405:
             service.send(service.topicCmd + "ti/rc","0.1 0")
@@ -313,14 +328,14 @@ def loop():
 
         elif state == 406: # turn towards axe
             service.send(service.topicCmd + "ti/rc","0.0 1")
-            if pose.tripBtimePassed() > 1.8:
+            if pose.tripBtimePassed() > 1.5:
                 service.send(service.topicCmd + "ti/rc","0.0 0")
                 state = 407
                 pose.tripBreset()
 
         elif state == 407: # move slowly on line towards axe
             # THIS HAS TO BE SUBSTITUTED WITH ANDREA'S CODE
-            service.send(service.topicCmd + "ti/rc","0.05 0")
+            edge.lineControl(0.05, 0)
             if pose.tripBtimePassed() > 5:
                 state = 23451234
 
@@ -376,8 +391,8 @@ if __name__ == "__main__":
         print("% Starting")
         # where is the MQTT data server:
         # service.setup("localhost")  # localhost
-        #service.setup("10.197.218.235")  # Arthur
-        service.setup("10.197.218.184") # Gandalf
+        service.setup("10.197.218.235")  # Arthur
+        # service.setup("10.197.218.184") # Gandalf
         # service.setup('10.197.217.81') # Juniper
         # service.setup('10.197.217.80') # Newton
         # service.setup("bode.local")  # Bode
