@@ -246,7 +246,7 @@ def move_straight(xy, distance, state:int, line:int):
                 time.sleep(0.1)
                 service.send(service.topicCmd + "ti/rc","0 0")  
                 time.sleep(0.1)
-                service.send(service.topicCmd + "ti/rc","0.1 -0.6")
+                service.send(service.topicCmd + "ti/rc","-0.1 -0.6")
                 time.sleep(0.1)
                 service.send(service.topicCmd + "ti/rc","0 0")
                 time.sleep(0.1)
