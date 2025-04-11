@@ -1,4 +1,4 @@
-[0:00:11.309257314] [731] [1;32m INFO [1;37mCamera [1;34mcamera_manager.cpp:327 [0mlibcamera v0.4.0+50-83cb8101
+[0:00:11.774332921] [742] [1;32m INFO [1;37mCamera [1;34mcamera_manager.cpp:327 [0mlibcamera v0.4.0+50-83cb8101
 Traceback (most recent call last):
   File "/home/local/svn/robobot/stream_server/stream_server.py", line 96, in <module>
     picam2 = Picamera2()

@@ -153,6 +153,8 @@ def distance_calc(xy, width, type):
 
     if xy != []:
         distance_xy = (a2*xy[1]**2 + b2*xy[1] + c2)*10 #in mm
+    else: 
+        distance_xy = 0.0
 
     # if the difference between the two distances is small, use the average
     if (type == 0) & (abs(distance_xy - distance_width)  < 5):
@@ -184,6 +186,7 @@ def move_straight(xy, distance, state:int, line:int):
 
     if (distance > 250.0):
         if state == 3:
+            print("Remove obstacles")
             #remove obstacles in the way
             drive.turnInPlace(deg = 90, dir = 0)
             service.send(service.topicCmd + "T0/servo", "1 -150 200")
@@ -193,6 +196,7 @@ def move_straight(xy, distance, state:int, line:int):
             state = 2
         elif state == 2:
         #adjust the position of the ball in the middle of the picture
+            print("Move to the middle")
             stat_m = move_middle(xy)
             if stat_m == 0:
                 # ball is in the middle
@@ -203,10 +207,12 @@ def move_straight(xy, distance, state:int, line:int):
             wait = (distance-200.0)/1000/velocity 
 
             if line == 0:
+                print("Move straight")
                 service.send(service.topicCmd + "ti/rc", f"{velocity:.2f} 0")
                 time.sleep(wait)
                 service.send(service.topicCmd + "ti/rc", "0 0")
             else:
+                print("Move straight on line")
                 edge.lineControl(velocity, 0.0)
                 time.sleep(wait)
                 edge.lineControl(0.0, 0.0)
@@ -225,6 +231,7 @@ def move_straight(xy, distance, state:int, line:int):
             time.sleep(wait)
             edge.lineControl(0.0, 0.0)
         #move the arm to the ball
+        print("Pick up ball")
         service.send(service.topicCmd + "T0/servo", "1 -150 200")
 
     else :
@@ -235,6 +242,10 @@ def move_straight(xy, distance, state:int, line:int):
 
 # detect holes on black surface in the pictures
 def hole(image):
+    """
+    Detects a hole in the image.
+        image: the image to be analyzed
+    """
     # calculate the differences between the main color values in the picture with some blurring
     d_B = gaussian_filter(image, sigma=1, order=(0,0,1))
     
@@ -254,13 +265,18 @@ def hole(image):
     # calculate the middle
     labeled_image, n_labels = label(hole, background=0,return_num=True,connectivity=2)
     regions = regionprops(label_image=labeled_image)
-    xy = regions[0].centroid    
 
-    if xy != []:
-       state = 1
-    
-    width = regions[0].axis_major_length
-    
+    #region detected correctly
+    if regions:
+        xy = regions[0].centroid  
+        width = regions[0].axis_major_length 
+        state = 1 
+    else:
+        xy = []
+        width = 0
+        state = 0
+        # no hole detected
+
     return xy, state, width # gives back a tuple with the pixel position of the (roughly) middle of the hole 
 
 # drive to the ball
@@ -296,8 +312,10 @@ def drive2ball(case:int):
         xy = []
         if case != 3:
             xy, width = ball(img, color)
+            print("Ball found:", xy)
         else:
             xy, state, width = hole(img)
+            print("Hole found:", xy)
 
         #Visualize the ball in the picture
         if (len(xy) == 2):
@@ -322,6 +340,7 @@ def drive2ball(case:int):
         elif (state == 1):
             # move straight to the ball
 
+            print("Move straight to the ball.")
             # calculate the distance to the ball
             distance, status_d = distance_calc(xy, width, case != 0)
             state_straight = move_straight(xy, distance, state_straight, case == 2)

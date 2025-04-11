@@ -175,7 +175,7 @@ def driveTurnPi():
 def loop():
   #INITIALIZE
   from ulog import flog
-  state = 22
+  state = 21
   state_ia = 0
   images = 0
   ledon = True
@@ -236,11 +236,14 @@ def loop():
 
     elif state == 21: #blue ball detection
       state_ia = 0
+      xy = []
       
       #find the blue ball
       while state_ia == 0:
-        image_ia = imageAnalysis(0)
-        xy, width = ia.ball(image_ia, 0) #detect blue ball
+        image_ia, ok = imageAnalysis(0)
+        if ok:
+          xy, width = ia.ball(image_ia, 0) #detect blue ball
+
         if xy == []: # no ball detected
           #turn right
           service.send(service.topicCmd + "ti/rc","0.0 0.3") #turn right
@@ -257,21 +260,24 @@ def loop():
 
     elif state == 22: #orange golf ball 
       state_ia = 0
-      
+      xy = []
+
       #find the orange ball
       while state_ia == 0:
-        image_ia = imageAnalysis(0)
-        xy, width = ia.ball(image_ia, 1) #detect orange ball
+        image_ia, ok = imageAnalysis(0)
 
-        #Visualize the ball in the picture
-        if (len(xy) == 2):
-            img = cv.circle(img, xy, radius=10, color=(0, 0, 255), thickness=-1) 
+        if ok:
+          xy, width = ia.ball(image_ia, 1) #detect orange ball
 
-        #Show the image for debugging
-        if not gpio.onPi:
-            cv.imshow('frame for analysis', img)
+          #Visualize the ball in the picture
+          if (len(xy) == 2):
+            image_ia = cv.circle(image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1) 
 
-        if xy == []: # no ball detected
+          #Show the image for debugging
+          if not gpio.onPi:
+              cv.imshow('frame for analysis', image_ia)
+
+        if (xy == []) & ok: # no ball detected
           #turn right
           service.send(service.topicCmd + "ti/rc","0.0 0.3") #turn right
           t.sleep(0.1)
@@ -286,8 +292,11 @@ def loop():
         state_ia = 2 # ball detected
       
       while state_ia == 2:
-        image_ia = imageAnalysis(0)
-        xy, state, width = ia.hole(image_ia) #detect hole
+        xy = []
+        image_ia, ok = imageAnalysis(0)
+
+        if ok:
+          xy, state, width = ia.hole(image_ia) #detect hole
 
         if state:
           state_ia = 3 # hole detected
