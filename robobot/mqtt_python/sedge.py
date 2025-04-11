@@ -99,22 +99,21 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 0.5 # Proportional constant
+    Kp = 0.6 # Proportional constant
     Ki = 0.15  # Integral constant
     Kd = 0.35  # Derivative constant
     #Kp = 0.55 # Proportional constant
     #Ki = 0.1  # Integral constant
     #Kd = 0.4  # Derivative constant
     
-    # lead compensator
-    #Kp = 0.6 # Proportional constant
-    #Ki = 0.12  # Integral constant
-    #Kd = 0.3  # Derivative constant
-    lineTauZ = 0.02
-    lineTauP = 0.1
+    max_d = 10.0
 
-    # Low-pass filter for derivative term
-    alpha = 0.1  # Choose a suitable alpha value
+    lineTauZ = 0.1  # unchanged
+    lineTauP = 0.3  # increase to soften filter
+
+    errorDiffFiltered = 0
+    
+    metric = 0.0  # Metric for PID tuning
 
     # values for ID
     errorSum = 0.0  # Integral term (sum of errors)
@@ -367,6 +366,7 @@ class SEdge:
             values[i] = thresholdedValue  # Update value in list
             valuesAboveZero += thresholdedValue > 0  # Count values above 0
 
+
         # Check if the line is valid (high above threshold)
         self.lineValid = high >= self.lineValidThreshold
 
@@ -490,8 +490,8 @@ class SEdge:
 
     def followLine(self):
       from uservice import service
+
       # some parameters depend on sample time, adjust
-      # print(f"LineCtrl:: sample time {self.edge_nInterval}")
       if abs(self.edge_nInterval - self.edgeIntervalSetup) > 2.0: # ms #? why
         self.PIDrecalculate()
         self.edgeIntervalSetup = self.edge_nInterval
@@ -507,30 +507,48 @@ class SEdge:
       # Calculate the error between the desired position and the current position
       e = self.refPosition - self.position
 
+      # penalty
+      if e == 0 and self.lastError == 0:
+        print("Penalty")
+        penalty = 3
+      else:
+        penalty = 0
+
       self.errorSum += e * deltaTime  # Sum of errors for integral term
       errorDiff = (e - self.lastError) / deltaTime  # Derivative term
-      errorDiffFiltered = self.alpha * errorDiff + (1 - self.alpha) * self.lastErrorDiff
 
-      # PID control output
-      self.u = self.Kp * e + min(max(self.Ki * self.errorSum, -10), 10) + self.Kd * errorDiff
-      
+      p_term = self.Kp * e
+      i_term = self.Ki * self.errorSum
+      i_term = max(min(i_term, 10), -10)  # Clamp to prevent integral windup
+
+      self.errorDiffFiltered = 0.9 * self.errorDiffFiltered + 0.1 * errorDiff
+      d_term = self.Kd * self.errorDiffFiltered
+      d_term = max(min(d_term, self.max_d), -self.max_d)  # Clamp derivative term
+
+      # Final control signal
+      self.u = p_term + i_term + d_term
       # Lead filter
+
       #self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT
       self.lineY = self.u
 
+      #print(f"error: {e:.4f} p_term: {p_term:.4f} i_term: {i_term:.4f} d_term: {d_term:.4f} u: {self.u:.4f} y: {self.lineY:.4f}")
+
+
       self.lineY = max(min(self.lineY, 4), -4)  # Limit the control signal to [-4, 4] rad/s
+
+      # save old values
+      self.lineE1 = self.u
+      self.lineY1 = self.lineY
+      self.lastError = e
 
       # Save data for graphing
       self.error_list.append(e)
       self.time_list.append(self.edge_nTime.timestamp() - self.startingTime)
 
-      # save old values
-      self.lineE1 = self.u
-      self.lineY1 = self.lineY
+      e = e + penalty  # Add penalty to error
 
-      # Save last values
-      self.lastError = e
-      self.lastErrorDiff = errorDiffFiltered
+      self.metric += (e * e) * deltaTime  # Calculate the metric for PID tuning
 
       if self.adjustSpeed:
           # Adjust speed based on error
