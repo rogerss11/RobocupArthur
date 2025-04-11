@@ -91,6 +91,8 @@ class UService:
                 help='Turn 180 degrees (Pi) and stop')
     self.parser.add_argument('-u', '--usestate', type=int,
                 help='set mission state to this value')
+    self.parser.add_argument('-d', '--distance', action='store_true',
+                help='wait for someone to touch side distance sensor before start')
     self.args = self.parser.parse_args()
     # print(f"% command line arguments: white {self.args.white}, gyro={self.args.gyro}, level={self.args.level}")
     # allow close down on ctrl-C

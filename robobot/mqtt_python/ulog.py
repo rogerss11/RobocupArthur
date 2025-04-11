@@ -1,5 +1,7 @@
 import time
 
+import time
+
 
 class ULog:
     def setup(self):
@@ -44,5 +46,6 @@ class ULog:
         self.f.close()
 
 
+# create a global instance
 # create a global instance
 flog = ULog()
