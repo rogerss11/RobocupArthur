@@ -246,26 +246,83 @@ def loop():
                 service.send(
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
-                state = 443
+                state = 401
                 pose.tripBreset()  # use trip counter/timer B
-        elif state == 441: #follow line nothing else
-            edge.lineControl(0.2, 0.0)
-            pose.tripBreset()
-            state = 442
-        elif state == 442:
-            if pose.tripBtimePassed() > 7:
-                service.send(service.topicCmd + "ti/rc","0.2 0.0") # go straight
-                state = 443
-                pose.tripBreset()
-        elif state == 443:
-            if pose.tripBtimePassed() > 3:
-                service.send(service.topicCmd + "ti/rc","0.0 1") # turn left
-                state = 444
-                pose.tripBreset()
-        elif state == 444:
-            if pose.tripBtimePassed() > 0.4:
+
+        elif state == 800: # TURNING TEST
+            service.send(service.topicCmd + "ti/rc","0.0 1")
+            if pose.tripBtimePassed() > 2:
+                service.send(service.topicCmd + "ti/rc","0.0 0")
+                state = 9238529837
+
+        elif state == 600: # DRIVE FORWARD TEST
+            service.send(service.topicCmd + "ti/rc","0.05 0.0")
+            if pose.tripBtimePassed() > 5:
                 service.send(service.topicCmd + "ti/rc","0.0 0.0")
-                state = 123123123
+                state = 3452159297834582340
+
+        elif state == 400: # START OF DOWNRAMP.
+            # assuming it's already on the line at the top of the ramp
+            # code works best when starting in the middle of the curve
+            edge.lineControl(0.2, 0)
+            if pose.tripBtimePassed() > 11:
+                edge.lineControl(0, 0)
+                state = 401
+                pose.tripBreset()
+        
+        elif state == 401: # go straight to skip the trident intersection next to the end
+            service.send(service.topicCmd + "ti/rc","0.2    0.0")
+            if pose.tripBtimePassed() > 6:
+                service.send(service.topicCmd + "ti/rc","0 0")
+                state = 402
+                pose.tripBreset()
+
+        elif state == 402: # turn to have the line somewhere in front after the intersection
+            service.send(service.topicCmd + "ti/rc","0 0.5")
+            if pose.tripBtimePassed() > 3:
+                service.send(service.topicCmd + "ti/rc","0 0")
+                state = 403
+                pose.tripBreset()
+
+        elif state == 403: # driveUntilLine
+            driveUntilLine()
+            state = 404
+            pose.tripBreset()
+        
+        elif state == 404: # slooooowly follow line so that it has time to align itself
+            edge.lineControl(0.05, 0)
+            if pose.tripBtimePassed() > 2:
+                edge.lineControl(0.1, 0)
+                state = 4041
+                pose.tripBreset()
+
+        elif state == 4041:
+            if edge.lineValidCnt == 0:
+                    edge.lineControl(0, 0)
+                    state = 405
+                    pose.tripBreset
+
+        elif state == 405:
+            service.send(service.topicCmd + "ti/rc","0.1 0")
+            if pose.tripBtimePassed() > 2:
+                service.send(service.topicCmd + "ti/rc","0 0.5")
+                driveUntilLine()
+                state = 406
+                pose.tripBreset()
+
+
+        elif state == 406: # turn towards axe
+            service.send(service.topicCmd + "ti/rc","0.0 1")
+            if pose.tripBtimePassed() > 1.8:
+                service.send(service.topicCmd + "ti/rc","0.0 0")
+                state = 407
+                pose.tripBreset()
+
+        elif state == 407: # move slowly on line towards axe
+            # THIS HAS TO BE SUBSTITUTED WITH ANDREA'S CODE
+            service.send(service.topicCmd + "ti/rc","0.05 0")
+            if pose.tripBtimePassed() > 5:
+                state = 23451234
 
 
         else:  # abort
@@ -319,8 +376,8 @@ if __name__ == "__main__":
         print("% Starting")
         # where is the MQTT data server:
         # service.setup("localhost")  # localhost
-        # service.setup("10.197.218.235")  # Arthur
-        service.setup("10.197.218.184")
+        #service.setup("10.197.218.235")  # Arthur
+        service.setup("10.197.218.184") # Gandalf
         # service.setup('10.197.217.81') # Juniper
         # service.setup('10.197.217.80') # Newton
         # service.setup("bode.local")  # Bode
