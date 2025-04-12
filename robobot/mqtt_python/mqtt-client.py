@@ -39,6 +39,7 @@ from sgpio import gpio
 from scam import cam
 from uservice import service
 from ulog import flog
+from drive import *
 
 ############################################################
 
@@ -110,7 +111,8 @@ def loop():
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
-        edge.lineControl(0.2, 0.0) # m/s and position on line
+        edge.lineControl(0.1, 0.0) # m/s and position on line
+        edge.stopAtNthIntersection(['r'], 2)
         state = 110
         pose.tripBreset()
 
@@ -147,9 +149,7 @@ def loop():
     ###### MY TESTING STATES #######
     # line testing
     elif state == 110:
-      pass
-      #print("% AtIntersectionCnt: ", edge.atIntersectionCnt, ", navigatingIntersection: ", edge.navigatingIntersection)
-      if pose.tripBtimePassed() > 6: # is at intersection
+      if pose.tripBtimePassed() > 10:
         print("---------error integral metric:", edge.metric)
         state = 99 #end
 
@@ -182,7 +182,29 @@ def loop():
     elif state == 151: # wait for axe to pass
         if not ir.axeActive:
           state = 99
-      
+    
+    elif state == 160:
+      edge.stopAtIntersection = True
+      if edge.lineCtrl == False:
+        state = 99
+        
+    elif state == 161:
+      t.sleep(3)
+      driveXMeters(0.1)
+      t.sleep(3)
+      turnInPlace(90, -1)
+      t.sleep(3)
+      driveXMeters(-0.1)
+      t.sleep(3)
+      state = 162
+    
+    elif state == 162: # start lining up with white line
+      edge.shouldLineUp = True
+      state = 163
+
+    elif state == 163: # wait for it to line up with white line
+      if not edge.shouldLineUp:
+        state = 99
 
     else: # abort
       print(f"% Mission finished/aborted; state={state}")
@@ -235,7 +257,7 @@ if __name__ == "__main__":
       # where is the MQTT data server:
       # service.setup('localhost') # localhost
       service.setup('10.197.218.235')
-      #service.setup('10.197.218.184') #gladnalf
+      #service.setup('10.197.218.11') #gladnalf
       if service.connected:
         loop()
       service.terminate()
