@@ -113,7 +113,7 @@ def driveUntilLine(threshold=300):
     while not (service.stop):
         if state == 0:  # wait for start signal
             service.send(
-                "robobot/cmd/ti/rc", "0.2 0.0"
+                "robobot/cmd/ti/rc", "0.1 0.0"
             )  # (forward m/s, turn-rate rad/sec)
             state = 1
         elif state == 1:
@@ -144,6 +144,43 @@ def driveUntilLine(threshold=300):
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Driving until line ------------------------- end")
+
+def driveUntilLineAndTurn(velocity, side, threshold=300):
+    """
+    Drive until line and turn to the specified side for line following
+    """
+    print("driving until line")
+    driveUntilLine(threshold)
+    t.sleep(0.5)
+    state = 0
+    pose.tripBreset()
+    while not (service.stop):
+        if state == 0:
+            driveXMeters(-0.1, 0.1)
+            t.sleep(0.5)
+            state = 1
+        elif state == 1: # start lining up with white line
+            edge.shouldLineUp = True
+            state = 2
+        elif state == 2: # wait for it to line up with white line
+            if not edge.shouldLineUp:
+                state = 3
+        elif state == 3:
+            driveXMeters(0.01, 0.1)
+            t.sleep(0.5)
+            state = 4
+        elif state == 4:
+            if side == 'left':  # left
+                turnInPlace(60, 0)
+            elif side == 'right':  # right
+                turnInPlace(60, 1)
+            state = 99
+            t.sleep(0.5)
+        else:
+            return
+        t.sleep(0.1)
+        
+        
 
 
 def climbCircle(acc=50, vel=0.5):

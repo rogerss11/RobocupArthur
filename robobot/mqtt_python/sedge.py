@@ -132,7 +132,7 @@ class SEdge:
     lineY1 = 0.0 # old control output (rad/s)
     lineY = 0.0  # control output (rad/s)
 
-    LineUpWithLine = False # if we should line up with white line in front of us
+    shouldLineUp = False # if we should line up with white line in front of us
     last_cmd = None # last command sent to the robot (used for lineUpWithLine)
 
     # management
@@ -181,7 +181,7 @@ class SEdge:
 
     def setLineUpWithLine(self):
         """ Line up with the white line in front of us. """
-        self.LineUpWithLine = True
+        self.shouldLineUp = True
         self.lineControl(0.0, 0.0) # turn off line control
 
     ##########################################################
@@ -345,7 +345,7 @@ class SEdge:
           if self.lineCtrl:
               self.followLine()
           # if we want to line up with white line
-          if self.LineUpWithLine:
+          if self.shouldLineUp:
               self.lineUpWithLine()
           flog.write()
           # log relevant line sensor data
@@ -597,6 +597,7 @@ class SEdge:
     ##########################################################
 
     def lineUpWithLine(self):
+        print(self.edge_n)
         """ Line up with the white line in front of us. """
         # positive turnrate -> turn left
         from uservice import service
@@ -604,11 +605,9 @@ class SEdge:
         left = self.edge_n[0] > self.lineValidThreshold #! maybe replace with low
         right = self.edge_n[7] > self.lineValidThreshold
 
-        #print(left, right)
-
         if left and right: # we have lined up
             service.send("robobot/cmd/ti/rc","0 0")
-            self.LineUpWithLine = False
+            self.shouldLineUp = False
             return
         elif left:
             cmd = f"0 {speed:.3f}"  # turn left

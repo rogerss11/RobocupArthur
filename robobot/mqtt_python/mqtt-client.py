@@ -111,8 +111,7 @@ def loop():
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
-        edge.lineControl(0.1, 0.0) # m/s and position on line
-        edge.stopAtNthIntersection(['r'], 2)
+        edge.lineControl(0.0, 0.0) # m/s and position on line
         state = 110
         pose.tripBreset()
 
@@ -157,6 +156,7 @@ def loop():
     elif state == 120:
       #edge.print()
       edge.printn()
+      print(edge.edge_n)
       #edge.printnw()
       t.sleep(0.5)
 
@@ -199,12 +199,31 @@ def loop():
       state = 162
     
     elif state == 162: # start lining up with white line
-      edge.shouldLineUp = True
+      edge.setLineUpWithLine()
       state = 163
 
     elif state == 163: # wait for it to line up with white line
       if not edge.shouldLineUp:
         state = 99
+
+    elif state == 170:
+      driveUntilLineAndTurn(0.1, 'left')
+      print("dooooooone")
+      edge.stopAtNthIntersection(['l'], 2)
+      edge.lineControl(0.1, 0.0) # m/s and position on line
+      state = 171
+    elif state == 171:
+      if edge.lineCtrl == False:
+        state = 172
+    elif state == 172:
+      driveXMeters(0.1)
+      t.sleep(1)
+      turnInPlace(60, 0)
+      t.sleep(1)
+      driveXMeters(0.2)
+      t.sleep(1)
+      driveUntilLine()
+      state = 99
 
     else: # abort
       print(f"% Mission finished/aborted; state={state}")
@@ -256,8 +275,8 @@ if __name__ == "__main__":
       print("% Starting")
       # where is the MQTT data server:
       # service.setup('localhost') # localhost
-      service.setup('10.197.218.235')
-      #service.setup('10.197.218.11') #gladnalf
+      #service.setup('10.197.218.235')
+      service.setup('10.197.218.11') #gladnalf
       if service.connected:
         loop()
       service.terminate()
