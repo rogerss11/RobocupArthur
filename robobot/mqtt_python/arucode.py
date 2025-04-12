@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
-from eva_drive import turnInPlace, driveXMeters
+from eva_drive import turnInPlace, driveXMeters, driveUntilLine
+from scam import cam
 
 
 class ArucoDetector:
@@ -20,9 +21,8 @@ class ArucoDetector:
 
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         corners, ids, _ = cv.aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
-        print("corners:", corners)
-        print("ids:", ids)
-
+        #print("corners:", corners)
+        #print("ids:", ids)
 
         centers = []
         angles = []
@@ -60,30 +60,56 @@ class ArucoDetector:
         else:
             return None, None, None, None, frame
         
+
+    def find_and_orient_to_B(self, img):
+        while True: 
+            ids, corners, centers, angles, img = self.detect_markers(img)
+            if ids: 
+                ids_flat = ids
+                if 12 in ids_flat or 13 in ids_flat:
+                    print("Found B markers")
+                    self.orient_and_turn_to_B(img, ids, centers)
+                    break 
+            else: 
+                print("No B marker found, turning a bit:-)")
+                turnInPlace(deg=15, dir=0, ang_speed=0.5)  # Clockwise, small step
+            ok, img, _ = cam.getImage()
+            if not ok:
+                print("No image from camera.")
+                break
+        
     def orient_and_turn_to_B(self, frame, ids, centers):
-        while ids is None:
-            turnInPlace()
-            print("No marker detected")
-            return
+        if ids is not None: 
+            ids_flat = ids #first ID it sees 
+            print(f"Detected IDs: {ids_flat}")
 
-        ids_flat = [int(id[0]) for id in ids] #first ID it sees 
-        print(f"Detected IDs: {ids_flat}")
-
-        if 12 in ids_flat and 13 in ids_flat: 
-            print("Seeing both markers, assume centered")
-            turnInPlace(63,dir=1) #turn 90 degrees right, 63 is 90
-        elif 12 in ids_flat:
-            print("Seeing marker 12, turning 90+ degrees")  
-            turnInPlace(93,dir=1) #turn more than 90 degrees right 
-        elif 13 in ids_flat:
-            print("Seeing marker 13, turning less than 90 degrees")
-            turnInPlace(33,dir=-1)
-        else: 
-            #turninplace 
-            print("No B markers detected")
+            if 12 in ids_flat and 13 in ids_flat: 
+                print("Seeing both markers, assume centered")
+                turnInPlace(63,dir=1) #turn 90 degrees right, 63 is 90
+            elif 12 in ids_flat:
+                print("Seeing marker 12, turning 90+ degrees")  
+                turnInPlace(93,dir=1) #turn more than 90 degrees right 
+            else:
+                print("Seeing marker 13, turning less than 90 degrees")
+                turnInPlace(23,dir=1)
 
     def release(self):
         cv.destroyAllWindows()
+
+    def drive_to_line_and_turn_left(self):
+        #print("Driving to line")
+        driveUntilLine()
+        print("Line reached, now turning left")
+        turnInPlace(63, dir=0) #90 degrees left 
+
+#when it sees second line, turn left 90 degrees 
+#drive forward 30 centimeters or something
+#drop the ball, lift arm
+#turn 90 to the right 
+#find line again
+#turn left until aruco is centered
+#when centered, trigger sensor 
+#or just follow the line until sensor says its close enough 
 
 
 """
@@ -167,5 +193,39 @@ class ArucoDetector:
             print("Marker centered and straight → stop")
             service.send(service.topicCmd + "ti/rc", "0 0")
             state = 99
+
+
+ more graveyards:
+
+
+        while True: 
+            if ids is not None: 
+                ids_flat = [int(id[0]) for id in ids]
+                if 12 in ids_flat or 13 in ids_flat: 
+                    print("Found B markers")
+                    self.orient_and_turn_to_B(frame, ids, centers)
+                    break
+                else: 
+                    print("No B marker found, turning a bit:-)")
+                    turnInPlace()
+
+def find_B(self, frame, ids, centers):
+    ids_flat = [int(id[0]) for id in ids] if ids is not None else []
+
+    while 12 not in ids_flat and 13 not in ids_flat:
+        print("No B marker found, turning a bit :-)")
+        turnInPlace(deg=15, dir=1, ang_speed=0.5)  # Clockwise, small step
+
+        # Get updated image and detect again
+        ok, new_frame, _ = cam.getImage()
+        if not ok or new_frame is None:
+            print("No image from camera.")
+            continue
+
+        _, new_ids, _, new_centers, _ = self.detect_markers(new_frame)
+        ids_flat = [int(id[0]) for id in new_ids] if new_ids is not None else []
+
+    print("Found B marker(s)")
+    self.orient_and_turn_to_B(frame, new_ids, new_centers)
 
 """

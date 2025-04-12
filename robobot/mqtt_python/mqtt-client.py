@@ -114,27 +114,16 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0 0") # stop for images
       print(f"% --- state {state}, h = {pose.tripBh:.4f}, t={pose.tripBtimePassed():.3f}")
     
+    ########################
     elif state == 20: # image analysis
       img = imageAnalysis(0)  # get the image
       if img is not None:
-          ids, corners, centers, angles, img = aruco_detector.detect_markers(img)
-          #print("Hello there")
-          if ids:
-              for i, marker_id in enumerate(ids):
-                  center = centers[i]
-                  angle = angles[i]
-                  print(f"ID: {marker_id} | Center: {center} | Angle: {angle:.2f} deg")
-                  # --- Stop if close enough ---
-                  #state = 99
-                  aruco_detector.orient_and_turn_to_B(img, ids, centers)
-                  state = 99 
-          if not gpio.onPi:
-              cv.imshow('Live ArUco Detection', img)
-              cv.waitKey(1)
-
+          aruco_detector.find_and_orient_to_B(img)
+          aruco_detector.drive_to_line_and_turn_left()
+          state = 99 
+    ###################################
       if not cam.useCam or stateTimePassed() > 120:
           state = 99
-
       # blink LED
       if ledon:
         service.send(service.topicCmd + "T0/leds","16 0 64 0")
@@ -207,4 +196,24 @@ if __name__ == "__main__":
             cv.imshow('Live ArUco Detection', img)
       if not cam.useCam or stateTimePassed() > 20:
          state = 99"
+
+
+      elif state == 20: # image analysis
+      img = imageAnalysis(0)  # get the image
+      if img is not None:
+          ids, corners, centers, angles, img = aruco_detector.detect_markers(img)
+          #print("Hello there")
+          if ids:
+              for i, marker_id in enumerate(ids):
+                  center = centers[i]
+                  angle = angles[i]
+                  print(f"ID: {marker_id} | Center: {center} | Angle: {angle:.2f} deg")
+                  # --- Stop if close enough ---
+                  #state = 99
+                  #OPS!!!!! 
+                  aruco_detector.find_B(img, ids, centers)
+                  state = 99 
+          if not gpio.onPi:
+              cv.imshow('Live ArUco Detection', img)
+              cv.waitKey(1)
     """
