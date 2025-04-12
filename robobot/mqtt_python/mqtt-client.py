@@ -105,13 +105,12 @@ def loop():
     #  break
 
     if state == 0: # starting state (waiting for start signal or --now)
-      print("IR: ", ir.ir[0])
       if not service.args.distance or ir.ir[0] < 0.1: # if -d was used when starting mqtt-client, wait for someone to 'touch' side IR sensor
         print("% Starting")
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
-        edge.lineControl(0.0, 0.0) # m/s and position on line
+        edge.lineControl(0.2, 0.0) # m/s and position on line
         state = 110
         pose.tripBreset()
 
@@ -148,9 +147,30 @@ def loop():
     ###### MY TESTING STATES #######
     # line testing
     elif state == 110:
-      if pose.tripBtimePassed() > 10:
-        print("---------error integral metric:", edge.metric)
-        state = 99 #end
+      if pose.tripBtimePassed() > 13:
+        edge.lineControl(0.3, 0.0)
+        state = 111
+
+    elif state == 111:
+      if pose.tripBtimePassed() > 18:
+        edge.lineControl(0.25, 0.0)
+        state = 112
+    
+    elif state == 112:
+      if pose.tripBtimePassed() > 22.5:
+        edge.lineControl(0.38, 0.0)
+        state = 113
+      
+    elif state == 113:
+      if pose.tripBtimePassed() > 28:
+        edge.lineControl(0.05, 0.0)
+        state = 114
+    
+    elif state == 114:
+      if pose.tripBtimePassed() > 45:
+        edge.lineControl(0.0, 0.0)
+        state = 115
+
 
     # color sensor printing
     elif state == 120:
@@ -275,8 +295,8 @@ if __name__ == "__main__":
       print("% Starting")
       # where is the MQTT data server:
       # service.setup('localhost') # localhost
-      #service.setup('10.197.218.235')
-      service.setup('10.197.218.11') #gladnalf
+      service.setup('10.197.218.235')
+      #service.setup('10.197.218.11') #gladnalf
       if service.connected:
         loop()
       service.terminate()
