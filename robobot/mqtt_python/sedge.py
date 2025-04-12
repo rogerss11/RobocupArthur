@@ -421,13 +421,12 @@ class SEdge:
                 self.navigatingIntersection = False
                 self.passedIntersections += 1
           
-        print(self.edge_n, " -> ", values)
-        print(valuesAboveZero, self.atIntersectionCnt, self.navigatingIntersection)
+        # print(self.edge_n, " -> ", values)
+        # print(valuesAboveZero, self.atIntersectionCnt, self.navigatingIntersection)
 
         # If we are currently at an intersection
         if self.navigatingIntersection and not self.ignoreIntersections:
             if self.stopAtIntersectionN == self.passedIntersections + 1: # if we want to stop at next intersection
-                print("stop at intersectioooooooooooooooooooooooon")
                 self.lineControl(0, 0)
                 self.position = 0
                 return
