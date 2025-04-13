@@ -154,7 +154,7 @@ def loop():
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
 
-                state = 100  # ========== START STATE ===============
+                state = 700  # ========== START STATE ===============
                 # should be 100
                 pose.tripBreset()  # use trip counter/timer B
 
@@ -279,10 +279,10 @@ def loop():
         elif state == 700:  # Roger
             # ------------- PASS BIRTLE (start from line) -------------------------------------------
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
-            driveXMeters(0.3, vel=0.3)
+            driveXMeters(0.65, vel=0.3)
             driveUntilWall(0.30, ir_id=1, vel=0.0)
             t.sleep(3)
-            driveXMeters(1.3, vel=0.3)
+            driveXMeters(1.6, vel=0.3)
             state = 705
 
         elif state == 705:
@@ -291,8 +291,7 @@ def loop():
             print(f"% gate_dist = {gate_dist:.2f}")
             turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
             service.send(service.topicCmd + "T0/servo", "1 -200 200")
-            driveXMeters(gate_dist + 0.25)  # drive to extra time
-            driveXMeters(-0.30)
+            driveXMeters(gate_dist)
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
             turnInPlace(25, dir=1)
             climbCircle(40, vel=0.45)
