@@ -148,7 +148,7 @@ def loop():
     # line testing
     elif state == 110:
       if pose.tripBtimePassed() > 13:
-        edge.lineControl(0.3, 0.0)
+        edge.lineControl(0.2, 0.0)
         state = 111
 
     elif state == 111:

@@ -94,15 +94,15 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 0.5 # Proportional constant
-    Ki = 0.15  # Integral constant
-    Kd = 0.35  # Derivative constant
+    Kp = 0.45 # Proportional constant
+    Ki = 0.1  # Integral constant
+    Kd = 0.15  # Derivative constant
 
-    #lineTauZ = 0.8
-    #lineTauP = 0.15
+    lineTauZ = 0.4
+    lineTauP = 0.3
     
-    lineTauZ = 0.1  # unchanged
-    lineTauP = 0.3  # increase to soften filter
+    #lineTauZ = 0.1  # unchanged
+    #lineTauP = 0.3  # increase to soften filter
 
     # values for ID
     errorSum = 0.0  # Integral term (sum of errors)
@@ -499,7 +499,7 @@ class SEdge:
         from uservice import service
 
         # some parameters depend on sample time, adjust
-        if abs(self.edge_nInterval - self.edgeIntervalSetup) > 2.0: # ms #? why
+        if abs(self.edge_nInterval - self.edgeIntervalSetup) > 1.0: # ms #? why
           self.PIDrecalculate()
           self.edgeIntervalSetup = self.edge_nInterval
 
@@ -521,22 +521,22 @@ class SEdge:
         errorDiff = (e - self.lastError) / deltaTime  # Derivative term
 
         p_term = self.Kp * e
+        p_term = (p_term * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT
+
         i_term = self.Ki * self.errorSum
         d_term = self.Kd * errorDiff
 
         # Final control signal
         self.u = p_term + i_term + d_term
 
-        # Lead filter
-        #self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT
         self.lineY = self.u
 
-        # print(f"time: {self.edge_nTime.timestamp() - self.startingTime} error: {e:.4f} p_term: {p_term:.4f} i_term: {i_term:.4f} d_term: {d_term:.4f} u: {self.u:.4f}")
+        print(f"time: {self.edge_nTime.timestamp() - self.startingTime} error: {e:.4f} p_term: {p_term:.4f} i_term: {i_term:.4f} d_term: {d_term:.4f} u: {self.u:.4f}")
 
-        self.lineY = max(min(self.lineY, 3), -3)  # Limit the control signal to [-4, 4] rad/s
+        self.lineY = max(min(self.lineY, 4), -4)  # Limit the control signal to [-4, 4] rad/s
 
         # save old values
-        self.lineE1 = self.u
+        self.lineE1 = p_term
         self.lineY1 = self.lineY
         self.lastError = e
 
