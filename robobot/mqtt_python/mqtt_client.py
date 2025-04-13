@@ -175,7 +175,7 @@ def driveTurnPi():
 def loop():
   #INITIALIZE
   from ulog import flog
-  state = 21
+  state = 22
   state_ia = 0
   images = 0
   ledon = True
@@ -289,21 +289,8 @@ def loop():
       if state_ia == 1:
         #drive to orange ball
         ia.drive2ball(1) #drive to the blue oval ball
-        drive.turnInPlace(deg=90, dir=1)  #turn right
+        drive.turnInPlace(deg=90, dir=0)  #turn right
         state_ia = 2 # ball detected
-      
-      while state_ia == 2:
-        xy = []
-        image_ia, ok = imageAnalysis(0)
-
-        if ok:
-          xy, state, width = ia.hole(image_ia) #detect hole
-
-        if state:
-          state_ia = 3 # hole detected
-      
-      if state_ia == 3:
-        ia.drive2ball(3) #drive to hole
 
       if stateTimePassed() >= 45:
           state = 99

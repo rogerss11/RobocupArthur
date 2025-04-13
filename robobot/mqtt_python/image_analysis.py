@@ -228,8 +228,10 @@ def move_straight(xy, distance, state:int, line:int):
                 drive.driveXMeters(x = (distance-15)/1000)
 
         else:
-            #wait = 100.0/1000/velocity 
-            #wait = distance/1000/velocity
+            if distance > 250:
+                wait = 100.0/1000/velocity 
+            else:
+                wait = distance/1000/velocity
             print("MS: Move straight on line")
             edge.lineControl(velocity, 0.0)
             time.sleep(wait)
@@ -322,9 +324,10 @@ def drive2ball(case:int):
         state_straight_init = 1 # just move straight
         color = 1 # orange
         state = 1 # start with the first state
-    elif case == 3:
+    elif case == 3: #find hole
         state_straight_init = 2
         color = -1 # hole
+        state = 0
     
     state_straight = state_straight_init # state of the straight movement
 
@@ -336,7 +339,7 @@ def drive2ball(case:int):
 
         servo_up()
         while not ok:
-            img,ok = imageAnalysis(0)
+            img,ok = imageAnalysis(1)
             img_num += 1
 
         #find ball in the picture
@@ -374,6 +377,10 @@ def drive2ball(case:int):
             # move straight to the ball
 
             # calculate the distance to the ball
+            if case == 1 or case == 2: #orange ball
+                xy = (xy[0], xy[1] - 20)
+
+
             distance, status_d = distance_calc(xy)
             print("DB: Distance to ball:", distance)
             if status_d != -1:
