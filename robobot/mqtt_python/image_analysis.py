@@ -140,7 +140,7 @@ def move_middle(xy, range):
     return status
 
 # calculate the distance to the ball
-def distance_calc(xy):
+def distance_calc(xy,color:int):
     """
     Calculate the distance to the ball based on its width and coordinates.
      xy: the coordinates of the ball in the picture
@@ -151,16 +151,20 @@ def distance_calc(xy):
 
     if xy != []:
     #calculate the distance to the ball by the coordinates of the ball
-        if xy[1] < 400:
-            a = 0.006183
-            b = -5.472149
-            c = 1265.259
-        else:
-            a = 0.001078
-            b = -1.279013
-            c = 405.12
+        if color == 0: # blue ball
+            a = -0.0000079881
+            b = 0.011625897
+            c = -5.74405
+            d = 997.518
 
-        distance = (a*xy[1]**2 + b*xy[1] + c)*10 #in mm
+        elif color == 1: # orange ball
+            a = -0.00000502
+            b = 0.00765108
+            c = -4.0016825
+            d = 751.342459
+
+
+        distance = (a*xy[1]**3 + b*xy[1]**2 + c*xy[1] + d)*10 #in mm
 
     print("Distance: ", distance)
 
@@ -176,7 +180,7 @@ def distance_calc(xy):
     return distance, status
 
 # move to the ball
-def move_straight(xy, distance, state:int, line:int):
+def move_straight(xy, distance, state:int, line:int, color:int):
     """
     Moves the robot straight to the ball.
         xy: the coordinates of the ball in the picture
@@ -184,11 +188,15 @@ def move_straight(xy, distance, state:int, line:int):
         state: start with 3 to remove obstacles, then use the state of the function
         line: 0 = normal drive, 1 = line following
     """
-    state_init = 0
 
-    
+    final_distance = 0
+
+    if color == 0: #blue
+        final_distance = 150
+    elif color == 1: #orange
+        final_distance = 250
+
     if state == 3:
-        state_init = 3
         print("MS: Remove obstacles")
         #remove obstacles in the way
         drive.turnInPlace(deg = 30, dir = 0)
@@ -202,10 +210,13 @@ def move_straight(xy, distance, state:int, line:int):
     #adjust the position of the ball in the middle of the picture
             
         print("MS: Move to the middle")
-        if distance > 150.0:
+        if distance > final_distance:
             stat_m = move_middle(xy, 10)
         else:
-            stat_m = move_middle(xy, 5)
+            if color == 0:
+                stat_m = move_middle(xy, 5)
+            else:
+                stat_m = move_middle(xy, 3)
 
         if stat_m == 0:
             # ball is in the middle
@@ -221,14 +232,17 @@ def move_straight(xy, distance, state:int, line:int):
 
             if distance > 500.0:
                 drive.driveXMeters(x = 0.10, vel=velocity)
-            elif distance > 150.0:
+            elif distance > final_distance:
                 drive.driveXMeters(x = 0.05, vel=velocity)
-            else:
-                
-                drive.driveXMeters(x = (distance-15)/1000, vel=velocity)
+            else: 
+                if color == 0:
+                    drive.driveXMeters(x = (distance-15)/1000, vel=velocity)
+                if color == 1:
+                    velocity = 0.05
+                    drive.driveXMeters(x = (distance-80)/1000, vel=velocity)
 
         else:
-            if distance > 250:
+            if distance > final_distance:
                 wait = 100.0/1000/velocity 
             else:
                 wait = distance/1000/velocity
@@ -237,7 +251,7 @@ def move_straight(xy, distance, state:int, line:int):
             time.sleep(wait)
             edge.lineControl(0.0, 0.0)
         
-        if distance < 150.0:
+        if distance < final_distance:
             #move the arm up
             print("MS: Pick up ball")
             state = 100
@@ -245,16 +259,14 @@ def move_straight(xy, distance, state:int, line:int):
             for i in range(3):
                 print("MS: Shaking")
                 service.send(service.topicCmd + "ti/rc","0.1 0.6")
-                time.sleep(0.1)
+                time.sleep(0.2)
                 service.send(service.topicCmd + "ti/rc","0 0")  
                 time.sleep(0.1)
                 service.send(service.topicCmd + "ti/rc","-0.1 -0.6")
-                time.sleep(0.1)
+                time.sleep(0.2)
                 service.send(service.topicCmd + "ti/rc","0 0")
                 time.sleep(0.1)
             service.send(service.topicCmd + "ti/rc","0 0")     
-        
-        
 
     else :
         state = -1
@@ -339,7 +351,7 @@ def drive2ball(case:int):
 
         servo_up()
         while not ok:
-            img,ok = imageAnalysis(1)
+            img,ok = imageAnalysis(0)
             img_num += 1
 
         #find ball in the picture
@@ -375,20 +387,16 @@ def drive2ball(case:int):
         elif (state == 1):
             print("DB: State 1")
             # move straight to the ball
-
-            # calculate the distance to the ball
-            if case == 1 or case == 2: #orange ball
-                xy = (xy[0], xy[1] - 20)
-
-
-            distance, status_d = distance_calc(xy)
+            if xy == []:
+                drive.driveXMeters(x = -0.07, vel=0.2) # move back a little bit
+            distance, status_d = distance_calc(xy, color)
             print("DB: Distance to ball:", distance)
             if status_d != -1:
                 if state_straight == 0:
                     state_straight = state_straight_init
 
                 print("DB: State straight:", state_straight)
-                state_straight = move_straight(xy, distance, state_straight, case == 2)
+                state_straight = move_straight(xy, distance, state_straight, case == 2, color)
         
             else:
                 #stop

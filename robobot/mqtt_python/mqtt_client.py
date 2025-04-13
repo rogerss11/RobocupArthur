@@ -175,7 +175,7 @@ def driveTurnPi():
 def loop():
   #INITIALIZE
   from ulog import flog
-  state = 22
+  state = 20
   state_ia = 0
   images = 0
   ledon = True
@@ -218,6 +218,7 @@ def loop():
       print(f"% --- state {state}, h = {pose.tripBh:.4f}, t={pose.tripBtimePassed():.3f}")
     elif state == 20: # take images
       ia.servo_up()
+      t.sleep(0.5)
       imageAnalysis(1)
       images += 1
       t.sleep(2)
@@ -260,7 +261,7 @@ def loop():
       pass
 
     elif state == 22: #orange golf ball 
-      state_ia = 2
+      state_ia = 0
       xy = []
 
       #find the orange ball
@@ -288,20 +289,48 @@ def loop():
 
       if state_ia == 1:
         #drive to orange ball
-        ia.drive2ball(1) #drive to the blue oval ball
+        ia.drive2ball(1) #drive to the orange ball
         state_ia = 2 # ball detected
 
       if state_ia == 2: #move to hole
-        drive.turnInPlace(deg=160, dir=0)  #turn right
+        drive.driveUntilLine(300, vel = -0.15)
+        #edge.lineUpWithLine()
+        drive.turnInPlace(deg= 55, dir = 1)
+        drive.driveXMeters(x = 0.1)
+        edge.lineControl(0.15, 0.0)
+        t.sleep(2)
+        edge.lineControl(0.0, 0.0)
+      
+        drive.driveXMeters(x=0.22)
+
+        print("Whiggle")
+        service.send(service.topicCmd + "ti/rc","-0.0 -0.6") #right
+        t.sleep(0.7)
+        for i in range(3):
+          service.send(service.topicCmd + "ti/rc","0.0 0.6") #left
+          t.sleep(1.0)
+          service.send(service.topicCmd + "ti/rc","0 0")
+          t.sleep(0.1)
+          drive.driveXMeters(x=0.01, vel=0.1)
+          service.send(service.topicCmd + "ti/rc","-0.0 -0.6") #right
+          t.sleep(1.0)
+          service.send(service.topicCmd + "ti/rc","0 0")
+          t.sleep(0.1)
+          
         state_ia = 3
 
-      if stateTimePassed() >= 45:
+      if (stateTimePassed() >= 45) or state_ia == 3:
           state = 99
       pass
 
     elif state == 23: #orange ball on seasaw (with line)
       ia.drive2ball(2) #drive to the orange ball
       pass
+
+    elif state == 30:
+      edge.print
+      edge.printn
+      t.sleep(1)
 
     elif state == 101:
       driveOneMeter();

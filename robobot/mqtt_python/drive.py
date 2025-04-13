@@ -102,7 +102,7 @@ def driveUntilWall(d=0.2, ir_id=1, vel=0.2):
     return min_d
 
 
-def driveUntilLine(threshold=300):
+def driveUntilLine(threshold=300, vel=0.2):
     """
     driveUntilLine() - drive until line is detected
     """
@@ -113,8 +113,9 @@ def driveUntilLine(threshold=300):
     while not (service.stop):
         if state == 0:  # wait for start signal
             service.send(
-                "robobot/cmd/ti/rc", "0.2 0.0"
-            )  # (forward m/s, turn-rate rad/sec)
+                "robobot/cmd/ti/rc", f"{vel} 0.0"
+            )
+            # (forward m/s, turn-rate rad/sec)
             state = 1
         elif state == 1:
             line_sensor = edge.edge_n
