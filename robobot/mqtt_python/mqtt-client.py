@@ -153,7 +153,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 700  # ========== START STATE ===============
+                state = 400  # ========== START STATE ===============
                 # should be 100
                 pose.tripBreset()  # use trip counter/timer B
 
@@ -177,7 +177,7 @@ def loop():
 
         elif state == 400:  # Roger + Arnau
             # ------------- GO DOWN STAIRS -------------------------------------------
-            service.send(service.topicCmd + "T0/servo", "1 -600 200")
+            service.send(service.topicCmd + "T0/servo", "1 -800 200")
             steps = 0
             while steps < 5:
                 stairStep(60, 0.1)  # go down one step
@@ -327,8 +327,9 @@ def loop():
             driveUntilLine(300)
             turnInPlace(50, dir=1)  # turn clockwise 65=90deg
             edge.lineControl(0.2, 0)  # follow line
-            t.sleep(5)
+            t.sleep(4)
             edge.lineControl(0, 0)  # stop following line
+            driveXMeters(0.3, vel=0.4)
             """
             # Go straight until line
             turnInPlace(5, dir=1)
