@@ -260,7 +260,7 @@ def loop():
       pass
 
     elif state == 22: #orange golf ball 
-      state_ia = 0
+      state_ia = 2
       xy = []
 
       #find the orange ball
@@ -289,8 +289,11 @@ def loop():
       if state_ia == 1:
         #drive to orange ball
         ia.drive2ball(1) #drive to the blue oval ball
-        drive.turnInPlace(deg=90, dir=0)  #turn right
         state_ia = 2 # ball detected
+
+      if state_ia == 2: #move to hole
+        drive.turnInPlace(deg=160, dir=0)  #turn right
+        state_ia = 3
 
       if stateTimePassed() >= 45:
           state = 99

@@ -220,12 +220,12 @@ def move_straight(xy, distance, state:int, line:int):
             print("MS: Move straight")
 
             if distance > 500.0:
-                drive.driveXMeters(x = 0.10)
+                drive.driveXMeters(x = 0.10, vel=velocity)
             elif distance > 150.0:
-                drive.driveXMeters(x = 0.05)
+                drive.driveXMeters(x = 0.05, vel=velocity)
             else:
                 
-                drive.driveXMeters(x = (distance-15)/1000)
+                drive.driveXMeters(x = (distance-15)/1000, vel=velocity)
 
         else:
             if distance > 250:
