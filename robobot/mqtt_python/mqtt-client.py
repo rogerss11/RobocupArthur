@@ -154,7 +154,7 @@ def loop():
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
 
-                state = 700  # ========== START STATE ===============
+                state = 400  # ========== START STATE ===============
                 # should be 100
                 pose.tripBreset()  # use trip counter/timer B
 
@@ -177,6 +177,7 @@ def loop():
         #                *** might be skipped to implement 5 instead
 
         elif state == 400:  # Roger + Arnau
+            service.send(service.topicCmd + "T0/servo", "1 -600 200")
             steps = 0
             while steps < 5:
                 stairStep(60, 0.1)  # go down one step
@@ -307,19 +308,19 @@ def loop():
             turnInPlace(43, dir=0, ang_speed=0.4)  # position tangent to the circle
             min_d = driveUntilWall(0.3, ir_id=0, vel=0.1)
             print(f"% min_d = {min_d:.2f}")
-            turn_rad = min_d + 0.125  # 0.1 is the 1/2 of the wheel base
+            turn_rad = min_d + 0.14  # 0.1 is the 1/2 of the wheel base
             turnInPlace(8, dir=1, ang_speed=0.3)  # Adjust position
             rotateCircle(r=turn_rad, deg=310, dir=1)
             state = 715
 
         elif state == 715:
             # ------------- LEAVE CIRCLE -------------------------------------------
-            driveXMeters(min_d + 0.25, vel=0.3)
+            driveXMeters(min_d + 0.30, vel=0.3)
             driveUntilWall(0.3, ir_id=1, vel=0.0)
             t.sleep(7)
             driveXMeters(1, vel=0.2)
             driveUntilLine(300)
-            turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
+            turnInPlace(63, dir=1)  # turn clockwise 65=90deg
             state = 800  # go to blue ball sorting section
 
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
