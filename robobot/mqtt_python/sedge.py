@@ -89,10 +89,10 @@ class SEdge:
     atIntersectionCnt = 0  # 20 = at Intersection
     passedIntersections = 0  # how many intersection have we passed
     intersectionPath = [
-        "r",
-        "r",
-        "r",
-        "r",
+        "l",
+        "l",
+        "l",
+        "l",
     ]  # l = choose left line, r = choose right line, m = choose middle line
     navigatingIntersection = False  # if we are currently navigating an intersection
 
