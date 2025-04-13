@@ -94,12 +94,14 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 0.45 # Proportional constant
-    Ki = 0.1  # Integral constant
-    Kd = 0.15  # Derivative constant
+    Kp = 0.3 # Proportional constant
+    Ki = 0.12  # Integral constant
+    Kd = 0.08  # Derivative constant
 
-    lineTauZ = 0.4
-    lineTauP = 0.3
+    lineTauZ = 0.5
+    lineTauP = 0.35
+
+    errorCutoff = 0.05 # Error cutoff for integral and derivitive term
     
     #lineTauZ = 0.1  # unchanged
     #lineTauP = 0.3  # increase to soften filter
@@ -514,17 +516,19 @@ class SEdge:
         # Calculate the error between the desired position and the current position
         e = self.refPosition - self.position
 
-        if abs(e) < 0.1:  # If the error is small, reset the integral term
-            e = 0
-
-        self.errorSum += e * deltaTime  # Sum of errors for integral term
-        errorDiff = (e - self.lastError) / deltaTime  # Derivative term
-
         p_term = self.Kp * e
         p_term = (p_term * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT
 
-        i_term = self.Ki * self.errorSum
-        d_term = self.Kd * errorDiff
+        if abs(e) < self.errorCutoff:  # If the error is small, reset the integral term
+            i_term = 0
+            d_term = 0
+        
+        else:
+            self.errorSum += e * deltaTime  # Sum of errors for integral term
+            errorDiff = (e - self.lastError) / deltaTime  # Derivative term
+
+            i_term = self.Ki * self.errorSum
+            d_term = self.Kd * errorDiff
 
         # Final control signal
         self.u = p_term + i_term + d_term
