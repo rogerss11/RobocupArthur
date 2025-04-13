@@ -103,17 +103,19 @@ def ball(image, color: int):
     # gives back a tuple with the pixel position of the (roughly) middle of the ball and the result
     return xy, width 
 
-def move_middle(xy, range):
+def move_middle(xy, range, color):
     """
     Moves the robot so that the object is in the middle of the picture.
      xy: the coordinates of the object in the picture
     """
     #the whole image is of the size 616x820x3
     middle_x = 410
-    #range = 5
     status = 99
     wait = 0.0
-    velocity = 0.6
+    if color == 0:
+        velocity = 0.6
+    else:
+        velocity = 0.9
 
     # distance of the object to the middle of the picture
     e = abs(xy[0] - middle_x)
@@ -132,7 +134,10 @@ def move_middle(xy, range):
         status = 0
         service.send(service.topicCmd + "ti/rc","0 0")
 
-    wait = (e/middle_x)*0.6 + 0.05
+    if color == 0:
+        wait = (e/middle_x)*0.6 + 0.05
+    else:
+        wait = (e/middle_x)*0.6 + 0.025
     #stop to update the picture and the ball detection
     time.sleep(wait)
     service.send(service.topicCmd + "ti/rc", "0 0")
@@ -211,12 +216,12 @@ def move_straight(xy, distance, state:int, line:int, color:int):
             
         print("MS: Move to the middle")
         if distance > final_distance:
-            stat_m = move_middle(xy, 10)
+            stat_m = move_middle(xy, 10, color)
         else:
             if color == 0:
-                stat_m = move_middle(xy, 5)
+                stat_m = move_middle(xy, 5, color)
             else:
-                stat_m = move_middle(xy, 3)
+                stat_m = move_middle(xy, 3, color)
 
         if stat_m == 0:
             # ball is in the middle
@@ -236,10 +241,10 @@ def move_straight(xy, distance, state:int, line:int, color:int):
                 drive.driveXMeters(x = 0.05, vel=velocity)
             else: 
                 if color == 0:
-                    drive.driveXMeters(x = (distance-15)/1000, vel=velocity)
+                    drive.driveXMeters(x = (distance-45)/1000, vel=velocity)
                 if color == 1:
                     velocity = 0.05
-                    drive.driveXMeters(x = (distance-80)/1000, vel=velocity)
+                    drive.driveXMeters(x = (distance-35)/1000, vel=velocity)
 
         else:
             if distance > final_distance:
@@ -347,7 +352,6 @@ def drive2ball(case:int):
         #Take a picture, until taking a picture is successful
         ok = False
         img = np.zeros((616, 820, 3), dtype=np.uint8) # create an empty image
-        
 
         servo_up()
         while not ok:
@@ -370,15 +374,16 @@ def drive2ball(case:int):
             if not gpio.onPi:
                 print("DB: Show image")
                 cv.imshow('frame for analysis', img)
-                fn = f"{img_num}_analyzed.jpg"
-                cv.imwrite(fn, img)
+
+                #fn = f"{img_num}_analyzed.jpg"
+                #cv.imwrite(fn, img)
 
         if (state == 0):
             print("DB: State 0")
 
             if xy != []: # found one or more balls
                 print("DB: Found one or more balls. Nearest ball:", xy)
-                status_middle = move_middle(xy, 10)
+                status_middle = move_middle(xy, 10, color)
 
                 if status_middle == 0:
                     # ball is in the middle

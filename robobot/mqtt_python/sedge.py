@@ -79,7 +79,7 @@ class SEdge:
     atIntersection = False # if the current reading suggests that we are at an intersection
     atIntersectionCnt = 0  # 20 = at Intersection
     passedIntersections = 0 # how many intersection have we passed
-    intersectionPath = ['r', 'l', 'r', 'r'] # l = choose left line, r = choose right line, m = choose middle line
+    intersectionPath = ['l'] # l = choose left line, r = choose right line, m = choose middle line
     navigatingIntersection = False # if we are currently navigating an intersection
 
     adjustSpeed = False # if we should adjust speed based on error

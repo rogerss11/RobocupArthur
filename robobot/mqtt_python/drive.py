@@ -533,3 +533,71 @@ def stairStep(acc=50, vel=0.1):
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Stairs step ------------------------- end")
+
+def wiggle(width=60, ang_speed=0.5, N_wiggles=3, x=0.03):
+    """
+    Wiggle to put ball in hole, repeated N_wiggles times,
+    driving forward x meters between each wiggle.
+    """
+    rad = width * 3.14 / 180.0
+    state = 0
+    wiggle_count = 0
+    pose.tripBreset()
+    print(f"% Wiggle -------------------------")
+    service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
+
+    while not service.stop:
+        if state == 0:
+            cmnd_msg = f"0.0 {ang_speed:.2f}"
+            service.send("robobot/cmd/ti/rc", cmnd_msg)
+            state = 1
+
+        elif state == 1:  # Turn right
+            if abs(pose.tripBh) > rad / 2 or pose.tripBtimePassed() > 15:
+                cmnd_msg = f"0.0 {-ang_speed:.2f}"
+                service.send("robobot/cmd/ti/rc", cmnd_msg)
+                pose.tripBreset()
+                state = 2
+
+        elif state == 2:  # Turn left
+            if abs(pose.tripBh) > rad or pose.tripBtimePassed() > 15:
+                cmnd_msg = f"0.0 {ang_speed:.2f}"
+                service.send("robobot/cmd/ti/rc", cmnd_msg)
+                pose.tripBreset()
+                state = 3
+
+        elif state == 3:  # Back to center
+            if abs(pose.tripBh) > rad / 2 or pose.tripBtimePassed() > 15:
+                cmnd_msg = f"0.0 0.0"
+                service.send("robobot/cmd/ti/rc", cmnd_msg)
+                pose.tripBreset()
+                state = 4  # Move forward next
+
+        elif state == 4:  # Drive forward x meters
+            pose.tripBreset()
+            cmnd_msg = f"{0.1:.2f} 0.0"  # Drive forward slowly
+            service.send("robobot/cmd/ti/rc", cmnd_msg)
+            state = 5
+
+        elif state == 5:  # Wait until moved x meters
+            if pose.tripB >= x or pose.tripBtimePassed() > 10:
+                cmnd_msg = f"0.0 0.0"
+                service.send("robobot/cmd/ti/rc", cmnd_msg)
+                pose.tripBreset()
+                wiggle_count += 1
+                if wiggle_count < N_wiggles:
+                    cmnd_msg = f"0.0 {ang_speed:.2f}"
+                    service.send("robobot/cmd/ti/rc", cmnd_msg)
+                    state = 1
+                else:
+                    state = 99
+
+        elif state == 99:
+            service.send("robobot/cmd/ti/rc", "0.0 0.0")
+            break
+
+        print(f"# state {state}, turn {pose.tripBh:.3f} rad, time {pose.tripBtimePassed():.3f} s")
+        t.sleep(0.05)
+
+    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # LEDs off
+    print(f"% Wiggle ended after {wiggle_count} cycles and driving {x * wiggle_count:.2f} meters forward")
