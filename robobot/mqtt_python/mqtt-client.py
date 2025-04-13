@@ -177,7 +177,14 @@ def loop():
         #                *** might be skipped to implement 5 instead
 
         elif state == 400:  # Roger + Arnau
-            pass
+            steps = 0
+            while steps < 5:
+                stairStep(60, 0.1)  # go down one step
+                steps += 1
+                print(f"% ----------------- steps = {steps} ------------")
+
+            driveXMeters(0.5, vel=0.2)
+            state = 405
 
         # once down the stairs, code can be adapted from the downramp section
 
@@ -279,47 +286,46 @@ def loop():
         elif state == 700:  # Roger
             # ------------- PASS BIRTLE (start from line) -------------------------------------------
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
-            driveXMeters(0.65, vel=0.3)
+            driveXMeters(0.45, vel=0.3)
             driveUntilWall(0.30, ir_id=1, vel=0.0)
             t.sleep(3)
-            driveXMeters(1.6, vel=0.3)
+            driveXMeters(1.45, vel=0.3)
             state = 705
 
         elif state == 705:
             # ------------- CLIMB CIRCLE MISSION -------------------------------------------
-            gate_dist = driveUntilWall_measure_gate_dist(0.25, ir_id=1)
+            gate_dist = driveUntilWall_measure_gate_dist(0.30, ir_id=1)
             print(f"% gate_dist = {gate_dist:.2f}")
             turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
-            service.send(service.topicCmd + "T0/servo", "1 -200 200")
             driveXMeters(gate_dist)
-            service.send(service.topicCmd + "T0/servo", "1 -900 200")
             turnInPlace(25, dir=1)
             climbCircle(40, vel=0.45)
             state = 710  # inside circle
 
         elif state == 710:
             # ------------- INSIDE CIRCLE MISSION -------------------------------------------
-            turnInPlace(38, dir=0, ang_speed=0.4)  # position tangent to the circle
+            turnInPlace(43, dir=0, ang_speed=0.4)  # position tangent to the circle
             min_d = driveUntilWall(0.3, ir_id=0, vel=0.1)
             print(f"% min_d = {min_d:.2f}")
             turn_rad = min_d + 0.125  # 0.1 is the 1/2 of the wheel base
             turnInPlace(8, dir=1, ang_speed=0.3)  # Adjust position
-            rotateCircle(r=turn_rad, deg=333, dir=1)
+            rotateCircle(r=turn_rad, deg=310, dir=1)
             state = 715
 
         elif state == 715:
             # ------------- LEAVE CIRCLE -------------------------------------------
-            driveXMeters(0.3 + min_d, vel=0.3)
+            driveXMeters(min_d + 0.25, vel=0.3)
             driveUntilWall(0.3, ir_id=1, vel=0.0)
             t.sleep(7)
             driveXMeters(1, vel=0.2)
-            driveUntilLine(400)
+            driveUntilLine(300)
             turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
             state = 800  # go to blue ball sorting section
 
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
 
         elif state == 800:  # Eva + Leona
+            state = 805
             pass
 
         #################################### TESTS (9000-9999) ###################################
