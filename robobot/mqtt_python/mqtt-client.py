@@ -331,6 +331,7 @@ def loop():
             edge.lineControl(0, 0)  # stop following line
             """
             # Go straight until line
+            turnInPlace(5, dir=1)
             t.sleep(7)
             driveXMeters(1, vel=0.2)
             driveUntilLine(300)
