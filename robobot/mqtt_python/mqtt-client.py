@@ -140,8 +140,61 @@ def loop():
 
         ############################### START FUNCTIONS (100-199) ###############################
 
-        elif state == 100:  # Vojta
-            pass
+        elif state == 100:  
+            edge.lineControl(0.2, 0.0) # m/s and position on line
+            edge.adjustSpeed = False # adjust speed to follow line
+            edge.stopAtNthIntersection(["r"], 2)
+            state = 110
+            pose.tripBreset()
+            state = 110
+        
+        elif state == 110:
+            if pose.tripBtimePassed() > 13.5:
+                edge.adjustSpeed = True
+                state = 120
+                pose.tripBreset()
+
+        elif state == 120:
+            if pose.tripB > 1.85:
+                edge.adjustSpeed = False
+                state = 130
+                pose.tripBreset()
+        
+        elif state == 130:
+            if pose.tripBtimePassed() > 4.5:
+                edge.adjustSpeed = True
+                state = 140
+                pose.tripBreset()
+
+        elif state == 140:
+            if pose.tripB > 1.8:
+                edge.adjustSpeed = False
+                edge.lineControl(0.05, 0)
+                state = 150
+                pose.tripBreset()
+
+        elif state == 150:  # drive until line
+            if edge.hasArrivedAtNthIntersection():
+                driveXMeters(0.025, 0.1)
+                turnInPlace(48 , 0)
+                edge.setIgnoreIntersections(True)
+                edge.lineControl(0.05, 0)
+                state = 160
+                pose.tripBreset()
+        
+        elif state == 160:
+            if pose.tripBtimePassed() > 2.2:
+                edge.lineControl(0.0, 0)
+                driveXMeters(0.2, 0.1)
+                pose.tripBreset()
+                edge.lineControl(0.05, 0)
+                state = 170
+        
+        elif state == 170:  # drive until line
+            if pose.tripBtimePassed() > 7:
+                edge.lineControl(0.0, 0)
+                pose.tripBreset()
+                state = 200
 
         ######################### SEESAW + SEESAW GOLF BALL (200-299) ###########################
 
