@@ -525,6 +525,11 @@ def loop():
             driveXMeters(-0.2)
             state = 423154
 
+
+
+        elif state == 9800: # blue ball catch test
+            pass
+
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
             break
