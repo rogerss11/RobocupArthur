@@ -79,8 +79,9 @@ class SEdge:
     atIntersection = False # if the current reading suggests that we are at an intersection
     atIntersectionCnt = 0  # 20 = at Intersection
     passedIntersections = 0 # how many intersection have we passed
-    intersectionPath = ['l', 'l', 'r', 'r'] # l = choose left line, r = choose right line, m = choose middle line
+    intersectionPath = ['r', 'r', 'r', 'r'] # l = choose left line, r = choose right line, m = choose middle line
     navigatingIntersection = False # if we are currently navigating an intersection
+    ArrivedAtNthIntersection = False
 
     adjustSpeed = False # if we should adjust speed based on error
 
@@ -94,26 +95,26 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 0.5 # Proportional constant
-    Ki = 0.15  # Integral constant
-    Kd = 0.35  # Derivative constant
-    
-    max_d = 10.0 #! max derivative term TEST!!!!!!
+    Kp = 0.35           # 0.32        # keep as is
+    Ki = 0.15           # 0.15        # slightly reduce integral accumulation near zero
+    Kd = 0.2            # 0.17        # increase derivative for better anticipation
 
-    #lineTauZ = 0.8
-    #lineTauP = 0.15
-    
-    lineTauZ = 0.1  # unchanged
-    lineTauP = 0.3  # increase to soften filter
+    errorCutoff = 0.06  # Error cutoff for integral and derivitive term
+    integral_limit = 1.5
+    alpha_d = 0.1 # smoothing factor for derivative term
 
-    errorDiffFiltered = 0
-    
-    metric = 0.0  # Metric for PID tuning
+    lineTauZ = 0.6   # increase lead zero to anticipate error crossing earlier
+    lineTauP = 0.5   # decrease pole slightly for sharper lead effect
+
+
+    #lineTauZ = 0.1  # unchanged
+    #lineTauP = 0.3  # increase to soften filter
 
     # values for ID
     errorSum = 0.0  # Integral term (sum of errors)
     lastError = 0.0  # Previous error for calculating the derivative term
     lastErrorDiff = 0.0  # Previous derivative term for filtering
+    smoothedErrorDiff = 0.0
     lastTime = t.time()  # Time of last update to calculate the derivative (dt)
 
     # Lists to store data for graphing
@@ -132,7 +133,7 @@ class SEdge:
     lineY1 = 0.0 # old control output (rad/s)
     lineY = 0.0  # control output (rad/s)
 
-    LineUpWithLine = False # if we should line up with white line in front of us
+    shouldLineUp = False # if we should line up with white line in front of us
     last_cmd = None # last command sent to the robot (used for lineUpWithLine)
 
     # management
@@ -142,7 +143,7 @@ class SEdge:
 
 
     ##########################################################
-    #################   CONTROL FUNCTION   ###################
+    #################   CONTROL FUNCTIONS   ##################
     ##########################################################
 
     def resetIntersection(self):
@@ -169,19 +170,25 @@ class SEdge:
     
     ##########################################################
 
-    def stopAtNthIntersection(self, path, n): #this is the i am using
+    def stopAtNthIntersection(self, path, n):
         """ Stop at the nth intersection following the current path. """
         if (len(path) != n-1):
             print("Path length does not match the number of intersections.")
             return
         self.setIntersectionPath(path)
         self.stopAtIntersectionN = n
+        self.ArrivedAtNthIntersection = False
+
+    ##########################################################
+
+    def hasArrivedAtNthIntersection(self):
+       return self.ArrivedAtNthIntersection
 
     ##########################################################
 
     def setLineUpWithLine(self):
         """ Line up with the white line in front of us. """
-        self.LineUpWithLine = True
+        self.shouldLineUp = True
         self.lineControl(0.0, 0.0) # turn off line control
 
     ##########################################################
@@ -345,7 +352,7 @@ class SEdge:
           if self.lineCtrl:
               self.followLine()
           # if we want to line up with white line
-          if self.LineUpWithLine:
+          if self.shouldLineUp:
               self.lineUpWithLine()
           flog.write()
           # log relevant line sensor data
@@ -399,7 +406,7 @@ class SEdge:
 
         if not self.ignoreIntersections:
         # Detect if we have a crossing line
-            if valuesAboveZero >= 3: #! maybe change to 4
+            if valuesAboveZero >= 4: #! maybe change to 4
                 self.atIntersection = True
             else:
                 self.atIntersection = False
@@ -429,6 +436,7 @@ class SEdge:
             if self.stopAtIntersectionN == self.passedIntersections + 1: # if we want to stop at next intersection
                 self.lineControl(0, 0)
                 self.position = 0
+                self.ArrivedAtNthIntersection = True
                 return
 
             path = self.intersectionPath[self.passedIntersections] 
@@ -494,10 +502,10 @@ class SEdge:
 
         # Normal line calculation
         else:
-            sum_values = sum(values)
-            pos_sum = sum((i + 1) * v for i, v in enumerate(values))
+            sum_values = sum(self.edge_n)
+            pos_sum = sum((i + 1) * v for i, v in enumerate(self.edge_n))
             self.position = (pos_sum / sum_values - 4.5) if sum_values > 0 and self.lineValid else 0
-
+            
     ##########################################################
 
     def followLine(self):
@@ -505,7 +513,7 @@ class SEdge:
         from uservice import service
 
         # some parameters depend on sample time, adjust
-        if abs(self.edge_nInterval - self.edgeIntervalSetup) > 2.0: # ms #? why
+        if abs(self.edge_nInterval - self.edgeIntervalSetup) > 1.0: # ms #? why
           self.PIDrecalculate()
           self.edgeIntervalSetup = self.edge_nInterval
 
@@ -518,40 +526,41 @@ class SEdge:
         deltaTime = max(self.edge_nInterval / 1000, 0.001)  # in seconds
 
         # Calculate the error between the desired position and the current position
+        #print(self.edge_n, " -> ", self.position)
         e = self.refPosition - self.position
 
-        # penalty
-        if e == 0 and self.lastError == 0:
-            #print("Penalty")
-            penalty = 3
-        else:
-            penalty = 0
-
-        self.errorSum += e * deltaTime  # Sum of errors for integral term
-        errorDiff = (e - self.lastError) / deltaTime  # Derivative term
-
         p_term = self.Kp * e
-        i_term = self.Ki * self.errorSum
-        i_term = max(min(i_term, 10), -10)  # Clamp to prevent integral windup
+        p_term = (p_term * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT
 
-        self.errorDiffFiltered = 0.9 * self.errorDiffFiltered + 0.1 * errorDiff
-        d_term = self.Kd * self.errorDiffFiltered
-        d_term = max(min(d_term, self.max_d), -self.max_d)  # Clamp derivative term
+        if abs(e) < self.errorCutoff:
+            i_term = 0
+            self.errorSum = 0
+            d_term = 0
+        
+        else:
+            self.errorSum += e * deltaTime
+            self.errorSum = max(min(self.errorSum, self.integral_limit), -self.integral_limit)
+            i_term = self.Ki * self.errorSum
+
+            errorDiff_raw = (e - self.lastError) / deltaTime
+            self.smoothedErrorDiff = (self.alpha_d * getattr(self, 'smoothedErrorDiff', 0) + (1 - self.alpha_d) * errorDiff_raw)
+            d_term = self.Kd * self.smoothedErrorDiff
+            d_term = max(min(d_term, 2.0), -2.0)  # You can tune this clamp
 
         # Final control signal
         self.u = p_term + i_term + d_term
-        # Lead filter
 
-        #self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT
+        if abs(e) < self.errorCutoff and abs(self.u) < 0.05:
+            self.u = 0.05 if e < 0 else -0.05  # Tiny nudge in the correct direction
+
         self.lineY = self.u
 
-        #print(f"error: {e:.4f} p_term: {p_term:.4f} i_term: {i_term:.4f} d_term: {d_term:.4f} u: {self.u:.4f} y: {self.lineY:.4f}")
-
+        #print(f"time: {self.edge_nTime.timestamp() - self.startingTime} error: {e:.4f} p_term: {p_term:.4f} d_term {d_term:.4f} i_term: {i_term:.4f} u: {self.u:.4f}")
 
         self.lineY = max(min(self.lineY, 4), -4)  # Limit the control signal to [-4, 4] rad/s
 
         # save old values
-        self.lineE1 = self.u
+        self.lineE1 = p_term
         self.lineY1 = self.lineY
         self.lastError = e
 
@@ -559,18 +568,14 @@ class SEdge:
         self.error_list.append(e)
         self.time_list.append(self.edge_nTime.timestamp() - self.startingTime)
 
-        e = e + penalty  # Add penalty to error
-
-        self.metric += (e * e) * deltaTime  # Calculate the metric for PID tuning
-
         if self.adjustSpeed:
             # Adjust speed based on error
             # Linear scaling based on error where:
-            # error = 0 -> 150% of velocity
-            # error > 1 -> 50% of velocity
-            scale_factor = 1.5 - (self.error * 1.0) #! linear - maybe improve
+            # error = 0 -> 200% of velocity
+            # error >= 1 -> 30% of velocity
+            scale_factor = 2.0 - (1.7 * e)
 
-            scale_factor = max(0.5, min(1.5, scale_factor))  # limit the range
+            scale_factor = max(0.3, min(2.0, scale_factor))  # limit the range
 
             adjusted_speed = self.velocity * scale_factor
         else:
@@ -597,6 +602,7 @@ class SEdge:
     ##########################################################
 
     def lineUpWithLine(self):
+        print(self.edge_n)
         """ Line up with the white line in front of us. """
         # positive turnrate -> turn left
         from uservice import service
@@ -604,11 +610,9 @@ class SEdge:
         left = self.edge_n[0] > self.lineValidThreshold #! maybe replace with low
         right = self.edge_n[7] > self.lineValidThreshold
 
-        #print(left, right)
-
         if left and right: # we have lined up
             service.send("robobot/cmd/ti/rc","0 0")
-            self.LineUpWithLine = False
+            self.shouldLineUp = False
             return
         elif left:
             cmd = f"0 {speed:.3f}"  # turn left

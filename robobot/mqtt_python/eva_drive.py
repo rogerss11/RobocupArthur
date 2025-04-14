@@ -63,15 +63,11 @@ def driveUntilWall(d=0.2, ir_id=1, vel=0.2):
     service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
     while not (service.stop):
         if state == 0:  # wait for start signal
-            service.send(
-                "robobot/cmd/ti/rc", f"{vel} 0.0"
-            )  # (forward m/s, turn-rate rad/sec)
+            service.send("robobot/cmd/ti/rc", f"{vel} 0.0")  # (forward m/s, turn-rate rad/sec)
             state = 1
         elif state == 1:
             if ir.ir[ir_id] < d or pose.tripBtimePassed() > 15:
-                service.send(
-                    "robobot/cmd/ti/rc", "0.0 0.0"
-                )  # (forward m/s, turn-rate rad/sec)
+                service.send("robobot/cmd/ti/rc", "0.0 0.0")  # (forward m/s, turn-rate rad/sec)
                 state = 2
                 min_d = ir.ir[ir_id]
             pass
@@ -79,21 +75,46 @@ def driveUntilWall(d=0.2, ir_id=1, vel=0.2):
             if abs(pose.velocity()) < 0.001:
                 state = 99
         else:
-            print(
-                f"# drive drove {pose.tripB:.3f}m. Stopped at {ir.ir[ir_id]:.3f}m from the wall. {pose.tripBtimePassed():.3f} seconds"
-            )
-            service.send(
-                "robobot/cmd/ti/rc", "0.0 0.0"
-            )  # (forward m/s, turn-rate rad/sec)
+            print(f"# drive drove {pose.tripB:.3f}m. Stopped at {ir.ir[ir_id]:.3f}m from the wall. {pose.tripBtimePassed():.3f} seconds")
+            service.send("robobot/cmd/ti/rc", "0.0 0.0")  # (forward m/s, turn-rate rad/sec)
             break
-        print(
-            f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-        )
+        print(f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
         t.sleep(0.05)
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Driving until wall ------------------------- end")
     return min_d
+
+def reverseUntilDistance(target=0.7, speed=-0.2):
+    """
+    Reverse until IR sensor detects distance >= target (default 0.7m).
+    speed should be negative (e.g., -0.2) to go backwards.
+    """
+    print(f"% Reversing until distance >= {target} meters")
+    state = 0
+    pose.tripBreset()
+
+    service.send(service.topicCmd + "T0/leds", "16 0 0 100")  # red
+
+    while not service.stop:
+        if state == 0:
+            service.send("robobot/cmd/ti/rc", f"{speed} 0.0")
+            state = 1
+        elif state == 1:
+            dist = ir.distance()
+            if dist >= target or pose.tripBtimePassed() > 10:
+                print(f"Reached distance: {dist:.2f} m")
+                service.send("robobot/cmd/ti/rc", "0.0 0.0")
+                state = 2
+        elif state == 2:
+            if abs(pose.velocity()) < 0.001:
+                break
+        print(f"# reverse {state}, dist: {ir.distance():.3f} m, time: {pose.tripBtimePassed():.3f}")
+        t.sleep(0.05)
+
+    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
+    print("% Reversing complete.")
+
 
 
 def driveUntilLine(threshold=300):

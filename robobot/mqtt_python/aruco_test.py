@@ -1,12 +1,14 @@
 import cv2 as cv
 import numpy as np
-from eva_drive import turnInPlace, driveXMeters, driveUntilLine
+from eva_drive import turnInPlace, driveXMeters, driveUntilLine, driveUntilWall
 from scam import cam
 from uservice import service
 from sedge import edge 
 from uservice import service
 from spose import pose
 import time as t
+from datetime import datetime
+from sir import ir
 
 
 
@@ -152,8 +154,18 @@ class ArucoDetector:
                 if 13 in ids_flat:
                     print("✅ Found ID 13!")
                     service.send(service.topicCmd + "ti/rc", "0 0")  # stop turning
-                    found_13 = True
-                    break
+                    #TRIGGER SENSOR
+                    min_d = ir.ir[1] # Get distance from IR sensor
+                    print("Distance captured: ", min_d)
+                    if min_d > 0.7: # if the object is detected less than 70 cm
+                        driveUntilWall(0.7, 0.2, 0.2)  # drive until wall
+                        break  
+                    else: 
+                        #back away until 0.7 m 
+                        driveUntilWall(0.7, 0.2, -0.2) #back away until distance
+                        break  
+                    #found_13 = True
+                    #break
 
             # Alternate turn direction
             #turning_left = not turning_left
@@ -189,9 +201,37 @@ class ArucoDetector:
         turnInPlace(15,0)
         print("🚗 Driving until line")
         driveUntilLine()
+        edge.lineControl(0.03, 0) # speed and position
+        #start_looking_for_ID16(img)
 
-        
-    def orient_and_turn_to_B(self, frame, ids, centers):
+    def start_looking_for_ID16(self, img):
+        print("Looking for ID 16...")
+        edge.lineControl(0.09, 0)
+        #if pose.tripBtimePassed()>1: #if more than 3 secs pass, stop line control, look right and check aruco
+        t.sleep(9)
+        #print("is this running")
+        edge.lineControl(0,0)
+        turnInPlace(59, dir=1) 
+        # Refresh image
+        ok, img, _ = cam.getImage()
+        if not ok:
+            print("Could not get image.")
+            return
+        ids, _, _, _, img = self.detect_markers(img)
+        if ids and 16 in ids: 
+            print("Found ID 16!!!!")
+            turnInPlace(33, dir=0) 
+            driveXMeters(0.2, 0.2)
+            driveUntilLine(500)
+
+        else:
+            print("Did NOT find ID 16, trying again.... ")
+            turnInPlace(59, dir=0)
+            ok, new_img, _ = cam.getImage()
+            if ok: 
+                self.start_looking_for_ID16(img)
+"""""
+    def DONT_orient_and_turn_to_B(self, frame, ids, centers):
         if ids is not None: 
             ids_flat = ids #first ID it sees 
             print(f"Detected IDs: {ids_flat}")
@@ -235,7 +275,7 @@ class ArucoDetector:
         driveUntilLine()
         print("Second line reached")
         #turnInPlace(63, dir=0) #90 degrees left 
-
+""""
     def release(self):
         cv.destroyAllWindows()
 

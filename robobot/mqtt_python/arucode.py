@@ -61,8 +61,51 @@ class ArucoDetector:
             return ids.flatten().tolist(), corners, centers, angles, frame
         else:
             return None, None, None, None, frame
-        
+    
+    def turning_to_center(self):
+        #center coordinate, center angles
+        image_center = (400, 300)
+        center_tolerance = 30 #pixels
+        angle_tolerance = 5 #degrees
+        while True: 
+            ok, img, _ = cam.getImage()
+            if not ok:
+                print("No image from camera.")
+                continue
+            ids, corners, centers, angles, img = self.detect_markers(img)
+            if not ids: 
+                print("No marker detected. Turning a bit.")
+                service.send(service.topicCmd + "ti/rc", "0 -0.2")  # search left
+                continue
+            dx = centers[0] - image_center[0] #positive, too far right
+            dy = centers[1] - image_center[1] #positive, too far down
+            print(f"Marker center offset: dx={dx}, dy={dy}, angle={angle:.2f}")
+    
+            # Adjust heading based on position
+            if abs(dx) > center_tolerance:
+                if dx > 0:
+                    print("Marker is to the right → turn right")
+                    service.send(service.topicCmd + "ti/rc", "0 0.2")  # rotate right
+                else:
+                    print("Marker is to the left → turn left")
+                    service.send(service.topicCmd + "ti/rc", "0 -0.2")  # rotate left
 
+            # Adjust heading based on angle
+            elif abs(angle) > angle_tolerance:
+                if angle > 0:
+                    print("Marker angled to the right → turn right slightly")
+                    service.send(service.topicCmd + "ti/rc", "0 0.1")
+                else:
+                    print("Marker angled to the left → turn left slightly")
+                    service.send(service.topicCmd + "ti/rc", "0 -0.1")
+
+            else:
+                print("Marker centered and straight → stop")
+                service.send(service.topicCmd + "ti/rc", "0 0")
+                break
+            t.sleep(0.1)  # Small delay to avoid rapid commands
+                
+#when it sees ID 16 
     def find_and_orient_to_B(self, img):
         while True: 
             ids, corners, centers, angles, img = self.detect_markers(img)

@@ -91,6 +91,7 @@ def loop():
     service.send(service.topicCmd + "T0/leds","16 30 30 0") # LED 16: yellow - waiting
   # main state machine
   edge.lineControl(0, 0) # make sure line control is off
+  edge.setIgnoreIntersections(True)
   while not service.stop:
     if state == 0: # wait for start signal
       start = 1 #gpio.start() or service.args.now
@@ -124,12 +125,14 @@ def loop():
     elif state == 120: 
       img = imageAnalysis(0)  # get the image
       aruco_detector.turn_left(img)
-      #driveUntilLine()
-      #service.send(service.topicCmd + "T0/servo", "1 -150 0")
       driveXMeters(0.3, 0.2)
       aruco_detector.find_and_orient_to_B(img)
-      if pose.tripBtimePassed()>2:
-        state = 99 
+      aruco_detector.start_looking_for_ID16(img)
+      state = 99
+    #elif state == 125:
+      #state = 99 
+    
+    #################################################################################
     elif state == 130:
       #edge.followLine()
       #t.sleep(0.2)  # short delay for stabilization
