@@ -438,43 +438,56 @@ def loop():
         elif state == 700:  # Roger
             # ------------- PASS BIRTLE (start from line) -------------------------------------------
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
-            driveXMeters(0.3, vel=0.3)
+            driveXMeters(0.45, vel=0.3)
             driveUntilWall(0.30, ir_id=1, vel=0.0)
             t.sleep(3)
-            driveXMeters(1.3, vel=0.3)
+            driveXMeters(1.45, vel=0.3)
             state = 705
 
         elif state == 705:
             # ------------- CLIMB CIRCLE MISSION -------------------------------------------
-            gate_dist = driveUntilWall_measure_gate_dist(0.25, ir_id=1)
+            gate_dist = driveUntilWall_measure_gate_dist(0.30, ir_id=1)
             print(f"% gate_dist = {gate_dist:.2f}")
             turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
-            service.send(service.topicCmd + "T0/servo", "1 -200 200")
-            driveXMeters(gate_dist + 0.25)  # drive to extra time
-            driveXMeters(-0.30)
-            service.send(service.topicCmd + "T0/servo", "1 -900 200")
+            driveXMeters(gate_dist)
             turnInPlace(25, dir=1)
-            climbCircle(40, vel=0.45)
+            climbCircle(45, vel=0.45)
             state = 710  # inside circle
 
         elif state == 710:
             # ------------- INSIDE CIRCLE MISSION -------------------------------------------
-            turnInPlace(38, dir=0, ang_speed=0.4)  # position tangent to the circle
+            turnInPlace(43, dir=0, ang_speed=0.4)  # position tangent to the circle
             min_d = driveUntilWall(0.3, ir_id=0, vel=0.1)
             print(f"% min_d = {min_d:.2f}")
-            turn_rad = min_d + 0.125  # 0.1 is the 1/2 of the wheel base
+            turn_rad = min_d + 0.13  # 0.1 is the 1/2 of the wheel base
             turnInPlace(8, dir=1, ang_speed=0.3)  # Adjust position
-            rotateCircle(r=turn_rad, deg=333, dir=1)
+            rotateCircle(r=turn_rad, deg=310, dir=1)
             state = 715
 
         elif state == 715:
             # ------------- LEAVE CIRCLE -------------------------------------------
-            driveXMeters(0.3 + min_d, vel=0.3)
+
+            driveXMeters(min_d + 0.30, vel=0.3)
             driveUntilWall(0.3, ir_id=1, vel=0.0)
+
+            # OPTION A: Go through the gate
+            t.sleep(1)
+            driveUntilLine(300)
+            turnInPlace(50, dir=1)  # turn clockwise 65=90deg
+            edge.lineControl(0.2, 0)  # follow line
+            t.sleep(4)
+            edge.lineControl(0, 0)  # stop following line
+            driveXMeters(0.3, vel=0.4)
+
+            """
+            # OPTION B: Go straight until line
+            turnInPlace(5, dir=1)
             t.sleep(7)
             driveXMeters(1, vel=0.2)
-            driveUntilLine(400)
-            turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
+            driveUntilLine(300)
+            turnInPlace(63, dir=1)  # turn clockwise 65=90deg
+            """
+
             state = 800  # go to blue ball sorting section
 
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
