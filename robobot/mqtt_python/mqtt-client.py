@@ -41,6 +41,7 @@ from uservice import service
 from simu import imu
 
 from drive import *
+from arucode import aru
 import image_analysis as ia
 
 ############################################################
@@ -140,14 +141,15 @@ def loop():
 
         ############################### START FUNCTIONS (100-199) ###############################
 
-        elif state == 100:  
-            edge.lineControl(0.2, 0.0) # m/s and position on line
-            edge.adjustSpeed = False # adjust speed to follow line
+        elif state == 100:
+            service.send(service.topicCmd + "T0/servo", "1 -900 200")  # arm up
+            edge.lineControl(0.2, 0.0)  # m/s and position on line
+            edge.adjustSpeed = False  # adjust speed to follow line
             edge.stopAtNthIntersection(["r"], 2)
             state = 110
             pose.tripBreset()
             state = 110
-        
+
         elif state == 110:
             if pose.tripBtimePassed() > 13.5:
                 edge.adjustSpeed = True
@@ -159,7 +161,7 @@ def loop():
                 edge.adjustSpeed = False
                 state = 130
                 pose.tripBreset()
-        
+
         elif state == 130:
             if pose.tripBtimePassed() > 4.5:
                 edge.adjustSpeed = True
@@ -176,12 +178,12 @@ def loop():
         elif state == 150:  # drive until line
             if edge.hasArrivedAtNthIntersection():
                 driveXMeters(0.025, 0.1)
-                turnInPlace(48 , 0)
+                turnInPlace(48, 0)
                 edge.setIgnoreIntersections(True)
                 edge.lineControl(0.05, 0)
                 state = 160
                 pose.tripBreset()
-        
+
         elif state == 160:
             if pose.tripBtimePassed() > 2.2:
                 edge.lineControl(0.0, 0)
@@ -189,7 +191,7 @@ def loop():
                 pose.tripBreset()
                 edge.lineControl(0.05, 0)
                 state = 170
-        
+
         elif state == 170:  # drive until line
             if pose.tripBtimePassed() > 7:
                 edge.lineControl(0.0, 0)
@@ -486,22 +488,42 @@ def loop():
                 pose.tripBreset()
 
         elif state == 615:
-            service.send(service.topicCmd + "ti/rc", "0.1 0")  # drive towards axe line
-            if pose.tripBtimePassed() > 2:
-                service.send(service.topicCmd + "ti/rc", "0 0.5")
-                driveUntilLine()
-                state = 620
+            edge.setDriveUntilLine(0.25, 300)
+            state = 620
+
+        elif state == 620:  # drive until line
+            if edge.reachedLine():
+                turnInPlace(60, 0)  # turn to the axe line
+                state = 630
                 pose.tripBreset()
 
-        elif state == 625:  # turn towards axe
-            service.send(service.topicCmd + "ti/rc", "0.0 1")
-            if pose.tripBtimePassed() > 1.5:
-                service.send(service.topicCmd + "ti/rc", "0.0 0")
-                pose.tripBreset()
-                state = 630  #
+        elif state == 630:  # set it to drive through the axe
+            ir.axeActive = True
+            edge.lineControl(0.1, 0.0)
+            state = 635
 
-        elif state == 630:  # start of Andrea + Vojta's code
-            pass
+        elif state == 635:  # wait for it to get past the axe
+            if not ir.axeActive:
+                edge.setIgnoreIntersections(False)
+                edge.stopAtNthIntersection([], 1)
+                edge.lineControl(0.05, 0.0)
+                state = 640
+
+        elif state == 640:
+            if edge.hasArrivedAtNthIntersection():
+                turnInPlace(63, 0)
+                driveXMeters(0.05, 0.1)
+                edge.lineControl(0.05, 0)
+                edge.stopAtNthIntersection([], 1)
+                state = 650
+
+        elif state == 650:
+            if edge.hasArrivedAtNthIntersection():
+                state = 660
+
+        elif state == 660:
+            aru.turning_to_center()
+            state = 665
 
         ####################### FIGURE-8 + ROUNDABOUT SECTION (700-799) #########################
 

@@ -136,6 +136,9 @@ class SEdge:
     shouldLineUp = False # if we should line up with white line in front of us
     last_cmd = None # last command sent to the robot (used for lineUpWithLine)
 
+    driveUntilLine = False # if we should drive until we see a line
+    driveUntilLineThreshold = 0.0 # threshold to drive until we see a line
+
     # management
     topicRc = ""
     lostLineCnt = 0
@@ -190,6 +193,22 @@ class SEdge:
         """ Line up with the white line in front of us. """
         self.shouldLineUp = True
         self.lineControl(0.0, 0.0) # turn off line control
+
+    ##########################################################
+
+    def setDriveUntilLine(self, velocity=0.1, threshold=500):
+        from uservice import service
+        """ Drive until we see a line. """
+        self.driveUntilLine = True
+        self.driveUntilLineThreshold = threshold
+        self.lineControl(0.0, 0.0) # turn off line control
+        service.send("robobot/cmd/ti/rc",f"{velocity} 0")
+
+    ##########################################################
+
+    def reachedLine(self):
+        """ Check if we have reached the line. """
+        return not self.driveUntilLine
 
     ##########################################################
 
@@ -354,6 +373,8 @@ class SEdge:
           # if we want to line up with white line
           if self.shouldLineUp:
               self.lineUpWithLine()
+          if self.driveUntilLine:
+              self.driveUntilLineFunc()
           flog.write()
           # log relevant line sensor data
           #self.printn()
@@ -442,7 +463,7 @@ class SEdge:
             path = self.intersectionPath[self.passedIntersections] 
 
             # If we arrived at a T intersection
-            if valuesAboveZero == 8:
+            if valuesAboveZero == 7:
                 print("arrived at T")
                 self.position = {'l': -4, 'r': 4}.get(path, 0)
                 if path == 'm':
@@ -602,7 +623,7 @@ class SEdge:
     ##########################################################
 
     def lineUpWithLine(self):
-        print(self.edge_n)
+        #print(self.edge_n)
         """ Line up with the white line in front of us. """
         # positive turnrate -> turn left
         from uservice import service
@@ -625,6 +646,17 @@ class SEdge:
             #print("cmd changed")
             service.send("robobot/cmd/ti/rc", cmd)
             self.last_cmd = cmd
+
+    ##########################################################
+
+    def driveUntilLineFunc(self):
+      """ Drive until we see a line. """
+      maxValue = max(self.edge_n)
+      print(edge.edge_n, " -> ", maxValue)
+      if maxValue >= self.driveUntilLineThreshold:
+        from uservice import service
+        self.driveUntilLine = False
+        service.send("robobot/cmd/ti/rc","0 0")
 
     ##########################################################
     #################   DEBUG FUNCTIONS   ####################
