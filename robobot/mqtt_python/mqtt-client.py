@@ -157,7 +157,7 @@ def loop():
                 state = 9200  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
-                  # use trip counter/timer B
+                # use trip counter/timer B
                 pose.tripBreset()
                 # 9200 turn test
                 # 9210 put arm down test
@@ -182,17 +182,17 @@ def loop():
                 service.send(service.topicCmd + "T0/servo", "1 2309823809 200")
                 pose.tripBreset()
                 state = 225
-        
+
         elif state == 225:
             service.send(service.topicCmd + "T0/servo", "1 -150 200")
             if pose.tripBtimePassed() > 2:
                 service.send(service.topicCmd + "T0/servo", "1 2309823809 200")
                 pose.tripBreset()
-                state = 230 
+                state = 230
 
         elif state == 230:
-            edge.lineControl(0.05,0)
-            if ir.ir[1] < 0.43 or pose.tripBtimePassed() > 11.5: # going down
+            edge.lineControl(0.05, 0)
+            if ir.ir[1] < 0.43 or pose.tripBtimePassed() > 11.5:  # going down
                 # print("end of ramp")
                 service.send(service.topicCmd + "T0/servo", "1 -200 300")
                 state = 231
@@ -215,16 +215,16 @@ def loop():
                 service.send(service.topicCmd + "T0/servo", "1 -150 25")
                 state = 240
                 pose.tripBreset()
-        
+
         elif state == 240:
-            edge.lineControl(0.1,0)
+            edge.lineControl(0.1, 0)
             if pose.tripBtimePassed() > 3:
-                edge.lineControl(0,0)
+                edge.lineControl(0, 0)
                 pose.tripBreset()
                 state = 241
 
         elif state == 241:
-            driveUntilNOLine_auto(0.2,500)
+            driveUntilNOLine_auto(0.2, 500)
             if pose.tripBtimePassed() > 5:
                 state = 23423235
             else:
@@ -232,7 +232,7 @@ def loop():
                 state = 255
 
         elif state == 255:
-            turnInPlace(72,1)
+            turnInPlace(72, 1)
             driveXMeters(x=1.1)
             driveUntilLine(600)
             turnInPlace(45, dir=1)
@@ -240,8 +240,8 @@ def loop():
 
         elif state == 260:
             service.send(service.topicCmd + "T0/servo", "1 -150 0")
-            edge.lineControl(0.06,0)
-            if ir.ir[1] < 0.4: # going up
+            edge.lineControl(0.06, 0)
+            if ir.ir[1] < 0.4:  # going up
                 pose.tripBreset()
                 state = 261
 
@@ -286,36 +286,36 @@ def loop():
             if pose.tripBtimePassed() > 3:
                 pose.tripBreset()
                 state = 265
-        
+
         elif state == 265:
-            edge.lineControl(0.25,0)
+            edge.lineControl(0.25, 0)
             if pose.tripBtimePassed() > 5.2:
                 pose.tripBreset()
                 state = 268
 
         elif state == 268:
             service.send(service.topicCmd + "T0/servo", "1 -50 50")
-            edge.lineControl(0.1,0)
+            edge.lineControl(0.1, 0)
             if pose.tripBtimePassed() > 2:
                 service.send(service.topicCmd + "T0/servo", "1 -125 200")
                 state = 270
 
         elif state == 270:
-            edge.lineControl(0,0)
-            state = 275 
+            edge.lineControl(0, 0)
+            state = 275
 
         elif state == 275:
-            driveUntilNOLine_manual(0.05,0)
+            driveUntilNOLine_manual(0.05, 0)
             state = 280
-        
+
         elif state == 280:
-            turnInPlace(5,0)
+            turnInPlace(5, 0)
             state = 282
 
         elif state == 282:
-            turnInPlace(15,0)
-            turnInPlace(40,1)
-            turnInPlace(15,0)
+            turnInPlace(15, 0)
+            turnInPlace(40, 1)
+            turnInPlace(15, 0)
             driveXMeters(x=0.025)
 
         ############################ TOP GOLF BALL (300-399) ####################################
@@ -327,7 +327,16 @@ def loop():
         #                *** might be skipped to implement 5 instead
 
         elif state == 400:  # Roger + Arnau
-            pass
+            # ------------- GO DOWN STAIRS -------------------------------------------
+            service.send(service.topicCmd + "T0/servo", "1 -800 200")
+            steps = 0
+            while steps < 5:
+                stairStep(60, 0.1)  # go down one step
+                steps += 1
+                print(f"% ----------------- steps = {steps} ------------")
+
+            driveXMeters(0.1, vel=0.2)
+            state = 405
 
         # once down the stairs, code can be adapted from the downramp section
 
@@ -480,37 +489,37 @@ def loop():
             t.sleep(30)
             state = 9100
 
-        elif state == 9200: # TURNING TEST
-            service.send(service.topicCmd + "ti/rc","0.0 1")
+        elif state == 9200:  # TURNING TEST
+            service.send(service.topicCmd + "ti/rc", "0.0 1")
             if pose.tripBtimePassed() > 2:
-                service.send(service.topicCmd + "ti/rc","0.0 0")
+                service.send(service.topicCmd + "ti/rc", "0.0 0")
                 state = 9238529837
 
-        elif state == 9210: # put arm down
+        elif state == 9210:  # put arm down
             service.send(service.topicCmd + "T0/servo", "1 -150 200")
             if pose.tripBtimePassed() > 3:
                 state = 9211
-        
-        elif state == 9211: # put arm down
+
+        elif state == 9211:  # put arm down
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
             if pose.tripBtimePassed() > 3:
                 state = 9212
 
-        elif state == 9212: # put arm down
+        elif state == 9212:  # put arm down
             service.send(service.topicCmd + "T0/servo", "1 -150 200")
             if pose.tripBtimePassed() > 3:
                 state = 921124534
 
-        elif state == 9213: # put arm up
+        elif state == 9213:  # put arm up
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
             if pose.tripBtimePassed() > 3:
                 state = 92122346264
 
-        elif state == 9220: # driveUntilNOLine test
-            driveUntilNOLine_auto(0.5,300)
+        elif state == 9220:  # driveUntilNOLine test
+            driveUntilNOLine_auto(0.5, 300)
             state = 2455234
 
-        elif state == 9230: # driveUntilLine test
+        elif state == 9230:  # driveUntilLine test
             driveUntilLine(300)
             state = 9231
 
@@ -520,14 +529,12 @@ def loop():
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
             if pose.tripBtimePassed() > 3:
                 state = 9232
-        
+
         elif state == 9232:
             driveXMeters(-0.2)
             state = 423154
 
-
-
-        elif state == 9800: # blue ball catch test
+        elif state == 9800:  # blue ball catch test
             pass
 
         else:  # abort
