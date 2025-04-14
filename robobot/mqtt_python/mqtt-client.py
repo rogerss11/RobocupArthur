@@ -111,9 +111,7 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
         edge.lineControl(0.2, 0.0) # m/s and position on line
-        edge.adjustSpeed = True # adjust speed to follow line
-        edge.stopAtNthIntersection(["r"], 2)
-        state = 110
+        state = 100
         pose.tripBreset()
 
     elif state == 12: # following line
@@ -148,35 +146,62 @@ def loop():
 
     ###### MY TESTING STATES #######
     # line testing
+    elif state == 100:  
+            edge.lineControl(0.185, 0.0) # m/s and position on line
+            edge.adjustSpeed = False # adjust speed to follow line
+            edge.stopAtNthIntersection(["r"], 2)
+            state = 110
+            pose.tripBreset()
+            state = 110
+        
     elif state == 110:
-      if edge.hasArrivedAtNthIntersection():
-        t.sleep(1)
-        #driveXMeters(0.025, 0.1)
-        turnInPlace(40, 0)
-        t.sleep(1)
-        driveXMeters(0.1, 0.1)
-        t.sleep(1)
-        state = 99
+        if pose.tripBtimePassed() > 14:
+            edge.adjustSpeed = True
+            state = 120
 
-    elif state == 111:
-      if pose.tripBtimePassed() > 18:
-        edge.lineControl(0.25, 0.0)
-        state = 112
+    elif state == 120:  # drive until line
+        if edge.hasArrivedAtNthIntersection():
+            t.sleep(1)
+            #driveXMeters(0.025, 0.1)
+            turnInPlace(40, 0)
+            t.sleep(1)
+            driveXMeters(0.1, 0.1)
+            t.sleep(1)
+            edge.lineControl(0.05, 0)
+            edge.setIgnoreIntersection(1)
+            pose.tripBreset()
+            state = 130
     
-    elif state == 112:
-      if pose.tripBtimePassed() > 22.5:
-        edge.lineControl(0.38, 0.0)
-        state = 113
-      
-    elif state == 113:
-      if pose.tripBtimePassed() > 28:
-        edge.lineControl(0.05, 0.0)
-        state = 114
-    
-    elif state == 114:
-      if pose.tripBtimePassed() > 45:
-        edge.lineControl(0.0, 0.0)
-        state = 115
+    elif state == 130:  # drive until line
+        if pose.tripBtimePassed()  > 3:
+            edge.lineControl(0.0, 0)
+            pose.tripBreset()
+            state = 140
+
+#    elif state == 110:
+#      if pose.tripBtimePassed() > 2000:
+#        edge.lineControl(0.2, 0.0)
+#        state = 111
+#
+#    elif state == 111:
+#      if pose.tripBtimePassed() > 18:
+#        edge.lineControl(0.25, 0.0)
+#        state = 112
+#    
+#    elif state == 112:
+#      if pose.tripBtimePassed() > 22.5:
+#        edge.lineControl(0.38, 0.0)
+#        state = 113
+#      
+#    elif state == 113:
+#      if pose.tripBtimePassed() > 28:
+#        edge.lineControl(0.05, 0.0)
+#        state = 114
+#    
+#    elif state == 114:
+#      if pose.tripBtimePassed() > 45:
+#        edge.lineControl(0.0, 0.0)
+#        state = 115
 
 
     # color sensor printing
