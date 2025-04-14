@@ -154,7 +154,7 @@ def loop():
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
 
-                state = 9200  # ========== START STATE ===============
+                state = 220  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                   # use trip counter/timer B
