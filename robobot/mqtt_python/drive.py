@@ -532,6 +532,7 @@ def stairStep(acc=50, vel=0.1):
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Stairs step ------------------------- end")
 
+
 def wiggle(width=60, ang_speed=0.5, N_wiggles=3, x=0.03):
     """
     Wiggle to put ball in hole, repeated N_wiggles times,
@@ -594,13 +595,17 @@ def wiggle(width=60, ang_speed=0.5, N_wiggles=3, x=0.03):
             service.send("robobot/cmd/ti/rc", "0.0 0.0")
             break
 
-        print(f"# state {state}, turn {pose.tripBh:.3f} rad, time {pose.tripBtimePassed():.3f} s")
+        print(
+            f"# state {state}, turn {pose.tripBh:.3f} rad, time {pose.tripBtimePassed():.3f} s"
+        )
         t.sleep(0.05)
 
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # LEDs off
-    print(f"% Wiggle ended after {wiggle_count} cycles and driving {x * wiggle_count:.2f} meters forward")
+    print(
+        f"% Wiggle ended after {wiggle_count} cycles and driving {x * wiggle_count:.2f} meters forward"
+    )
 
-    
+
 def driveUntilNOLine_auto(forward_speed=0.2, threshold=300):
     """
     driveUntilNOLine_auto() - follow line until it's no longer detected
@@ -671,4 +676,3 @@ def driveUntilNOLine_manual(forward_speed=0.2, turn_rate=0.0, threshold=300):
         t.sleep(0.05)
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Manual drive until NO line ------------------------- end")
->>>>>>>>> Temporary merge branch 2
