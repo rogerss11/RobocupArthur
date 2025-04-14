@@ -154,12 +154,30 @@ def loop():
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
 
-                state = 100  # ========== START STATE ===============
+                state = 1  # ========== START STATE ===============
+                edge.lineControl(0.1, 0)  # make sure line control is off
+                edge.stopAtNthIntersection([], 1)
                 # should be 100
                 pose.tripBreset()  # use trip counter/timer B
 
         ############################### START FUNCTIONS (100-199) ###############################
+        
+        elif state == 1:
+            if edge.hasArrivedAtNthIntersection():
+                t.sleep(1)
+                turnInPlace(63, 0)
+                t.sleep(1)
+                driveXMeters(0.1, 0.1)
+                t.sleep(1)
+                edge.lineControl(0.05, 0)
+                edge.stopAtNthIntersection([], 1)
+                state = 2
+        
+        elif state == 2:
+            if edge.hasArrivedAtNthIntersection():
+                state = 2194961
 
+            
         elif state == 100:  
             edge.lineControl(0.185, 0.0) # m/s and position on line
             edge.adjustSpeed = False # adjust speed to follow line
@@ -172,8 +190,28 @@ def loop():
             if pose.tripBtimePassed() > 14:
                 edge.adjustSpeed = True
                 state = 120
+                pose.tripBreset()
 
-        elif state == 120:  # drive until line
+        elif state == 120:
+            if pose.tripB > 4:
+                edge.adjustSpeed = False
+                state = 130
+                pose.tripBreset()
+        
+        elif state == 130:
+            if pose.tripBtimePassed() > 7:
+                edge.adjustSpeed = True
+                state = 140
+                pose.tripBreset()
+
+        elif state == 140:
+            if pose.tripB > 4:
+                edge.adjustSpeed = False
+                edge.lineControl(0.05, 0)
+                state = 150
+                pose.tripBreset()
+
+        elif state == 150:  # drive until line
             if edge.hasArrivedAtNthIntersection():
                 t.sleep(1)
                 turnInPlace(40, 0)
@@ -181,15 +219,15 @@ def loop():
                 driveXMeters(0.1, 0.1)
                 t.sleep(1)
                 edge.lineControl(0.05, 0)
-                edge.setIgnoreIntersection(1)
+                edge.setIgnoreIntersections(True)
                 pose.tripBreset()
-                state = 130
+                state = 160
         
-        elif state == 130:  # drive until line
+        elif state == 160:  # drive until line
             if pose.tripBtimePassed()  > 3:
                 edge.lineControl(0.0, 0)
                 pose.tripBreset()
-                state = 140
+                state = 200
 
 
 

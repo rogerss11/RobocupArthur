@@ -441,8 +441,9 @@ class SEdge:
 
             path = self.intersectionPath[self.passedIntersections] 
 
+            print(valuesAboveZero)
             # If we arrived at a T intersection
-            if valuesAboveZero == 8:
+            if valuesAboveZero == 7:
                 print("arrived at T")
                 self.position = {'l': -4, 'r': 4}.get(path, 0)
                 if path == 'm':
@@ -602,7 +603,7 @@ class SEdge:
     ##########################################################
 
     def lineUpWithLine(self):
-        print(self.edge_n)
+        #print(self.edge_n)
         """ Line up with the white line in front of us. """
         # positive turnrate -> turn left
         from uservice import service
