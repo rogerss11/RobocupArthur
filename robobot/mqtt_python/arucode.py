@@ -3,6 +3,7 @@ import numpy as np
 from eva_drive import turnInPlace, driveXMeters, driveUntilLine
 from scam import cam
 from uservice import service
+import time as t
 
 
 class ArucoDetector:
@@ -79,7 +80,7 @@ class ArucoDetector:
                 continue
             dx = centers[0] - image_center[0] #positive, too far right
             dy = centers[1] - image_center[1] #positive, too far down
-            print(f"Marker center offset: dx={dx}, dy={dy}, angle={angle:.2f}")
+            print(f"Marker center offset: dx={dx}, dy={dy}, angle={angles:.2f}")
     
             # Adjust heading based on position
             if abs(dx) > center_tolerance:
@@ -91,8 +92,8 @@ class ArucoDetector:
                     service.send(service.topicCmd + "ti/rc", "0 -0.2")  # rotate left
 
             # Adjust heading based on angle
-            elif abs(angle) > angle_tolerance:
-                if angle > 0:
+            elif abs(angles) > angle_tolerance:
+                if angles > 0:
                     print("Marker angled to the right → turn right slightly")
                     service.send(service.topicCmd + "ti/rc", "0 0.1")
                 else:
