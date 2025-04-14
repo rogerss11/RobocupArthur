@@ -110,8 +110,8 @@ def loop():
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
-        edge.lineControl(0.2, 0.0) # m/s and position on line
-        state = 110
+        edge.lineControl(0.0, 0.0) # m/s and position on line
+        state = 180
         pose.tripBreset()
 
     elif state == 12: # following line
@@ -244,6 +244,13 @@ def loop():
       t.sleep(1)
       driveUntilLine()
       state = 99
+    
+    elif state == 180:
+        ir.setFollowUntilWall(0.1, 0.32)
+        state = 181
+    elif state == 181:
+        if not ir.followLineUntilWall:
+          state = 99
 
     else: # abort
       print(f"% Mission finished/aborted; state={state}")
@@ -295,8 +302,8 @@ if __name__ == "__main__":
       print("% Starting")
       # where is the MQTT data server:
       # service.setup('localhost') # localhost
-      service.setup('10.197.218.235')
-      #service.setup('10.197.218.11') #gladnalf
+      #service.setup('10.197.218.235')
+      service.setup('10.197.218.11') #gladnalf
       if service.connected:
         loop()
       service.terminate()

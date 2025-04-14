@@ -96,7 +96,7 @@ class SEdge:
     # my PID values
     Kp = 0.3 # Proportional constant
     Ki = 0.12  # Integral constant
-    Kd = 0.08  # Derivative constant
+    Kd = 0.0  # Derivative constant
 
     lineTauZ = 0.5
     lineTauP = 0.35
@@ -138,7 +138,7 @@ class SEdge:
 
 
     ##########################################################
-    #################   CONTROL FUNCTION   ###################
+    #################   CONTROL FUNCTIONS   ##################
     ##########################################################
 
     def resetIntersection(self):
@@ -521,6 +521,7 @@ class SEdge:
 
         if abs(e) < self.errorCutoff:  # If the error is small, reset the integral term
             i_term = 0
+            self.errorSum = 0
             d_term = 0
         
         else:
