@@ -216,8 +216,8 @@ class UService:
         pass
       else:
         used = False
-    if not used:
-      print("% Service:: message not used " + topic + " " + msg)
+    #if not used:
+      #print("% Service:: message not used " + topic + " " + msg)
     return used
 
   def send(self, topic, param):

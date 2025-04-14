@@ -37,19 +37,13 @@ def driveXMeters(x=1.0, vel=0.2):
                 state = 2
             pass
         elif state == 2:
-            if abs(pose.velocity()) < 0.001:
-                state = 99
+            #if abs(pose.velocity()) < 0.001:
+            state = 99
         else:
-            print(
-                f"# drive {x}m drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-            )
-            service.send(
-                "robobot/cmd/ti/rc", "0.0 0.0"
-            )  # (forward m/s, turn-rate rad/sec)
+            #print(f"# drive {x}m drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
+            service.send("robobot/cmd/ti/rc", "0.0 0.0")  # (forward m/s, turn-rate rad/sec)
             break
-        print(
-            f"# drive {state}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-        )
+        #print(f"# drive {state}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
         t.sleep(0.05)
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end

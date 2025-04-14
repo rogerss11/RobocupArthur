@@ -3,6 +3,11 @@ import numpy as np
 from eva_drive import turnInPlace, driveXMeters, driveUntilLine
 from scam import cam
 from uservice import service
+from sedge import edge 
+from uservice import service
+from spose import pose
+import time as t
+
 
 
 class ArucoDetector:
@@ -62,19 +67,53 @@ class ArucoDetector:
         else:
             return None, None, None, None, frame
         
+    def turn_left(self, img):
+        driveXMeters(x=-0.2, vel=0.2)
+        service.send(service.topicCmd + "T0/servo", "1 -150 0")
+        #turnInPlace(deg=30, dir=0, ang_speed=0.5)
+        #driveXMeters(x=0.2, speed=0.2)
+        #turnInPlace(deg=20, dir=0, ang_speed=0.5)
+        turnInPlace(deg=45, dir=0, ang_speed=0.5)  # Clockwise, small step
 
-    def find_and_orient_to_B(self, img):
+        print("% Doing arc turn")
+        #service.send(service.topicCmd + "T0/leds", "16 100 100 0")  # yellowish LED
+
+        # Turn with forward speed + angular velocity
+        forward_speed = 0.2   # m/s
+        turn_rate = -0.3      # rad/s (negative = clockwise)
+
+        pose.tripBreset()
+        state = 0
+        while not service.stop:
+            if state == 0:
+                service.send("robobot/cmd/ti/rc", f"{forward_speed} {turn_rate}")
+                state = 1
+            elif state == 1:
+                if pose.tripBtimePassed() > 2.5:  # adjust timing based on how big arc you want
+                    service.send("robobot/cmd/ti/rc", "0.0 0.0")
+                    state = 99
+            elif state == 99:
+                print(f"# Finished arc in {pose.tripBtimePassed():.2f} sec")
+                break
+            t.sleep(0.05)
+
+        #service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # turn off LEDs
+
+    def find_and_orient_to_BBBBB(self, img):
         while True: 
             ids, corners, centers, angles, img = self.detect_markers(img)
             if ids: 
-                if 12 in ids or 13 in ids:
-                    print("Found B markers")
-                    self.orient_and_turn_to_B(img, ids, centers)
-                    break
+                if 13 in ids:
+                    print("Found ID 13 markers")
+                    #turrnInPlace(deg=30, dir=0, ang_speed=0.5)  # Clockwise, small step
+                    service.send(service.topicCmd + "ti/rc", "0 -0.25")
+                    #self.orient_and_turn_to_B(img, ids, centers)
+                    if 13 not in ids: 
+                        break
                 else: 
-                    print("No B marker found, turning a bit:-)")
+                    print("No ID 13 marker found, turning a bit:-)")
                     #turnInPlace(deg=15, dir=0, ang_speed=0.5)  # Clockwise, small step
-                    service.send(service.topicCmd + "ti/rc", "0 -0.25") 
+                    service.send(service.topicCmd + "ti/rc", "0 -0.25") #here i want it to turn a little right and a little left instead to look for
             else: 
                 print("No B marker found, turning a bit:-)")
                 #turnInPlace(deg=15, dir=0, ang_speed=0.5)  # Clockwise, small step
@@ -83,6 +122,74 @@ class ArucoDetector:
             if not ok:
                 print("No image from camera.")
                 break
+        driveUntilLine()
+
+        
+    def find_and_orient_to_B(self, img):
+        found_13 = False
+        turning_left = True
+
+        print("🔍 Looking for ID 13...")
+
+        while not found_13:
+            # Turn slowly left or right
+            #turn_rate = -0.3 if turning_left else 0.3
+            #turn_rate = 0.4
+            #service.send(service.topicCmd + "ti/rc", f"0 {turn_rate}")
+            turnInPlace(deg=30, dir=1, ang_speed=0.5)  # Clockwise, small step
+            #turnInPlace(deg=50, dir=1, ang_speed=0.5)  # Counter-clockwise, small step
+        
+            # Get image and check
+            ok, img, _ = cam.getImage()
+            if not ok:
+                print("No image from camera.")
+                break
+
+            ids, _, _, _, img = self.detect_markers(img)
+            if ids:
+                ids_flat = ids
+                print(f"Detected: {ids_flat}")
+                if 13 in ids_flat:
+                    print("✅ Found ID 13!")
+                    service.send(service.topicCmd + "ti/rc", "0 0")  # stop turning
+                    found_13 = True
+                    break
+
+            # Alternate turn direction
+            #turning_left = not turning_left
+            t.sleep(0.3)  # Pause briefly before switching direction
+
+        # Step 2: Turn left until ID 13 is no longer visible
+        
+
+        while True:
+            ok, img, _ = cam.getImage()
+            if not ok:
+                print("No image from camera.")
+                break
+
+            ids, _, _, _, img = self.detect_markers(img)
+            if ids:
+                ids_flat = ids
+                print(f"Still detecting: {ids_flat}")
+                print("🔄 Turning left until ID 13 disappears...")
+                service.send(service.topicCmd + "ti/rc", "0 0.25")  # Slow turn left
+                if 13 not in ids_flat:
+                    service.send(service.topicCmd + "ti/rc", "0 0")
+                    print("❌ ID 13 gone — stop turning") #
+                    break
+            else:
+                print("No marker visible — stop turning")
+                break
+
+            t.sleep(0.1)
+
+        # Final step
+        print("turn a little to the left still")
+        turnInPlace(15,0)
+        print("🚗 Driving until line")
+        driveUntilLine()
+
         
     def orient_and_turn_to_B(self, frame, ids, centers):
         if ids is not None: 
@@ -141,122 +248,3 @@ class ArucoDetector:
 #turn left until aruco is centered
 #when centered, trigger sensor 
 #or just follow the line until sensor says its close enough 
-
-
-"""
-import cv2 as cv
-import numpy as np
-
-class ArucoDetector:
-    def __init__(self):
-        self.aruco_dict = cv.aruco.getPredefinedDictionary(cv.aruco.DICT_4X4_250)
-        self.parameters = cv.aruco.DetectorParameters_create()  # <- safer method
-
-
-    def detect_markers(self, frame):
-        if frame is None or frame.size == 0:
-            print("Warning: Invalid image received.")
-            return None, None, None
-
-        try:
-            #print(f"[DEBUG] Frame shape: {frame.shape}")
-            gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-            #print("greyscale ok")
-            #print("[DEBUG] OpenCV version:", cv.__version__)
-
-            corners, ids, rejected = cv.aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
-
-            centers = []
-            angles = []
-
-            if ids is not None:
-                try:
-                    # draw markers
-                    cv.aruco.drawDetectedMarkers(frame, corners, ids)
-                    for i, marker_id in enumerate(ids.flatten()):
-                        if len(corners[i][0]) > 0:
-                            pt = tuple(map(int, corners[i][0][0]))
-                            cv.putText(frame, f"id={marker_id}", pt,
-                                    cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-                except Exception as draw_err:
-                    print(f"[DRAW ERROR] {draw_err}")
-                return ids.flatten().tolist(), corners, frame
-            else:
-                print("No markers found.")
-                return None, None, frame
-
-        except Exception as e:
-            print(f"Error in ArUco Detection: {e}")
-            return None, None, None
-    def release(self):
-        cv.destroyAllWindows()
-
-    def turning(self, ids, centers, angles):
-        #center coordinate, center angles
-        image_center = (400, 300)
-        center_tolerance = 30 #pixels
-        angle_tolerance = 5 #degrees
-
-        dx = center[0] - image_center[0] #positive, too far right
-        dy = center[1] - image_center[1] #positive, too far down
-        print(f"Marker center offset: dx={dx}, dy={dy}, angle={angle:.2f}")
-    
-    
-        # Adjust heading based on position
-        if abs(dx) > CENTER_TOLERANCE:
-            if dx > 0:
-                print("Marker is to the right → turn right")
-                service.send(service.topicCmd + "ti/rc", "0 0.2")  # rotate right
-            else:
-                print("Marker is to the left → turn left")
-                service.send(service.topicCmd + "ti/rc", "0 -0.2")  # rotate left
-
-        # Adjust heading based on angle
-        elif abs(angle) > ANGLE_TOLERANCE:
-            if angle > 0:
-                print("Marker angled to the right → turn right slightly")
-                service.send(service.topicCmd + "ti/rc", "0 0.1")
-            else:
-                print("Marker angled to the left → turn left slightly")
-                service.send(service.topicCmd + "ti/rc", "0 -0.1")
-
-        else:
-            print("Marker centered and straight → stop")
-            service.send(service.topicCmd + "ti/rc", "0 0")
-            state = 99
-
-
- more graveyards:
-
-
-        while True: 
-            if ids is not None: 
-                ids_flat = [int(id[0]) for id in ids]
-                if 12 in ids_flat or 13 in ids_flat: 
-                    print("Found B markers")
-                    self.orient_and_turn_to_B(frame, ids, centers)
-                    break
-                else: 
-                    print("No B marker found, turning a bit:-)")
-                    turnInPlace()
-
-def find_B(self, frame, ids, centers):
-    ids_flat = [int(id[0]) for id in ids] if ids is not None else []
-
-    while 12 not in ids_flat and 13 not in ids_flat:
-        print("No B marker found, turning a bit :-)")
-        turnInPlace(deg=15, dir=1, ang_speed=0.5)  # Clockwise, small step
-
-        # Get updated image and detect again
-        ok, new_frame, _ = cam.getImage()
-        if not ok or new_frame is None:
-            print("No image from camera.")
-            continue
-
-        _, new_ids, _, new_centers, _ = self.detect_markers(new_frame)
-        ids_flat = [int(id[0]) for id in new_ids] if new_ids is not None else []
-
-    print("Found B marker(s)")
-    self.orient_and_turn_to_B(frame, new_ids, new_centers)
-
-"""

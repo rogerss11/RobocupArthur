@@ -40,9 +40,10 @@ from sedge import edge
 from sgpio import gpio
 from scam import cam
 from uservice import service
-from eva_drive import turnInPlace
+from eva_drive import turnInPlace, driveUntilLine, driveXMeters
 
-from arucode import ArucoDetector  # Import ArucoDetector
+#from arucode import ArucoDetector  # Import ArucoDetector
+from aruco_test import ArucoDetector  # Import ArucoDetector
 aruco_detector = ArucoDetector()
 
 
@@ -99,8 +100,8 @@ def loop():
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turnrate rad/sec)
         # follow line (at 0.25cm/s)
         #edge.lineControl(0.25, 0.0) # m/s and position on line -2.0..2.0
-        state = 20 # until no more line
-        #pose.tripBreset() # use trip counter/timer B
+        state = 120 # until no more line
+        pose.tripBreset() # use trip counter/timer B
     elif state == 12: # following line
       if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 20:
         # no more line
@@ -110,16 +111,52 @@ def loop():
         state = 14 # turn left
     elif state == 14: # turning left
       if pose.tripBh > np.pi/2 or pose.tripBtimePassed() > 25:
-        state = 20 # finished   =17 go look for line
+        state = 420 # finished   =17 go look for line
         service.send(service.topicCmd + "ti/rc","0 0") # stop for images
       print(f"% --- state {state}, h = {pose.tripBh:.4f}, t={pose.tripBtimePassed():.3f}")
+
+    elif state == 420:
+      service.send(service.topicCmd + "T0/servo", "1 -150 0")
+      if pose.tripBtimePassed() > 3:
+        state = 20
     
     ########################
+    elif state == 120: 
+      img = imageAnalysis(0)  # get the image
+      aruco_detector.turn_left(img)
+      #driveUntilLine()
+      #service.send(service.topicCmd + "T0/servo", "1 -150 0")
+      driveXMeters(0.3, 0.2)
+      aruco_detector.find_and_orient_to_B(img)
+      if pose.tripBtimePassed()>2:
+        state = 99 
+    elif state == 130:
+      #edge.followLine()
+      #t.sleep(0.2)  # short delay for stabilization
+      #edge.pathStart()
+      service.send(service.topicCmd + "T0/servo", "1 -450 0")
+      edge.lineControl(0.09, 0) # speed and position
+      edge.stopAtNthIntersection('l', 1)
+      pose.tripBreset()
+      edge.lineControl(0.08,0)
+      #followline
+      #intersection, first one, turn left
+      #lift servo a bit
+      #drive forward and crash 
+      #drive backwards
+      #drive to the right 
+      #look for balls 
+      if pose.tripBtimePassed()>2:
+        state = 99 
     elif state == 20: # image analysis
+      #service.send(service.topicCmd + "T0/servo", "1 -150 0")
       img = imageAnalysis(0)  # get the image
       if img is not None:
           aruco_detector.find_and_orient_to_B(img)
-          aruco_detector.drive_to_line_and_turn_left()
+          aruco_detector.drive_to_line_and_find_C() #turn left until it sees aruo C, 15 
+          #change to drive to line - V will fix so its straight. 
+          #edge.stopAtNthIntersection(['l'], 2) #left, number 2 intersection 
+          #edge.lineControl(0.08, 0) #speed and position
           state = 99 
     ###################################
       if not cam.useCam or stateTimePassed() > 120:
@@ -171,7 +208,7 @@ if __name__ == "__main__":
     print("% Starting")
     # where is the MQTT data server:
     #service.setup('localhost') # localhost
-    service.setup('localhost') #Arthur
+    service.setup('10.197.218.235') #Arthur
     if service.connected:
       loop()
       service.terminate()
