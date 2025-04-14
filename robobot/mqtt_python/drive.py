@@ -406,7 +406,7 @@ def rotateCircle(r=0.5, deg=360, dir=0):
         if state == 0:
             # Send circular movement command: forward speed = 0.2 m/s, angular speed = 0.2 / r
             r = r if dir == 0 else -r  # Adjust radius based on direction
-            vel_cmd = f"0.2 {0.2 / r:.2f}"
+            vel_cmd = f"0.35 {0.35 / r:.2f}"
             service.send("robobot/cmd/ti/rc", vel_cmd)
             state = 1
 
@@ -484,6 +484,56 @@ def driveUntilWall_measure_gate_dist(d=0.2, ir_id=1, vel=0.2):
     print("% Driving until wall ------------------------- end")
     return min_d
 
+
+def stairStep(acc=50, vel=0.1):
+    """
+    driveUntilWall(d=0.2) - drive until a certain acceleration is detected
+    acc = acceleration in m/s^2 to stop at
+    """
+    max_acc = 0.0
+    state = 0
+    pose.tripBreset()
+    print(f"% Driving until acc spike of {acc} m/s2 -------------------------")
+    service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
+    while not (service.stop):
+        if state == 0:  # wait for start signal
+            service.send(
+                "robobot/cmd/ti/rc", f"{vel} 0.0"
+            )  # (forward m/s, turn-rate rad/sec)
+            state = 1
+        elif state == 1:
+            gyro = [imu.gyro[0], imu.gyro[1], imu.gyro[2]]
+            gyro = [abs(g) for g in gyro]  # absolute value
+            gyro = max(gyro)  # max of all 3 axes
+            if gyro > acc or pose.tripBtimePassed() > 15:
+                service.send("robobot/cmd/ti/rc", "0.05 0.0")
+                t.sleep(3.5)
+                service.send(
+                    "robobot/cmd/ti/rc", "0.0 0.0"
+                )  # (forward m/s, turn-rate rad/sec)
+                state = 2
+                max_acc = gyro
+            pass
+        elif state == 2:
+            if abs(pose.velocity()) < 0.001:
+                state = 99
+        else:
+            print(
+                f"# Max acc = {max_acc}, drive drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
+            )
+            service.send(
+                "robobot/cmd/ti/rc", "0.0 0.0"
+            )  # (forward m/s, turn-rate rad/sec)
+            break
+        print(
+            f"# drive {state}, acc {imu.acc}, gyro {imu.gyro} now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
+        )
+        t.sleep(0.05)
+    pass
+    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
+    print("% Stairs step ------------------------- end")
+
+
 def driveUntilNOLine_auto(forward_speed=0.2, threshold=300):
     """
     driveUntilNOLine_auto() - follow line until it's no longer detected
@@ -518,6 +568,7 @@ def driveUntilNOLine_auto(forward_speed=0.2, threshold=300):
         t.sleep(0.05)
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Driving until NO line ------------------------- end")
+
 
 def driveUntilNOLine_manual(forward_speed=0.2, turn_rate=0.0, threshold=300):
     """
