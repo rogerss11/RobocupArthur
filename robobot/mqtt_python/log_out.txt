@@ -1,31 +1,26 @@
 % Starting
-% Failed to connect to 10.197.216.214 on 1883
-% Won't work without MQTT connection, terminate!
-% Failed to connect out to 10.197.216.214 on 1883
-% Won't work without both MQTT connections, terminate!
-% failed to publish robobot/cmd/ti/alive with 2025-03-21 10:40:49.610637
-% failed to publish robobot/cmd/ti/log with 1
-% GPIO all ok
-% failed to publish robobot/cmd/ti/alive with 2025-03-21 10:40:49.610637
-% failed to publish robobot/cmd/ti/alive with 2025-03-21 10:40:49.610637
-% Robot (srobot.py) got no HBT data after 31 loops (stops).
-% Is teensy_interface running?
-% Service - thread stopped
-% Service - thread stopped
-% SCam:: Camera failed to open
-% Edge (sedge.py):: turns on line sensor
-% failed to publish robobot/cmd/T0/lip with 1
-% (uservice.py) Setup finished with connected=False
+% Connected to MQTT Broker 10.197.218.235 on 1883
+% ConnectedOut to MQTT Broker 10.197.218.235 on 1883
+% I am not robot master, quitting!
+% I am not robot master, quitting!
+% Robot (srobot.py) data stream OK; 7 loops.
+% IR sensor (sir.py):: got data stream; 0 loops.
 % shutting down
+% Service - thread stopped
+% Service - thread stopped
 % Pose terminated
 % Robot terminated
 % Pose terminated
 % IR terminated
 % Edge (sedge.py):: turn off line sensor
-% failed to publish robobot/cmd/T0/lip with 0
 % Edge (sedge.py):: terminated
 % join cam failed
+% Camera stream was not open
 % Camera terminated
 % GPIO terminated
 % logfile closed
+% SCam:: Camera failed to open
+% Edge (sedge.py):: turns on line sensor
+% (uservice.py) Setup finished with connected=True
+% Using state 22
 % Main Terminated
