@@ -28,12 +28,10 @@
 
 # TODO
 #! recalibrate -w and test line following and intersections with lowered color sensor
-#! speed based on error
-#! navigating of straight and right angle intersections doesnt work
-#! line up with line
+#! speed based on error or rather speed up for the long line after start
+#! navigate final intersection
 # improve PID (Kp, Ki, Kd)
 # Optional: Lead Compensator (if needed)
-
 
 from datetime import *
 import time as t
@@ -66,14 +64,10 @@ class SEdge:
     lineValidThreshold = 750  # 1000 is calibrated white
     # level for relevant white values
     low = lineValidThreshold - 100
-
-    # crossing thresholds - average above this is assumed to be crossing line
-    crossingThreshold = 730  # grey
-    # crossingThreshold = 400 # black ground
-    # crossingThreshold = 480 # black ramp
+    woodenLow = 800  #! test this
 
     # line detection values
-    position = 0.0  # ? what exactly is 0, between 4 and 5th sensor?
+    position = 0.0
 
     lineValid = False
     # start at 10 to avoid going to different mode at the start
@@ -82,6 +76,8 @@ class SEdge:
     )
 
     ignoreIntersections = False  # if we should ignore intersections
+    stopAtIntersectionN = 0  # stop when we reach nth intersection
+
     atIntersectionCntMaxValue = 3  #! test this value
     atIntersection = (
         False  # if the current reading suggests that we are at an intersection
@@ -89,12 +85,13 @@ class SEdge:
     atIntersectionCnt = 0  # 20 = at Intersection
     passedIntersections = 0  # how many intersection have we passed
     intersectionPath = [
-        "l",
-        "l",
-        "l",
-        "l",
+        "r",
+        "r",
+        "r",
+        "r",
     ]  # l = choose left line, r = choose right line, m = choose middle line
     navigatingIntersection = False  # if we are currently navigating an intersection
+    ArrivedAtNthIntersection = False
 
     adjustSpeed = False  # if we should adjust speed based on error
 
@@ -108,27 +105,25 @@ class SEdge:
     lineCtrl = False  # private
 
     # my PID values
-    Kp = 0.5  # Proportional constant
-    Ki = 0.15  # Integral constant
-    Kd = 0.35  # Derivative constant
-    # Kp = 0.55 # Proportional constant
-    # Ki = 0.1  # Integral constant
-    # Kd = 0.4  # Derivative constant
+    Kp = 0.35  # 0.32        # keep as is
+    Ki = 0.15  # 0.15        # slightly reduce integral accumulation near zero
+    Kd = 0.2  # 0.17        # increase derivative for better anticipation
 
-    # lead compensator
-    # Kp = 0.6 # Proportional constant
-    # Ki = 0.12  # Integral constant
-    # Kd = 0.3  # Derivative constant
-    lineTauZ = 0.02
-    lineTauP = 0.1
+    errorCutoff = 0.06  # Error cutoff for integral and derivitive term
+    integral_limit = 1.5
+    alpha_d = 0.1  # smoothing factor for derivative term
 
-    # Low-pass filter for derivative term
-    alpha = 0.1  # Choose a suitable alpha value
+    lineTauZ = 0.6  # increase lead zero to anticipate error crossing earlier
+    lineTauP = 0.5  # decrease pole slightly for sharper lead effect
+
+    # lineTauZ = 0.1  # unchanged
+    # lineTauP = 0.3  # increase to soften filter
 
     # values for ID
     errorSum = 0.0  # Integral term (sum of errors)
     lastError = 0.0  # Previous error for calculating the derivative term
     lastErrorDiff = 0.0  # Previous derivative term for filtering
+    smoothedErrorDiff = 0.0
     lastTime = t.time()  # Time of last update to calculate the derivative (dt)
 
     # Lists to store data for graphing
@@ -156,8 +151,84 @@ class SEdge:
     u = 0  # turn rate control signal
 
     ##########################################################
+    #################   CONTROL FUNCTIONS   ##################
+    ##########################################################
+
+    def resetIntersection(self):
+        """Reset the intersection detection variables."""
+        self.atIntersection = False
+        self.atIntersectionCnt = 0
+        self.navigatingIntersection = False
+
+    ##########################################################
+
+    def setIgnoreIntersections(self, ignore):
+        """Set whether to ignore intersections or not."""
+        self.ignoreIntersections = ignore
+        if ignore:
+            self.resetIntersection()
+
+    ##########################################################
+
+    def setIntersectionPath(self, path):
+        """Set the path for next intersections."""
+        self.intersectionPath = path
+        self.resetIntersection()
+        self.passedIntersections = 0
+
+    ##########################################################
+
+    def stopAtNthIntersection(self, path, n):
+        """Stop at the nth intersection following the current path."""
+        if len(path) != n - 1:
+            print("Path length does not match the number of intersections.")
+            return
+        self.setIntersectionPath(path)
+        self.stopAtIntersectionN = n
+        self.ArrivedAtNthIntersection = False
+
+    ##########################################################
+
+    def hasArrivedAtNthIntersection(self):
+        return self.ArrivedAtNthIntersection
+
+    ##########################################################
+
+    def setLineUpWithLine(self):
+        """Line up with the white line in front of us."""
+        self.shouldLineUp = True
+        self.lineControl(0.0, 0.0)  # turn off line control
+
+    ##########################################################
+
+    def lineControl(self, velocity, refPosition=0):
+        """Set the line control parameters."""
+        from uservice import service
+
+        self.velocity = velocity
+        self.refPosition = refPosition  # position on the line (0 = middle)
+        # velocity 0 is turning off line control
+        self.lineCtrl = velocity > 0.001  # is line control active
+        if not self.lineCtrl:
+            service.send("robobot/cmd/ti/rc", "0.0 0.0")  # stop robot
+
+    ##########################################################
+
+    def terminate(self):
+        """Terminate the line sensor."""
+        from uservice import service
+
+        self.need_data = False
+        # print("% Edge (sedge.py):: turn off line sensor")
+        service.send(self.topicLip, "0")
+        # print("% Edge (sedge.py):: terminated")
+
+    ##########################################################
+    #################   CORE FUNCTIONS   #####################
+    ##########################################################
 
     def setup(self):
+        """Setup the color sensors."""
         from uservice import service
 
         sendBlack = False  # False = Calibrate
@@ -241,64 +312,8 @@ class SEdge:
 
     ##########################################################
 
-    def print(self):  # print raw values
-        from uservice import service
-
-        print(
-            "% Edge (sedge.py):: "
-            + str(self.edgeTime - service.startTime)
-            + f" ({self.edge[0]}, "
-            + f"{self.edge[1]}, "
-            + f"{self.edge[2]}, "
-            + f"{self.edge[3]}, "
-            + f"{self.edge[4]}, "
-            + f"{self.edge[5]}, "
-            + f"{self.edge[6]}, "
-            + f"{self.edge[7]})"
-            + f" {self.edgeInterval:.2f} ms "
-            + str(self.edgeUpdCnt)
-        )
-
-    def printn(self):  # print normalized values
-        from uservice import service
-
-        print(
-            "% Edge (sedge.py):: normalized "
-            + str(self.edge_nTime - service.startTime)
-            + f" ({self.edge_n[0]}, "
-            + f"{self.edge_n[1]}, "
-            + f"{self.edge_n[2]}, "
-            + f"{self.edge_n[3]}, "
-            + f"{self.edge_n[4]}, "
-            + f"{self.edge_n[5]}, "
-            + f"{self.edge_n[6]}, "
-            + f"{self.edge_n[7]})"
-            + f" {self.edge_nInterval:.2f} ms "
-            + f" {self.position:.2f} "
-            + str(self.edge_nUpdCnt)
-        )
-
-    def printnw(self):  # print normalized white values
-        from uservice import service
-
-        print(
-            "% Edge (sedge.py):: white level "
-            + str(self.edge_n_wTime)
-            + f" ({self.edge_n_w[0]}, "
-            + f"{self.edge_n_w[1]}, "
-            + f"{self.edge_n_w[2]}, "
-            + f"{self.edge_n_w[3]}, "
-            + f"{self.edge_n_w[4]}, "
-            + f"{self.edge_n_w[5]}, "
-            + f"{self.edge_n_w[6]}, "
-            + f"{self.edge_n_w[7]}) "
-            + str(self.edge_n_wUpdCnt)
-        )
-
-    ##########################################################
-
     def decode(self, topic, msg):
-        # decode MQTT message
+        """Decode the MQTT message."""
         used = True
         if topic == "T0/liv":  # raw AD value
             from uservice import service
@@ -355,6 +370,7 @@ class SEdge:
                 # use to control, if active
                 if self.lineCtrl:
                     self.LineDetect()
+                if self.lineCtrl:
                     self.followLine()
                 # if we want to line up with white line
                 if self.shouldLineUp:
@@ -384,8 +400,8 @@ class SEdge:
 
     ##########################################################
 
-    # Calculate current position, intersections, and so on
     def LineDetect(self):
+        """Detect the line and calculate the position."""
         high = 0
         values = [0] * 8
         valuesAboveZero = 0
@@ -412,7 +428,7 @@ class SEdge:
 
         if not self.ignoreIntersections:
             # Detect if we have a crossing line
-            if valuesAboveZero >= 4:
+            if valuesAboveZero >= 4:  #! maybe change to 4
                 self.atIntersection = True
             else:
                 self.atIntersection = False
@@ -427,14 +443,26 @@ class SEdge:
                 if not self.navigatingIntersection:
                     print("started navigating intersection", self.passedIntersections)
                 self.navigatingIntersection = True
+
             # If we have passed the intersection
             elif self.atIntersectionCnt == 0 and self.navigatingIntersection:
                 print("finised navigating intersection", self.passedIntersections)
                 self.navigatingIntersection = False
                 self.passedIntersections += 1
 
+        # print(self.edge_n, " -> ", values)
+        # print(valuesAboveZero, self.atIntersectionCnt, self.navigatingIntersection)
+
         # If we are currently at an intersection
         if self.navigatingIntersection and not self.ignoreIntersections:
+            if (
+                self.stopAtIntersectionN == self.passedIntersections + 1
+            ):  # if we want to stop at next intersection
+                self.lineControl(0, 0)
+                self.position = 0
+                self.ArrivedAtNthIntersection = True
+                return
+
             path = self.intersectionPath[self.passedIntersections]
 
             # If we arrived at a T intersection
@@ -504,33 +532,20 @@ class SEdge:
 
         # Normal line calculation
         else:
-            sum_values = sum(values)
-            pos_sum = sum((i + 1) * v for i, v in enumerate(values))
+            sum_values = sum(self.edge_n)
+            pos_sum = sum((i + 1) * v for i, v in enumerate(self.edge_n))
             self.position = (
                 (pos_sum / sum_values - 4.5) if sum_values > 0 and self.lineValid else 0
             )
 
     ##########################################################
 
-    def lineControl(self, velocity, refPosition):
-        from uservice import service
-
-        self.velocity = velocity
-        self.refPosition = refPosition  # position on the line (0 = middle)
-        # velocity 0 is turning off line control
-        self.lineCtrl = velocity > 0.001  # is line control active
-        if not self.lineCtrl:
-            service.send("robobot/cmd/ti/rc", "0.0 0.0")  # stop robot
-        pass
-
-    ##########################################################
-
     def followLine(self):
+        """Follow the line using PID-Lead control."""
         from uservice import service
 
         # some parameters depend on sample time, adjust
-        # print(f"LineCtrl:: sample time {self.edge_nInterval}")
-        if abs(self.edge_nInterval - self.edgeIntervalSetup) > 2.0:  # ms #? why
+        if abs(self.edge_nInterval - self.edgeIntervalSetup) > 1.0:  # ms #? why
             self.PIDrecalculate()
             self.edgeIntervalSetup = self.edge_nInterval
 
@@ -543,49 +558,67 @@ class SEdge:
         deltaTime = max(self.edge_nInterval / 1000, 0.001)  # in seconds
 
         # Calculate the error between the desired position and the current position
+        # print(self.edge_n, " -> ", self.position)
         e = self.refPosition - self.position
 
-        self.errorSum += e * deltaTime  # Sum of errors for integral term
-        errorDiff = (e - self.lastError) / deltaTime  # Derivative term
-        errorDiffFiltered = (
-            self.alpha * errorDiff + (1 - self.alpha) * self.lastErrorDiff
-        )
+        p_term = self.Kp * e
+        p_term = (
+            p_term * self.tauZ2pT
+            - self.lineE1 * self.tauZ2mT
+            + self.lineY1 * self.tauP2mT
+        ) / self.tauP2pT
 
-        # PID control output
-        self.u = (
-            self.Kp * e
-            + min(max(self.Ki * self.errorSum, -10), 10)
-            + self.Kd * errorDiff
-        )
+        if abs(e) < self.errorCutoff:
+            i_term = 0
+            self.errorSum = 0
+            d_term = 0
 
-        # Lead filter
-        # self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT
+        else:
+            self.errorSum += e * deltaTime
+            self.errorSum = max(
+                min(self.errorSum, self.integral_limit), -self.integral_limit
+            )
+            i_term = self.Ki * self.errorSum
+
+            errorDiff_raw = (e - self.lastError) / deltaTime
+            self.smoothedErrorDiff = (
+                self.alpha_d * getattr(self, "smoothedErrorDiff", 0)
+                + (1 - self.alpha_d) * errorDiff_raw
+            )
+            d_term = self.Kd * self.smoothedErrorDiff
+            d_term = max(min(d_term, 2.0), -2.0)  # You can tune this clamp
+
+        # Final control signal
+        self.u = p_term + i_term + d_term
+
+        if abs(e) < self.errorCutoff and abs(self.u) < 0.05:
+            self.u = 0.05 if e < 0 else -0.05  # Tiny nudge in the correct direction
+
         self.lineY = self.u
+
+        # print(f"time: {self.edge_nTime.timestamp() - self.startingTime} error: {e:.4f} p_term: {p_term:.4f} d_term {d_term:.4f} i_term: {i_term:.4f} u: {self.u:.4f}")
 
         self.lineY = max(
             min(self.lineY, 4), -4
         )  # Limit the control signal to [-4, 4] rad/s
 
+        # save old values
+        self.lineE1 = p_term
+        self.lineY1 = self.lineY
+        self.lastError = e
+
         # Save data for graphing
         self.error_list.append(e)
         self.time_list.append(self.edge_nTime.timestamp() - self.startingTime)
 
-        # save old values
-        self.lineE1 = self.u
-        self.lineY1 = self.lineY
-
-        # Save last values
-        self.lastError = e
-        self.lastErrorDiff = errorDiffFiltered
-
         if self.adjustSpeed:
             # Adjust speed based on error
             # Linear scaling based on error where:
-            # error = 0 -> 150% of velocity
-            # error > 1 -> 50% of velocity
-            scale_factor = 1.5 - (self.error * 1.0)  #! linear - maybe improve
+            # error = 0 -> 200% of velocity
+            # error >= 1 -> 30% of velocity
+            scale_factor = 2.0 - (1.7 * e)
 
-            scale_factor = max(0.5, min(1.5, scale_factor))  # limit the range
+            scale_factor = max(0.3, min(2.0, scale_factor))  # limit the range
 
             adjusted_speed = self.velocity * scale_factor
         else:
@@ -595,13 +628,10 @@ class SEdge:
         par = f"{adjusted_speed:.3f} {self.lineY:.3f} {t.time()}"
         service.send(self.topicRc, par)  # send new turn command, maintaining velocity
 
-        # debug print
-        # if self.edge_nUpdCnt % 20 == 0:
-        #  print(f"% Edge::followLine: ctrl: e={e:.3f}, u={self.u:.3f}, y={self.lineY:.3f} -> {par}")
-
     ##########################################################
 
     def PIDrecalculate(self):
+        """Recalculate the PID parameters."""
         print(
             f"LineCtrl:: PIDrecalculate: T={self.edgeIntervalSetup:.2f} -> {self.edge_nInterval:.2f} ms"
         )
@@ -611,22 +641,20 @@ class SEdge:
         self.tauZ2pT = self.lineTauZ * 2.0 + Tsec
         self.tauZ2mT = self.lineTauZ * 2.0 - Tsec
         # debug
-        print(
-            f"%% Lead: tauZ {self.lineTauZ:.3f} sec, tauP = {self.lineTauP:.3f} sec, T = {self.edge_nInterval:.3f} ms"
-        )
-        print(
-            f"%%       tauZ2pT = {self.tauZ2pT:.4f}, tauZ2mT = {self.tauZ2mT:.4f}, tauP2pT = {self.tauP2pT:.4f}, tauP2mT = {self.tauP2pT:.4f}"
-        )
+        # print(f"%% Lead: tauZ {self.lineTauZ:.3f} sec, tauP = {self.lineTauP:.3f} sec, T = {self.edge_nInterval:.3f} ms")
+        # print(f"%%       tauZ2pT = {self.tauZ2pT:.4f}, tauZ2mT = {self.tauZ2mT:.4f}, tauP2pT = {self.tauP2pT:.4f}, tauP2mT = {self.tauP2pT:.4f}")
 
     ##########################################################
 
     def lineUpWithLine(self):
+        print(self.edge_n)
+        """ Line up with the white line in front of us. """
         # positive turnrate -> turn left
         from uservice import service
 
-        speed = 1
-        left = self.edge_n[0] > self.crossingThreshold  #! maybe replace with low
-        right = self.edge_n[7] > self.crossingThreshold
+        speed = 0.4
+        left = self.edge_n[0] > self.lineValidThreshold  #! maybe replace with low
+        right = self.edge_n[7] > self.lineValidThreshold
 
         if left and right:  # we have lined up
             service.send("robobot/cmd/ti/rc", "0 0")
@@ -637,38 +665,70 @@ class SEdge:
         elif right:
             cmd = f"0 {-speed:.3f}"  # turn right
         else:
-            cmd = f"{speed:.3f} 0"  # go straight
+            cmd = "0.05 0"  # go straight
 
         if cmd != self.last_cmd:
-            print("cmd changed")
+            # print("cmd changed")
             service.send("robobot/cmd/ti/rc", cmd)
             self.last_cmd = cmd
 
     ##########################################################
-
-    def setIgnoreIntersections(self, ignore):
-        self.ignoreIntersections = ignore
-        if ignore:
-            self.atIntersection = False
-            self.atIntersectionCnt = 0
-            self.navigatingIntersection = False
-
+    #################   DEBUG FUNCTIONS   ####################
     ##########################################################
 
-    def terminate(self):
+    def print(self):  # print raw values
         from uservice import service
 
-        self.need_data = False
-        print("% Edge (sedge.py):: turn off line sensor")
-        service.send(self.topicLip, "0")
-        # try:
-        #   self.th.join()
-        #   # stop subscription service from Teensy
-        #   service.send(service.topicCmd + "T0/sub","livn 0")
-        # except:
-        #   print("% Edge thread not running")
-        print("% Edge (sedge.py):: terminated")
-        pass
+        print(
+            "% Edge (sedge.py):: "
+            + str(self.edgeTime - service.startTime)
+            + f" ({self.edge[0]}, "
+            + f"{self.edge[1]}, "
+            + f"{self.edge[2]}, "
+            + f"{self.edge[3]}, "
+            + f"{self.edge[4]}, "
+            + f"{self.edge[5]}, "
+            + f"{self.edge[6]}, "
+            + f"{self.edge[7]})"
+            + f" {self.edgeInterval:.2f} ms "
+            + str(self.edgeUpdCnt)
+        )
+
+    def printn(self):  # print normalized values
+        from uservice import service
+
+        print(
+            "% Edge (sedge.py):: normalized "
+            + str(self.edge_nTime - service.startTime)
+            + f" ({self.edge_n[0]}, "
+            + f"{self.edge_n[1]}, "
+            + f"{self.edge_n[2]}, "
+            + f"{self.edge_n[3]}, "
+            + f"{self.edge_n[4]}, "
+            + f"{self.edge_n[5]}, "
+            + f"{self.edge_n[6]}, "
+            + f"{self.edge_n[7]})"
+            + f" {self.edge_nInterval:.2f} ms "
+            + f" {self.position:.2f} "
+            + str(self.edge_nUpdCnt)
+        )
+
+    def printnw(self):  # print normalized white values
+        from uservice import service
+
+        print(
+            "% Edge (sedge.py):: white level "
+            + str(self.edge_n_wTime)
+            + f" ({self.edge_n_w[0]}, "
+            + f"{self.edge_n_w[1]}, "
+            + f"{self.edge_n_w[2]}, "
+            + f"{self.edge_n_w[3]}, "
+            + f"{self.edge_n_w[4]}, "
+            + f"{self.edge_n_w[5]}, "
+            + f"{self.edge_n_w[6]}, "
+            + f"{self.edge_n_w[7]}) "
+            + str(self.edge_n_wUpdCnt)
+        )
 
     ##########################################################
 
@@ -775,6 +835,9 @@ class SEdge:
         # Save plot to file
         plt.savefig(filename, dpi=300, bbox_inches="tight")
         plt.close()  # Close the figure to free memory
+
+
+##########################################################
 
 
 # create the data object
