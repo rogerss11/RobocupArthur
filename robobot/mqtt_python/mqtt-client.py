@@ -154,14 +154,46 @@ def loop():
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
 
-                state = 600  # ========== START STATE ===============
+                state = 100  # ========== START STATE ===============
                 # should be 100
                 pose.tripBreset()  # use trip counter/timer B
 
         ############################### START FUNCTIONS (100-199) ###############################
 
-        elif state == 100:  # Vojta
-            pass
+        elif state == 100:  
+            edge.lineControl(0.185, 0.0) # m/s and position on line
+            edge.adjustSpeed = False # adjust speed to follow line
+            edge.stopAtNthIntersection(["r"], 2)
+            state = 110
+            pose.tripBreset()
+            state = 110
+        
+        elif state == 110:
+            if pose.tripBtimePassed() > 14:
+                edge.adjustSpeed = True
+                state = 120
+
+        elif state == 120:  # drive until line
+            if edge.hasArrivedAtNthIntersection():
+                t.sleep(1)
+                #driveXMeters(0.025, 0.1)
+                turnInPlace(40, 0)
+                t.sleep(1)
+                driveXMeters(0.1, 0.1)
+                t.sleep(1)
+                edge.lineControl(0.05, 0)
+                edge.setIgnoreIntersection(1)
+                pose.tripBreset()
+                state = 130
+        
+        elif state == 130:  # drive until line
+            if pose.tripBtimePassed()  > 3:
+                edge.lineControl(0.0, 0)
+                pose.tripBreset()
+                state = 140
+
+
+
 
         ######################### SEESAW + SEESAW GOLF BALL (200-299) ###########################
 

@@ -62,7 +62,7 @@ class SEdge:
     # line detection levels
     lineValidThreshold = 750 # 1000 is calibrated white
     # level for relevant white values
-    low = lineValidThreshold - 50
+    low = lineValidThreshold - 100
     woodenLow = 800 #! test this
 
     # line detection values
@@ -79,8 +79,9 @@ class SEdge:
     atIntersection = False # if the current reading suggests that we are at an intersection
     atIntersectionCnt = 0  # 20 = at Intersection
     passedIntersections = 0 # how many intersection have we passed
-    intersectionPath = ['r', 'l', 'r', 'r'] # l = choose left line, r = choose right line, m = choose middle line
+    intersectionPath = ['l', 'l', 'r', 'r'] # l = choose left line, r = choose right line, m = choose middle line
     navigatingIntersection = False # if we are currently navigating an intersection
+    ArrivedAtNthIntersection = False
 
     adjustSpeed = False # if we should adjust speed based on error
 
@@ -94,20 +95,26 @@ class SEdge:
     lineCtrl = False # private
 
     # my PID values
-    Kp = 0.5 # Proportional constant
-    Ki = 0.15  # Integral constant
-    Kd = 0.35  # Derivative constant
+    Kp = 0.35           # 0.32        # keep as is
+    Ki = 0.15           # 0.15        # slightly reduce integral accumulation near zero
+    Kd = 0.17            # 0.17        # increase derivative for better anticipation
 
-    #lineTauZ = 0.8
-    #lineTauP = 0.15
-    
-    lineTauZ = 0.1  # unchanged
-    lineTauP = 0.3  # increase to soften filter
+    errorCutoff = 0.06  # Error cutoff for integral and derivitive term
+    integral_limit = 1.5
+    alpha_d = 0.1 # smoothing factor for derivative term
+
+    lineTauZ = 0.6   # increase lead zero to anticipate error crossing earlier
+    lineTauP = 0.5   # decrease pole slightly for sharper lead effect
+
+
+    #lineTauZ = 0.1  # unchanged
+    #lineTauP = 0.3  # increase to soften filter
 
     # values for ID
     errorSum = 0.0  # Integral term (sum of errors)
     lastError = 0.0  # Previous error for calculating the derivative term
     lastErrorDiff = 0.0  # Previous derivative term for filtering
+    smoothedErrorDiff = 0.0
     lastTime = t.time()  # Time of last update to calculate the derivative (dt)
 
     # Lists to store data for graphing
@@ -136,7 +143,7 @@ class SEdge:
 
 
     ##########################################################
-    #################   CONTROL FUNCTION   ###################
+    #################   CONTROL FUNCTIONS   ##################
     ##########################################################
 
     def resetIntersection(self):
@@ -170,6 +177,12 @@ class SEdge:
             return
         self.setIntersectionPath(path)
         self.stopAtIntersectionN = n
+        self.ArrivedAtNthIntersection = False
+
+    ##########################################################
+
+    def hasArrivedAtNthIntersection(self):
+       return self.ArrivedAtNthIntersection
 
     ##########################################################
 
@@ -423,6 +436,7 @@ class SEdge:
             if self.stopAtIntersectionN == self.passedIntersections + 1: # if we want to stop at next intersection
                 self.lineControl(0, 0)
                 self.position = 0
+                self.ArrivedAtNthIntersection = True
                 return
 
             path = self.intersectionPath[self.passedIntersections] 
@@ -488,10 +502,10 @@ class SEdge:
 
         # Normal line calculation
         else:
-            sum_values = sum(values)
-            pos_sum = sum((i + 1) * v for i, v in enumerate(values))
+            sum_values = sum(self.edge_n)
+            pos_sum = sum((i + 1) * v for i, v in enumerate(self.edge_n))
             self.position = (pos_sum / sum_values - 4.5) if sum_values > 0 and self.lineValid else 0
-
+            
     ##########################################################
 
     def followLine(self):
@@ -499,7 +513,7 @@ class SEdge:
         from uservice import service
 
         # some parameters depend on sample time, adjust
-        if abs(self.edge_nInterval - self.edgeIntervalSetup) > 2.0: # ms #? why
+        if abs(self.edge_nInterval - self.edgeIntervalSetup) > 1.0: # ms #? why
           self.PIDrecalculate()
           self.edgeIntervalSetup = self.edge_nInterval
 
@@ -512,31 +526,41 @@ class SEdge:
         deltaTime = max(self.edge_nInterval / 1000, 0.001)  # in seconds
 
         # Calculate the error between the desired position and the current position
+        #print(self.edge_n, " -> ", self.position)
         e = self.refPosition - self.position
 
-        if abs(e) < 0.1:  # If the error is small, reset the integral term
-            e = 0
-
-        self.errorSum += e * deltaTime  # Sum of errors for integral term
-        errorDiff = (e - self.lastError) / deltaTime  # Derivative term
-
         p_term = self.Kp * e
-        i_term = self.Ki * self.errorSum
-        d_term = self.Kd * errorDiff
+        p_term = (p_term * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT
+
+        if abs(e) < self.errorCutoff:
+            i_term = 0
+            self.errorSum = 0
+            d_term = 0
+        
+        else:
+            self.errorSum += e * deltaTime
+            self.errorSum = max(min(self.errorSum, self.integral_limit), -self.integral_limit)
+            i_term = self.Ki * self.errorSum
+
+            errorDiff_raw = (e - self.lastError) / deltaTime
+            self.smoothedErrorDiff = (self.alpha_d * getattr(self, 'smoothedErrorDiff', 0) + (1 - self.alpha_d) * errorDiff_raw)
+            d_term = self.Kd * self.smoothedErrorDiff
+            d_term = max(min(d_term, 2.0), -2.0)  # You can tune this clamp
 
         # Final control signal
         self.u = p_term + i_term + d_term
 
-        # Lead filter
-        #self.lineY = (self.u * self.tauZ2pT - self.lineE1 * self.tauZ2mT + self.lineY1 * self.tauP2mT)/self.tauP2pT
+        if abs(e) < self.errorCutoff and abs(self.u) < 0.05:
+            self.u = 0.05 if e < 0 else -0.05  # Tiny nudge in the correct direction
+
         self.lineY = self.u
 
-        # print(f"time: {self.edge_nTime.timestamp() - self.startingTime} error: {e:.4f} p_term: {p_term:.4f} i_term: {i_term:.4f} d_term: {d_term:.4f} u: {self.u:.4f}")
+        #print(f"time: {self.edge_nTime.timestamp() - self.startingTime} error: {e:.4f} p_term: {p_term:.4f} d_term {d_term:.4f} i_term: {i_term:.4f} u: {self.u:.4f}")
 
-        self.lineY = max(min(self.lineY, 3), -3)  # Limit the control signal to [-4, 4] rad/s
+        self.lineY = max(min(self.lineY, 4), -4)  # Limit the control signal to [-4, 4] rad/s
 
         # save old values
-        self.lineE1 = self.u
+        self.lineE1 = p_term
         self.lineY1 = self.lineY
         self.lastError = e
 
@@ -549,7 +573,7 @@ class SEdge:
             # Linear scaling based on error where:
             # error = 0 -> 150% of velocity
             # error > 1 -> 50% of velocity
-            scale_factor = 1.5 - (self.error * 1.0) #! linear - maybe improve
+            scale_factor = 1.5 - (e * 1.0) #! linear - maybe improve
 
             scale_factor = max(0.5, min(1.5, scale_factor))  # limit the range
 
