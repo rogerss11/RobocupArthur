@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-<<<<<<< HEAD:robobot/mqtt_python/mqtt-client.py
-
-=======
->>>>>>> a165b8a6f04e9d448b8794a91674ebaa4d88fe0d:robobot/mqtt_python/mqtt_client.py
 # /***************************************************************************
 # *   Copyright (C) 2024 by DTU
 # *   jcan@dtu.dk
@@ -45,17 +41,12 @@ from uservice import service
 from simu import imu
 
 from drive import *
-<<<<<<< HEAD:robobot/mqtt_python/mqtt-client.py
-=======
 import image_analysis as ia
-#import drive
->>>>>>> a165b8a6f04e9d448b8794a91674ebaa4d88fe0d:robobot/mqtt_python/mqtt_client.py
 
 ############################################################
 
 
 def imageAnalysis(save):
-<<<<<<< HEAD:robobot/mqtt_python/mqtt-client.py
     if cam.useCam:
         ok, img, imgTime = cam.getImage()
         if not ok:  # size(img) == 0):
@@ -79,29 +70,6 @@ def imageAnalysis(save):
     pass
 
 
-=======
-  if cam.useCam:
-    ok, img, imgTime = cam.getImage()
-    if not ok:  # size(img) == 0):
-        if cam.imageFailCnt < 5:
-            print("% Failed to get image.")
-    else:
-        h, w, ch = img.shape
-        if not service.args.silent:
-            # print(f"% At {imgTime}, got image {cam.cnt} of size= {w}x{h}")
-            pass
-        edge.paint(img)
-        if not gpio.onPi:
-            cv.imshow("frame for analysis", img)
-        if save:
-            fn = f"image_{imgTime.strftime('%Y_%b_%d_%H%M%S_')}{cam.cnt:03d}.jpg"
-            cv.imwrite(fn, img)
-            if not service.args.silent:
-                print(f"% Saved image {fn}")
-        pass
-    pass
-    return img, ok
->>>>>>> a165b8a6f04e9d448b8794a91674ebaa4d88fe0d:robobot/mqtt_python/mqtt_client.py
 ############################################################
 
 stateTime = datetime.now()
@@ -113,10 +81,7 @@ def stateTimePassed():
 
 ############################################################
 
-<<<<<<< HEAD:robobot/mqtt_python/mqtt-client.py
 
-=======
->>>>>>> a165b8a6f04e9d448b8794a91674ebaa4d88fe0d:robobot/mqtt_python/mqtt_client.py
 def loop():
     """
     Please talk to Arnau or Roger before touching other things. When in doubt, ask.
@@ -209,8 +174,8 @@ def loop():
         ######################### SEESAW + SEESAW GOLF BALL (200-299) ###########################
 
         elif state == 210:  # Arnau + Leona
-          ia.drive2ball(2) #drive to the orange ball
-          state = 220  
+            ia.drive2ball(2)  # drive to the orange ball
+            state = 220
 
         elif state == 220:
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
@@ -356,51 +321,53 @@ def loop():
 
         ############################ TOP GOLF BALL (300-399) ####################################
 
-        elif state == 300:  #find the orange ball
-          xy = []
-          image_ia, ok = imageAnalysis(0)
+        elif state == 300:  # find the orange ball
+            xy = []
+            image_ia, ok = imageAnalysis(0)
 
-          if ok:
-            xy, width = ia.ball(image_ia, 1) #detect orange ball
+            if ok:
+                xy, width = ia.ball(image_ia, 1)  # detect orange ball
 
-          #Visualize the ball in the picture
-          if (len(xy) == 2):
-            image_ia = cv.circle(image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1) 
+            # Visualize the ball in the picture
+            if len(xy) == 2:
+                image_ia = cv.circle(
+                    image_ia, xy, radius=10, color=(0, 0, 255), thickness=-1
+                )
 
-          #Show the image for debugging
-          if not gpio.onPi:
-            cv.imshow('frame for analysis', image_ia)
+            # Show the image for debugging
+            if not gpio.onPi:
+                cv.imshow("frame for analysis", image_ia)
 
-          if (xy == []) & ok: # no ball detected
-            #turn right
-            service.send(service.topicCmd + "ti/rc","0.0 0.3") #turn right
-            t.sleep(0.1)
-            service.send(service.topicCmd + "ti/rc","0.0 0.0") #stop
-          else:
-            state = 301 # ball detected
+            if (xy == []) & ok:  # no ball detected
+                # turn right
+                service.send(service.topicCmd + "ti/rc", "0.0 0.3")  # turn right
+                t.sleep(0.1)
+                service.send(service.topicCmd + "ti/rc", "0.0 0.0")  # stop
+            else:
+                state = 301  # ball detected
 
-        elif state == 301: #drive to orange ball
-          ia.drive2ball(1) 
-          state = 302 
+        elif state == 301:  # drive to orange ball
+            ia.drive2ball(1)
+            state = 302
 
-        elif state == 302: #move to hole
-          driveUntilLine(300, vel = -0.15)
-            #edge.lineUpWithLine()
-          turnInPlace(deg=50, dir = 1)
-          driveXMeters(x = 0.15)
-          edge.lineControl(0.15, 0.0)
-          t.sleep(1.5)
-          edge.lineControl(0.0, 0.0)
-        
-          driveXMeters(x=0.22)
+        elif state == 302:  # move to hole
+            driveUntilLine(300, vel=-0.15)
+            # edge.lineUpWithLine()
+            turnInPlace(deg=50, dir=1)
+            driveXMeters(x=0.15)
+            edge.lineControl(0.15, 0.0)
+            t.sleep(1.5)
+            edge.lineControl(0.0, 0.0)
 
-          print("Wiggle")
-          speed= 0.5
-          turnInPlace(30, dir=1, ang_speed= speed) 
-          wiggle(width=50, ang_speed=0.5, N_wiggles=3)
+            driveXMeters(x=0.22)
 
-          state = 400
-          pass
+            print("Wiggle")
+            speed = 0.5
+            turnInPlace(30, dir=1, ang_speed=speed)
+            wiggle(width=50, ang_speed=0.5, N_wiggles=3)
+
+            state = 400
+            pass
 
         ############################## STAIRS SECTION (400-499) #################################
         #                *** might be skipped to implement 5 instead
@@ -572,26 +539,25 @@ def loop():
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
 
         elif state == 800:  # Eva + Leona
-          pass
-        
-        elif state == 810: # find the blue ball
-          xy = []
-          image_ia, ok = imageAnalysis(0)
+            pass
 
-          if ok:
-            xy, width = ia.ball(image_ia, 0) #detect blue ball
+        elif state == 810:  # find the blue ball
+            xy = []
+            image_ia, ok = imageAnalysis(0)
 
-          if xy == []: # no ball detected
-            #turn right
-            service.send(service.topicCmd + "ti/rc","0.0 0.3") #turn right
-            t.sleep(0.1)
-            service.send(service.topicCmd + "ti/rc","0.0 0.0") #stop
-          else:
-            state = 811
-        
-        elif state == 811: #drive to the blue oval ball
-          status = ia.drive2ball(0) 
-                
+            if ok:
+                xy, width = ia.ball(image_ia, 0)  # detect blue ball
+
+            if xy == []:  # no ball detected
+                # turn right
+                service.send(service.topicCmd + "ti/rc", "0.0 0.3")  # turn right
+                t.sleep(0.1)
+                service.send(service.topicCmd + "ti/rc", "0.0 0.0")  # stop
+            else:
+                state = 811
+
+        elif state == 811:  # drive to the blue oval ball
+            status = ia.drive2ball(0)
 
         #################################### TESTS (9000-9999) ###################################
 
@@ -647,26 +613,26 @@ def loop():
 
         elif state == 9800:  # blue ball catch test
             pass
-        
-        elif state == 9900: # take one picture
-          ia.servo_up()
-          t.sleep(0.5)
-          imageAnalysis(1)
-          images += 1
-          t.sleep(2)
-          # blink LED
-          if ledon:
-            service.send(service.topicCmd + "T0/leds","16 0 64 0")
-            gpio.set_value(20, 1)
-          else:
-            service.send(service.topicCmd + "T0/leds","16 0 30 30")
-            gpio.set_value(20, 0)
-          ledon = not ledon
-          # finished?
-          if images >= 1 or (not cam.useCam) or stateTimePassed() > 100:
-            images = 0
-            state = 99
-          pass
+
+        elif state == 9900:  # take one picture
+            ia.servo_up()
+            t.sleep(0.5)
+            imageAnalysis(1)
+            images += 1
+            t.sleep(2)
+            # blink LED
+            if ledon:
+                service.send(service.topicCmd + "T0/leds", "16 0 64 0")
+                gpio.set_value(20, 1)
+            else:
+                service.send(service.topicCmd + "T0/leds", "16 0 30 30")
+                gpio.set_value(20, 0)
+            ledon = not ledon
+            # finished?
+            if images >= 1 or (not cam.useCam) or stateTimePassed() > 100:
+                images = 0
+                state = 99
+            pass
 
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")
@@ -701,10 +667,7 @@ def loop():
     print(f"gate_dist = {gate_dist:.2f}, min_d = {min_d:.2f}")
     pass
 
-<<<<<<< HEAD:robobot/mqtt_python/mqtt-client.py
 
-=======
->>>>>>> a165b8a6f04e9d448b8794a91674ebaa4d88fe0d:robobot/mqtt_python/mqtt_client.py
 ############################################################
 
 if __name__ == "__main__":
