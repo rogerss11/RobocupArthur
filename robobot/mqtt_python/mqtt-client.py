@@ -45,33 +45,6 @@ import image_analysis as ia
 
 ############################################################
 
-
-def imageAnalysis(save):
-    if cam.useCam:
-        ok, img, imgTime = cam.getImage()
-        if not ok:  # size(img) == 0):
-            if cam.imageFailCnt < 5:
-                print("% Failed to get image.")
-        else:
-            h, w, ch = img.shape
-            if not service.args.silent:
-                # print(f"% At {imgTime}, got image {cam.cnt} of size= {w}x{h}")
-                pass
-            edge.paint(img)
-            if not gpio.onPi:
-                cv.imshow("frame for analysis", img)
-            if save:
-                fn = f"image_{imgTime.strftime('%Y_%b_%d_%H%M%S_')}{cam.cnt:03d}.jpg"
-                cv.imwrite(fn, img)
-                if not service.args.silent:
-                    print(f"% Saved image {fn}")
-            pass
-        pass
-    pass
-
-
-############################################################
-
 stateTime = datetime.now()
 
 
@@ -142,7 +115,7 @@ def loop():
     # elif not service.args.now:
     #   print("% Ready, press start button")
 
-    # main state machine
+    # MAIN STATE MACHINE
     edge.lineControl(0, 0)  # make sure line control is off
     while not (service.stop):
         if state == 0:  # wait for start signal
@@ -150,9 +123,8 @@ def loop():
             if start:
                 print("% Starting")
                 service.send(service.topicCmd + "T0/leds", "16 0 0 30")  # blue: running
-                service.send(
-                    service.topicCmd + "ti/rc", "0.0 0.0"
-                )  # (forward m/s, turn-rate rad/sec)
+                service.send(service.topicCmd + "ti/rc", "0.0 0.0")
+                # (forward m/s, turn-rate rad/sec)
 
                 state = 9200  # ========== START STATE ===============
                 # should be 100 for final run
@@ -323,7 +295,7 @@ def loop():
 
         elif state == 300:  # find the orange ball
             xy = []
-            image_ia, ok = imageAnalysis(0)
+            image_ia, ok = ia.imageAnalysis(0)
 
             if ok:
                 xy, width = ia.ball(image_ia, 1)  # detect orange ball
@@ -367,7 +339,6 @@ def loop():
             wiggle(width=50, ang_speed=0.5, N_wiggles=3)
 
             state = 400
-            pass
 
         ############################## STAIRS SECTION (400-499) #################################
         #                *** might be skipped to implement 5 instead
@@ -543,7 +514,7 @@ def loop():
 
         elif state == 810:  # find the blue ball
             xy = []
-            image_ia, ok = imageAnalysis(0)
+            image_ia, ok = ia.imageAnalysis(0)
 
             if ok:
                 xy, width = ia.ball(image_ia, 0)  # detect blue ball
@@ -617,7 +588,7 @@ def loop():
         elif state == 9900:  # take one picture
             ia.servo_up()
             t.sleep(0.5)
-            imageAnalysis(1)
+            ia.imageAnalysis(1)
             images += 1
             t.sleep(2)
             # blink LED
@@ -642,7 +613,7 @@ def loop():
         # images are almost useless while turning, but
         # used here to illustrate some image processing (painting)
         if cam.useCam:
-            imageAnalysis(False)
+            ia.imageAnalysis(False)
             key = cv.waitKey(100)  # ms
             if key > 0:  # e.g. Esc (key=27) pressed with focus on image
                 break
