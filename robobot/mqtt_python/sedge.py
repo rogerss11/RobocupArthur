@@ -441,7 +441,6 @@ class SEdge:
 
             path = self.intersectionPath[self.passedIntersections] 
 
-            print(valuesAboveZero)
             # If we arrived at a T intersection
             if valuesAboveZero == 7:
                 print("arrived at T")

@@ -144,6 +144,7 @@ def loop():
 
     # main state machine
     edge.lineControl(0, 0)  # make sure line control is off
+    edge.lineControl(0.05, 0)
     while not (service.stop):
         if state == 0:  # wait for start signal
             start = True  # gpio.start() or service.args.now
@@ -154,32 +155,14 @@ def loop():
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
 
-                state = 1  # ========== START STATE ===============
-                edge.lineControl(0.1, 0)  # make sure line control is off
-                edge.stopAtNthIntersection([], 1)
+                state = 100  # ========== START STATE ===============
                 # should be 100
                 pose.tripBreset()  # use trip counter/timer B
 
         ############################### START FUNCTIONS (100-199) ###############################
-        
-        elif state == 1:
-            if edge.hasArrivedAtNthIntersection():
-                t.sleep(1)
-                turnInPlace(63, 0)
-                t.sleep(1)
-                driveXMeters(0.1, 0.1)
-                t.sleep(1)
-                edge.lineControl(0.05, 0)
-                edge.stopAtNthIntersection([], 1)
-                state = 2
-        
-        elif state == 2:
-            if edge.hasArrivedAtNthIntersection():
-                state = 2194961
-
-            
+  
         elif state == 100:  
-            edge.lineControl(0.185, 0.0) # m/s and position on line
+            edge.lineControl(0.2, 0.0) # m/s and position on line
             edge.adjustSpeed = False # adjust speed to follow line
             edge.stopAtNthIntersection(["r"], 2)
             state = 110
@@ -187,25 +170,25 @@ def loop():
             state = 110
         
         elif state == 110:
-            if pose.tripBtimePassed() > 14:
+            if pose.tripBtimePassed() > 13.5:
                 edge.adjustSpeed = True
                 state = 120
                 pose.tripBreset()
 
         elif state == 120:
-            if pose.tripB > 4:
+            if pose.tripB > 1.85:
                 edge.adjustSpeed = False
                 state = 130
                 pose.tripBreset()
         
         elif state == 130:
-            if pose.tripBtimePassed() > 7:
+            if pose.tripBtimePassed() > 4.5:
                 edge.adjustSpeed = True
                 state = 140
                 pose.tripBreset()
 
         elif state == 140:
-            if pose.tripB > 4:
+            if pose.tripB > 1.8:
                 edge.adjustSpeed = False
                 edge.lineControl(0.05, 0)
                 state = 150
@@ -213,23 +196,26 @@ def loop():
 
         elif state == 150:  # drive until line
             if edge.hasArrivedAtNthIntersection():
-                t.sleep(1)
-                turnInPlace(40, 0)
-                t.sleep(1)
-                driveXMeters(0.1, 0.1)
-                t.sleep(1)
-                edge.lineControl(0.05, 0)
+                driveXMeters(0.025, 0.1)
+                turnInPlace(48 , 0)
                 edge.setIgnoreIntersections(True)
-                pose.tripBreset()
+                edge.lineControl(0.05, 0)
                 state = 160
+                pose.tripBreset()
         
-        elif state == 160:  # drive until line
-            if pose.tripBtimePassed()  > 3:
+        elif state == 160:
+            if pose.tripBtimePassed() > 2.2:
+                edge.lineControl(0.0, 0)
+                driveXMeters(0.2, 0.1)
+                pose.tripBreset()
+                edge.lineControl(0.05, 0)
+                state = 170
+        
+        elif state == 170:  # drive until line
+            if pose.tripBtimePassed() > 7:
                 edge.lineControl(0.0, 0)
                 pose.tripBreset()
                 state = 200
-
-
 
 
         ######################### SEESAW + SEESAW GOLF BALL (200-299) ###########################
@@ -307,6 +293,7 @@ def loop():
         # Vojta + Arnau + Andrea
         elif state == 600:  # follow line until end
             edge.lineControl(0.1, 0)
+            edge.setIgnoreIntersections(True)
             state = 605
             pose.tripBreset()
 
@@ -329,13 +316,14 @@ def loop():
             service.send(service.topicCmd + "ti/rc", "0.1 0")  # drive towards axe line
             if pose.tripBtimePassed() > 2:
                 service.send(service.topicCmd + "ti/rc", "0 0.5")
-                driveUntilLine()
+                driveUntilLine(500)
+                driveXMeters(0.05, vel=0.1)
                 state = 625
                 pose.tripBreset()
 
         elif state == 625:  # turn towards axe
             service.send(service.topicCmd + "ti/rc", "0.0 1")
-            if pose.tripBtimePassed() > 1.5:
+            if pose.tripBtimePassed() > 1.2:
                 service.send(service.topicCmd + "ti/rc", "0.0 0")
                 pose.tripBreset()
                 state = 630  #
@@ -346,24 +334,24 @@ def loop():
         
         elif state == 635: # wait for it to get past the axe
             if not ir.axeActive :
-                state = 99
-        
-        elif state == 640: # drive to second intersection from this point
-            if edge.atIntersectionCnt == 7: #! idk the exact count yet
-                edge.setIgnoreIntersection(1)
+                state = 640
+
+        elif state == 640:
+            if edge.hasArrivedAtNthIntersection():
+                t.sleep(1)
+                turnInPlace(63, 0)
+                t.sleep(1)
+                driveXMeters(0.1, 0.1)
+                t.sleep(1)
+                edge.lineControl(0.05, 0)
+                edge.stopAtNthIntersection([], 1)
                 state = 650
         
-        elif state == 650: #! drive to desired location for lining up
-            state = 670
-            pass
+        elif state == 650:
+            if edge.hasArrivedAtNthIntersection():
+                state = 2194961
 
-        elif state == 670: # start lining up with white line
-            edge.shouldLineUp = True
-            state = 675
-            
-        elif state == 675: # wait for it to line up with white line
-            if not edge.shouldLineUp:
-                state = 700
+        
 
 
         ####################### FIGURE-8 + ROUNDABOUT SECTION (700-799) #########################
