@@ -40,6 +40,7 @@ from sgpio import gpio
 from scam import cam
 from uservice import service
 from simu import imu
+from arucode import aru
 
 from drive import *
 
@@ -144,7 +145,6 @@ def loop():
 
     # main state machine
     edge.lineControl(0, 0)  # make sure line control is off
-    edge.lineControl(0.05, 0)
     while not (service.stop):
         if state == 0:  # wait for start signal
             start = True  # gpio.start() or service.args.now
@@ -155,13 +155,14 @@ def loop():
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
 
-                state = 100  # ========== START STATE ===============
+                state = 660  # ========== START STATE ===============
                 # should be 100
                 pose.tripBreset()  # use trip counter/timer B
 
         ############################### START FUNCTIONS (100-199) ###############################
   
         elif state == 100:  
+            service.send(service.topicCmd + "T0/servo", "1 -900 200")
             edge.lineControl(0.2, 0.0) # m/s and position on line
             edge.adjustSpeed = False # adjust speed to follow line
             edge.stopAtNthIntersection(["r"], 2)
@@ -313,43 +314,42 @@ def loop():
                 pose.tripBreset()
 
         elif state == 615:
-            service.send(service.topicCmd + "ti/rc", "0.1 0")  # drive towards axe line
-            if pose.tripBtimePassed() > 2:
-                service.send(service.topicCmd + "ti/rc", "0 0.5")
-                driveUntilLine(500)
-                driveXMeters(0.05, vel=0.1)
-                state = 625
-                pose.tripBreset()
+            edge.setDriveUntilLine(0.25, 300)
+            state = 620
 
-        elif state == 625:  # turn towards axe
-            service.send(service.topicCmd + "ti/rc", "0.0 1")
-            if pose.tripBtimePassed() > 1.2:
-                service.send(service.topicCmd + "ti/rc", "0.0 0")
+        elif state == 620:  # drive until line
+            if edge.reachedLine():
+                turnInPlace(60, 0)  # turn to the axe line
+                state = 630
                 pose.tripBreset()
-                state = 630  #
 
         elif state == 630:  # set it to drive through the axe
             ir.axeActive = True
+            edge.lineControl(0.1, 0.0)
             state = 635
         
         elif state == 635: # wait for it to get past the axe
             if not ir.axeActive :
+                edge.setIgnoreIntersections(False)
+                edge.stopAtNthIntersection([], 1)
+                edge.lineControl(0.05, 0.0)
                 state = 640
 
         elif state == 640:
             if edge.hasArrivedAtNthIntersection():
-                t.sleep(1)
                 turnInPlace(63, 0)
-                t.sleep(1)
-                driveXMeters(0.1, 0.1)
-                t.sleep(1)
+                driveXMeters(0.05, 0.1)
                 edge.lineControl(0.05, 0)
                 edge.stopAtNthIntersection([], 1)
                 state = 650
         
         elif state == 650:
             if edge.hasArrivedAtNthIntersection():
-                state = 2194961
+                state = 660
+        
+        elif state == 660:
+            aru.turning_to_center()
+            state = 665
 
         
 
