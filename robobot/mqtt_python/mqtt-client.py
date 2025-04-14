@@ -110,15 +110,15 @@ def loop():
         service.send(service.topicCmd + "T0/leds","16 0 0 30") # blue: running
         service.send(service.topicCmd + "ti/rc","0.0 0.0") # (forward m/s, turn-rate rad/sec)
         # follow line (at 0.25cm/s)
-        edge.lineControl(0.1, 0.0) # m/s and position on line
-        edge.stopAtNthIntersection([], 1)
+        edge.lineControl(0.2, 0.0) # m/s and position on line
+        edge.adjustSpeed = True # adjust speed to follow line
+        edge.stopAtNthIntersection(["r"], 2)
         state = 110
         pose.tripBreset()
 
     elif state == 12: # following line
       if edge.lineValidCnt == 0 or pose.tripBtimePassed() > 10: # no line or following for too long
         edge.lineControl(0.25,0) # stop following line
-        edge.driveU
         pose.tripBreset()
         service.send(service.topicCmd + "ti/rc","0.1 0.5") # turn left
         state = 14 # turn left
