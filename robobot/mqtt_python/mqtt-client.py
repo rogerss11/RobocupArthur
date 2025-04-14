@@ -154,9 +154,17 @@ def loop():
                     service.topicCmd + "ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
 
-                state = 100  # ========== START STATE ===============
-                # should be 100
-                pose.tripBreset()  # use trip counter/timer B
+                state = 9200  # ========== START STATE ===============
+                # should be 100 for final run
+                # CP1 (checkpoint 1)
+                  # use trip counter/timer B
+                pose.tripBreset()
+                # 9200 turn test
+                # 9210 put arm down test
+                # 9213 put arm up test
+                # 9220 driveUntilNOLine_auto test
+                # 9221 driveUntilNOLine_manual test
+                # 9230 driveUntilLine test
 
         ############################### START FUNCTIONS (100-199) ###############################
 
@@ -165,8 +173,150 @@ def loop():
 
         ######################### SEESAW + SEESAW GOLF BALL (200-299) ###########################
 
-        elif state == 200:  # Arnau + Leona
+        elif state == 256:  # Arnau + Leona
             pass
+
+        elif state == 220:
+            service.send(service.topicCmd + "T0/servo", "1 -900 200")
+            if pose.tripBtimePassed() > 2:
+                service.send(service.topicCmd + "T0/servo", "1 2309823809 200")
+                pose.tripBreset()
+                state = 225
+        
+        elif state == 225:
+            service.send(service.topicCmd + "T0/servo", "1 -150 200")
+            if pose.tripBtimePassed() > 2:
+                service.send(service.topicCmd + "T0/servo", "1 2309823809 200")
+                pose.tripBreset()
+                state = 230 
+
+        elif state == 230:
+            edge.lineControl(0.05,0)
+            if ir.ir[1] < 0.43 or pose.tripBtimePassed() > 11.5: # going down
+                # print("end of ramp")
+                service.send(service.topicCmd + "T0/servo", "1 -200 300")
+                state = 231
+                pose.tripBreset()
+
+        elif state == 231:
+            if pose.tripBtimePassed() > 0.5:
+                service.send(service.topicCmd + "T0/servo", "1 -250 300")
+                state = 232
+                pose.tripBreset()
+
+        elif state == 232:
+            if pose.tripBtimePassed() > 0.3:
+                service.send(service.topicCmd + "T0/servo", "1 -350 100")
+                state = 235
+                pose.tripBreset()
+
+        elif state == 235:
+            if pose.tripBtimePassed() > 3:
+                service.send(service.topicCmd + "T0/servo", "1 -150 25")
+                state = 240
+                pose.tripBreset()
+        
+        elif state == 240:
+            edge.lineControl(0.1,0)
+            if pose.tripBtimePassed() > 3:
+                edge.lineControl(0,0)
+                pose.tripBreset()
+                state = 241
+
+        elif state == 241:
+            driveUntilNOLine_auto(0.2,500)
+            if pose.tripBtimePassed() > 5:
+                state = 23423235
+            else:
+                pose.tripBreset()
+                state = 255
+
+        elif state == 255:
+            turnInPlace(72,1)
+            driveXMeters(x=1.1)
+            driveUntilLine(600)
+            turnInPlace(45, dir=1)
+            state = 260
+
+        elif state == 260:
+            service.send(service.topicCmd + "T0/servo", "1 -150 0")
+            edge.lineControl(0.06,0)
+            if ir.ir[1] < 0.4: # going up
+                pose.tripBreset()
+                state = 261
+
+        elif state == 261:
+            service.send(service.topicCmd + "T0/servo", "1 -190 0")
+            if pose.tripBtimePassed() > 0.1:
+                pose.tripBreset()
+                state = 2615
+
+        elif state == 2615:
+            service.send(service.topicCmd + "T0/servo", "1 -210 0")
+            if pose.tripBtimePassed() > 0.2:
+                pose.tripBreset()
+                state = 262
+
+        elif state == 262:
+            service.send(service.topicCmd + "T0/servo", "1 -235 0")
+            if pose.tripBtimePassed() > 0.3:
+                pose.tripBreset()
+                state = 2625
+
+        elif state == 2625:
+            service.send(service.topicCmd + "T0/servo", "1 -265 0")
+            if pose.tripBtimePassed() > 0.3:
+                pose.tripBreset()
+                state = 263
+
+        elif state == 263:
+            service.send(service.topicCmd + "T0/servo", "1 -290 0")
+            if pose.tripBtimePassed() > 0.2:
+                pose.tripBreset()
+                state = 2635
+
+        elif state == 2635:
+            service.send(service.topicCmd + "T0/servo", "1 -320 0")
+            if pose.tripBtimePassed() > 0.5:
+                pose.tripBreset()
+                state = 264
+
+        elif state == 264:
+            service.send(service.topicCmd + "T0/servo", "1 -150 10")
+            if pose.tripBtimePassed() > 3:
+                pose.tripBreset()
+                state = 265
+        
+        elif state == 265:
+            edge.lineControl(0.25,0)
+            if pose.tripBtimePassed() > 5.2:
+                pose.tripBreset()
+                state = 268
+
+        elif state == 268:
+            service.send(service.topicCmd + "T0/servo", "1 -50 50")
+            edge.lineControl(0.1,0)
+            if pose.tripBtimePassed() > 2:
+                service.send(service.topicCmd + "T0/servo", "1 -125 200")
+                state = 270
+
+        elif state == 270:
+            edge.lineControl(0,0)
+            state = 275 
+
+        elif state == 275:
+            driveUntilNOLine_manual(0.05,0)
+            state = 280
+        
+        elif state == 280:
+            turnInPlace(5,0)
+            state = 282
+
+        elif state == 282:
+            turnInPlace(15,0)
+            turnInPlace(40,1)
+            turnInPlace(15,0)
+            driveXMeters(x=0.025)
 
         ############################ TOP GOLF BALL (300-399) ####################################
 
@@ -329,6 +479,51 @@ def loop():
             # ------ TESTS --------------------------------------------------------
             t.sleep(30)
             state = 9100
+
+        elif state == 9200: # TURNING TEST
+            service.send(service.topicCmd + "ti/rc","0.0 1")
+            if pose.tripBtimePassed() > 2:
+                service.send(service.topicCmd + "ti/rc","0.0 0")
+                state = 9238529837
+
+        elif state == 9210: # put arm down
+            service.send(service.topicCmd + "T0/servo", "1 -150 200")
+            if pose.tripBtimePassed() > 3:
+                state = 9211
+        
+        elif state == 9211: # put arm down
+            service.send(service.topicCmd + "T0/servo", "1 -900 200")
+            if pose.tripBtimePassed() > 3:
+                state = 9212
+
+        elif state == 9212: # put arm down
+            service.send(service.topicCmd + "T0/servo", "1 -150 200")
+            if pose.tripBtimePassed() > 3:
+                state = 921124534
+
+        elif state == 9213: # put arm up
+            service.send(service.topicCmd + "T0/servo", "1 -900 200")
+            if pose.tripBtimePassed() > 3:
+                state = 92122346264
+
+        elif state == 9220: # driveUntilNOLine test
+            driveUntilNOLine_auto(0.5,300)
+            state = 2455234
+
+        elif state == 9230: # driveUntilLine test
+            driveUntilLine(300)
+            state = 9231
+
+        elif state == 9231:
+            pose.tripBreset()
+            driveXMeters(-0.05)
+            service.send(service.topicCmd + "T0/servo", "1 -900 200")
+            if pose.tripBtimePassed() > 3:
+                state = 9232
+        
+        elif state == 9232:
+            driveXMeters(-0.2)
+            state = 423154
 
         else:  # abort
             print(f"% Mission finished/aborted; state={state}")

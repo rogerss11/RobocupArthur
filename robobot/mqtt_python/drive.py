@@ -483,3 +483,73 @@ def driveUntilWall_measure_gate_dist(d=0.2, ir_id=1, vel=0.2):
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Driving until wall ------------------------- end")
     return min_d
+
+def driveUntilNOLine_auto(forward_speed=0.2, threshold=300):
+    """
+    driveUntilNOLine_auto() - follow line until it's no longer detected
+    """
+    state = 0
+    pose.tripBreset()
+    print(f"% Driving until NO line -------------------------")
+    service.send(service.topicCmd + "T0/leds", "16 100 0 0")  # red
+    while not (service.stop):
+        if state == 0:  # start driving
+            edge.lineControl(forward_speed, 0.0)
+            state = 1
+        elif state == 1:
+            line_sensor = edge.edge_n
+            line_sensor = [abs(s) for s in line_sensor]
+            line_sensor = max(line_sensor)
+            if line_sensor < threshold or pose.tripBtimePassed() > 30:
+                edge.lineControl(0.0, 0.0)
+                state = 2
+        elif state == 2:
+            if abs(pose.velocity()) < 0.001:
+                state = 99
+        else:
+            print(
+                f"# drive stopped after {pose.tripB:.3f}m. Last line values: {edge.edge_n}. {pose.tripBtimePassed():.3f} seconds"
+            )
+            edge.lineControl(0.0, 0.0)
+            break
+        print(
+            f"# drive {state}, line: {edge.edge_n}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
+        )
+        t.sleep(0.05)
+    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
+    print("% Driving until NO line ------------------------- end")
+
+def driveUntilNOLine_manual(forward_speed=0.2, turn_rate=0.0, threshold=300):
+    """
+    driveUntilNOLine_manual() - manually drive forward until line disappears
+    """
+    state = 0
+    pose.tripBreset()
+    print(f"% Manual drive until NO line -------------------------")
+    service.send(service.topicCmd + "T0/leds", "16 100 50 0")  # orange
+    while not (service.stop):
+        if state == 0:  # start manual driving
+            service.send("robobot/cmd/ti/rc", f"{forward_speed} {turn_rate}")
+            state = 1
+        elif state == 1:
+            line_sensor = edge.edge_n
+            line_sensor = [abs(s) for s in line_sensor]
+            line_sensor = max(line_sensor)
+            if line_sensor < threshold or pose.tripBtimePassed() > 30:
+                service.send("robobot/cmd/ti/rc", "0.0 0.0")
+                state = 2
+        elif state == 2:
+            if abs(pose.velocity()) < 0.001:
+                state = 99
+        else:
+            print(
+                f"# manual drive stopped after {pose.tripB:.3f}m. Last line values: {edge.edge_n}. {pose.tripBtimePassed():.3f} seconds"
+            )
+            service.send("robobot/cmd/ti/rc", "0.0 0.0")
+            break
+        print(
+            f"# drive {state}, line: {edge.edge_n}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
+        )
+        t.sleep(0.05)
+    service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
+    print("% Manual drive until NO line ------------------------- end")
