@@ -638,6 +638,7 @@ def driveUntilNOLine_auto(forward_speed=0.2, threshold=300):
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Driving until NO line ------------------------- end")
 
+
 def driveUntilNOLine_manual(forward_speed=0.2, turn_rate=0.0, threshold=300):
     """
     driveUntilNOLine_manual() - manually drive forward until line disappears
