@@ -27,7 +27,6 @@ from datetime import *
 from sedge import edge
 
 class SIr:
-
     ir = [0, 0]
     irUpdCnt = 0
     irTime = datetime.now()
@@ -35,8 +34,50 @@ class SIr:
     
     axeActive = False
     axeState = 1
-    passed = False
+    passedAxe = False
     timeout = 0
+
+    followLineUntilWall = False
+    followLineVelocity = 0.0
+    WallDistance = 0.0
+
+    ##########################################################
+    #################   CONTROL FUNCTIONS   ##################
+    ##########################################################
+
+    def startAxe(self):
+        self.axeActive = True
+        self.passedAxe = False
+        self.axeState = 1
+        self.timeout = 0
+    
+    ##########################################################
+
+    def hasPassedAxe(self):
+        return self.passedAxe
+
+    ##########################################################
+
+    def setFollowUntilWall(self, velocity, distance):
+        self.followLineUntilWall = True
+        self.followLineVelocity = velocity
+        self.WallDistance = distance
+        edge.lineControl(velocity, 0.0)
+    
+    ##########################################################
+
+    def hasReachedWall(self):
+        return self.followLineUntilWall
+
+    ##########################################################
+
+    def terminate(self):
+        print("% IR terminated")
+        pass
+    
+    ##########################################################
+    #################   CORE FUNCTIONS   #####################
+    ##########################################################
 
     def setup(self):
       # data subscription is set in teensy_interface/build/robot.ini
@@ -58,14 +99,8 @@ class SIr:
         pass
       pass
 
-    def print(self):
-      from uservice import service
-      print("% IR dist " + str(self.irTime - service.startTime) + " (" +
-            str(self.ir[0]) + ", " +
-            str(self.ir[1]) + ", " +
-            f") {self.irInterval:.4f} sec " +
-            str(self.irUpdCnt))
-
+    ##########################################################
+    
     def decode(self, topic, msg):
         # decode MQTT message
         used = True
@@ -87,8 +122,12 @@ class SIr:
           used = False
         if self.axeActive:
           self.axe()
+        elif self.followLineUntilWall:
+          self.followLineUntilWallFunc()
         return used
     
+    ##########################################################
+
     def axe(self):
         if self.axeState == 1: # still furter from the object
             if ir.ir[1] < 1:
@@ -104,7 +143,7 @@ class SIr:
             if ir.ir[1] < 0.20:  # if the object is detected less than 20 cm
                 print("# Object detected less than 20 cm, stops.")
                 edge.lineControl(0.0, 0.0)
-                self.passed = False
+                self.passedAxe = False
                 self.axeState = 4
             elif ir.ir[1] == 1.5:  # if the axe is not in front of us, dont move (we cant see the distance)
                 edge.lineControl(0.0, 0.0)
@@ -113,18 +152,18 @@ class SIr:
 
         elif self.axeState == 4:  # Waiting for the object to be removed
             distance = ir.ir[1]
-            if distance > 0.3 and self.passed:  # if the object is not detected anymore and the axe has at least once passed
+            if distance > 0.3 and self.passedAxe:  # if the object is not detected anymore and the axe has at least once passed
                 print("# Object not detected anymore, accelerate to pass the gate.")
                 self.timeout = t.time()
                 edge.lineControl(0.35, 0.0)
                 self.axeState = 5
             else:
-                if self.passed == False:
+                if self.passedAxe == False:
                     print("Axe detected for the first time, waiting for it to pass.")
-                self.passed = True
+                self.passedAxe = True
 
         elif self.axeState == 5:  # Pass the gate axe and stop
-            if t.time() - self.timeout > 1.1: # 1.5 seconds have passed, should be past gate
+            if t.time() - self.timeout > 2: # 2 seconds have passed, should be past gate
                 print("# Gate passed, stop.")
                 #service.send("robobot/cmd/ti/rc", "0.0 0.0")  # robot stops
                 edge.lineControl(0.0, 0.0)
@@ -134,10 +173,27 @@ class SIr:
             print("% Axe completed -------------------------")
             self.axeActive = False
 
-    def terminate(self):
-        print("% IR terminated")
-        pass
+    ##########################################################
+
+    def followLineUntilWallFunc(self):
+        if self.ir[1] < self.WallDistance:
+            edge.lineControl(0.0, 0.0)
+            self.followLineUntilWall = False
+
+    ##########################################################
+    #################   DEBUG FUNCTIONS   ####################
+    ##########################################################
+
+    def print(self):
+      from uservice import service
+      print("% IR dist " + str(self.irTime - service.startTime) + " (" +
+            str(self.ir[0]) + ", " +
+            str(self.ir[1]) + ", " +
+            f") {self.irInterval:.4f} sec " +
+            str(self.irUpdCnt))
+
+    ##########################################################
+    
 
 # create the data object
 ir = SIr()
-

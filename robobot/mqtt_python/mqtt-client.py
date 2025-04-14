@@ -176,7 +176,6 @@ def loop():
         elif state == 120:  # drive until line
             if edge.hasArrivedAtNthIntersection():
                 t.sleep(1)
-                #driveXMeters(0.025, 0.1)
                 turnInPlace(40, 0)
                 t.sleep(1)
                 driveXMeters(0.1, 0.1)

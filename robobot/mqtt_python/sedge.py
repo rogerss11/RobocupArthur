@@ -79,7 +79,7 @@ class SEdge:
     atIntersection = False # if the current reading suggests that we are at an intersection
     atIntersectionCnt = 0  # 20 = at Intersection
     passedIntersections = 0 # how many intersection have we passed
-    intersectionPath = ['l', 'l', 'r', 'r'] # l = choose left line, r = choose right line, m = choose middle line
+    intersectionPath = ['r', 'r', 'r', 'r'] # l = choose left line, r = choose right line, m = choose middle line
     navigatingIntersection = False # if we are currently navigating an intersection
     ArrivedAtNthIntersection = False
 
@@ -97,7 +97,7 @@ class SEdge:
     # my PID values
     Kp = 0.35           # 0.32        # keep as is
     Ki = 0.15           # 0.15        # slightly reduce integral accumulation near zero
-    Kd = 0.17            # 0.17        # increase derivative for better anticipation
+    Kd = 0.2            # 0.17        # increase derivative for better anticipation
 
     errorCutoff = 0.06  # Error cutoff for integral and derivitive term
     integral_limit = 1.5
@@ -571,11 +571,11 @@ class SEdge:
         if self.adjustSpeed:
             # Adjust speed based on error
             # Linear scaling based on error where:
-            # error = 0 -> 150% of velocity
-            # error > 1 -> 50% of velocity
-            scale_factor = 1.5 - (e * 1.0) #! linear - maybe improve
+            # error = 0 -> 200% of velocity
+            # error >= 1 -> 30% of velocity
+            scale_factor = 2.0 - (1.7 * e)
 
-            scale_factor = max(0.5, min(1.5, scale_factor))  # limit the range
+            scale_factor = max(0.3, min(2.0, scale_factor))  # limit the range
 
             adjusted_speed = self.velocity * scale_factor
         else:
