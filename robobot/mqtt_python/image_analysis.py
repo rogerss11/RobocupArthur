@@ -31,9 +31,7 @@ def imageAnalysis(save):
             if not service.args.silent:
                 # print(f"% At {imgTime}, got image {cam.cnt} of size= {w}x{h}")
                 pass
-            edge.paint(img)
-            if not gpio.onPi:
-                cv.imshow("frame for analysis", img)
+            # edge.paint(img)
             if save:
                 fn = f"image_{imgTime.strftime('%Y_%b_%d_%H%M%S_')}{cam.cnt:03d}.jpg"
                 cv.imwrite(fn, img)
@@ -42,6 +40,7 @@ def imageAnalysis(save):
             pass
         pass
     pass
+    return img, ok
 
 
 def servo_up():

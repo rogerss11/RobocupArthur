@@ -127,7 +127,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 100  # ========== START STATE ===============
+                state = 220  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -201,6 +201,9 @@ def loop():
         ######################### SEESAW + SEESAW GOLF BALL (200-299) ###########################
 
         elif state == 200:  # Arnau + Leona
+            """
+            Revise!!!
+            """
             ia.drive2ball(2)  # drive to the orange ball
             state = 220
 
@@ -251,30 +254,31 @@ def loop():
                 pose.tripBreset()
                 state = 241
 
-        elif state == 241:
-            driveUntilNOLine_auto(0.2, 500)
-            if pose.tripBtimePassed() > 5:
-                state = 23423235
-            else:
-                pose.tripBreset()
-                state = 255
+        elif state == 241:  # White horizontal line in front of seasaw
+            driveUntilNOLine_auto(0.2, 350)
+            pose.tripBreset()
+            state = 255
 
         elif state == 255:
+            service.send(service.topicCmd + "T0/servo", "1 -175 0")
             turnInPlace(72, 1)
-            driveXMeters(x=1.1)
+            driveXMeters(x=1.1, vel=0.35)
             driveUntilLine(600)
             turnInPlace(45, dir=1)
             state = 260
 
-        elif state == 260:
-            service.send(service.topicCmd + "T0/servo", "1 -150 0")
+        elif state == 260:  # Climb the ramp
             edge.lineControl(0.06, 0)
-            if ir.ir[1] < 0.4:  # going up
+            t.sleep(1.5)
+            print(f"ir: {ir.ir[1]}")
+            if ir.ir[1] < 0.38:  # going up
                 pose.tripBreset()
                 state = 261
 
         elif state == 261:
+            # ------------ ARM MOVEMENT BOTTOM ----------------------
             service.send(service.topicCmd + "T0/servo", "1 -190 0")
+            edge.lineControl(0.06, 0)
             if pose.tripBtimePassed() > 0.1:
                 pose.tripBreset()
                 state = 2615
@@ -298,43 +302,48 @@ def loop():
                 state = 263
 
         elif state == 263:
-            service.send(service.topicCmd + "T0/servo", "1 -290 0")
+            service.send(service.topicCmd + "T0/servo", "1 -265 0")
             if pose.tripBtimePassed() > 0.2:
                 pose.tripBreset()
                 state = 2635
 
         elif state == 2635:
-            service.send(service.topicCmd + "T0/servo", "1 -320 0")
+            service.send(service.topicCmd + "T0/servo", "1 -265 0")
             if pose.tripBtimePassed() > 0.5:
                 pose.tripBreset()
                 state = 264
 
         elif state == 264:
-            service.send(service.topicCmd + "T0/servo", "1 -150 10")
+            service.send(service.topicCmd + "T0/servo", "1 -100 10")
             if pose.tripBtimePassed() > 3:
                 pose.tripBreset()
                 state = 265
 
         elif state == 265:
+            # ------------- TOP OF THE RAMP -------------------------------------------
             edge.lineControl(0.25, 0)
-            if pose.tripBtimePassed() > 5.2:
+            if pose.tripBtimePassed() > 4.5:
+                # service.send(service.topicCmd + "T0/servo", "1 -100 10")
                 pose.tripBreset()
-                state = 268
+                state = 267
 
-        elif state == 268:
-            service.send(service.topicCmd + "T0/servo", "1 -50 50")
+        elif state == 267:
+            # -------------- DETECT GATE AND LOWER ARM --------------
             edge.lineControl(0.1, 0)
-            if pose.tripBtimePassed() > 2:
-                service.send(service.topicCmd + "T0/servo", "1 -125 200")
-                state = 270
+            if ir.ir[0] < 0.35:
+                service.send(service.topicCmd + "ti/rc", "0.05 0.0")
+                service.send(service.topicCmd + "T0/servo", "1 -50 0")
+                t.sleep(2)
+                service.send(service.topicCmd + "T0/servo", "1 -150 50")
+                edge.lineControl(0, 0)
+                state = 275
 
-        elif state == 270:
-            edge.lineControl(0, 0)
-            state = 275
-
-        elif state == 275:
+        elif state == 275:  # On top of the ramp
             driveUntilNOLine_manual(0.05, 0)
-            state = 280
+            driveXMeters(0.05, vel=0.1)
+            turnInPlace(8, 0)
+            wiggle(width=50, ang_speed=0.4, N_wiggles=3)
+            state = 299
 
         elif state == 280:
             turnInPlace(5, 0)
@@ -387,7 +396,6 @@ def loop():
             edge.lineControl(0.0, 0.0)
 
             driveXMeters(x=0.22)
-
             print("Wiggle")
             speed = 0.5
             turnInPlace(30, dir=1, ang_speed=speed)
