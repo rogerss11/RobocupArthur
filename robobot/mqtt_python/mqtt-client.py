@@ -127,7 +127,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 9200  # ========== START STATE ===============
+                state = 100  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -200,7 +200,7 @@ def loop():
 
         ######################### SEESAW + SEESAW GOLF BALL (200-299) ###########################
 
-        elif state == 210:  # Arnau + Leona
+        elif state == 200:  # Arnau + Leona
             ia.drive2ball(2)  # drive to the orange ball
             state = 220
 
