@@ -42,6 +42,7 @@ from scam import cam
 from sedge import edge
 from sgpio import gpio
 from ulog import flog
+import psutil
 
 class UService:
   host = 'IP-setup'
@@ -59,6 +60,7 @@ class UService:
   stop = False
   th = {} # thread for incoming
   th2 = {} # thread for outgoing
+  thAlive = {} # thread for sending alive messages
   sendCnt = 0
   gotCnt = 0
   gotOutCnt = 0 # should continue to be 0
@@ -78,18 +80,21 @@ class UService:
     self.parser.add_argument('-g', '--gyro', action='store_true',
                 help='Calibrate gyro')
     self.parser.add_argument('-l', '--level', action='store_true',
-                help='Calibrate horizontal')
+                help='Calibrate horizontal (not implemented, but maybe an idea)')
     self.parser.add_argument('-s', '--silent', action='store_true',
                 help='Print less to console')
     self.parser.add_argument('-n', '--now', action='store_true',
-                help='Start drive now (do not wait for start button)')
+                help='Start drive now (do not wait for the start button)')
+    self.parser.add_argument('-m', '--meter', action='store_true',
+                help='Drive 1 m and stop')
+    self.parser.add_argument('-p', '--pi', action='store_true',
+                help='Turn 180 degrees (Pi) and stop')
+    self.parser.add_argument('-u', '--usestate', type=int,
+                help='set mission state to this value')
+    self.parser.add_argument('-d', '--distance', action='store_true',
+                help='wait for someone to touch side distance sensor before start')
     self.args = self.parser.parse_args()
     # print(f"% command line arguments: white {self.args.white}, gyro={self.args.gyro}, level={self.args.level}")
-    if self.args.gyro:
-      print(f"% Command line argument '--gyro'={self.args.gyro} not implemented")
-    if self.args.level:
-      print(f"% Command line argument '--level'={self.args.level} not implemented")
-    print(f"% Command line argument '--silent'={self.args.silent}")
     # allow close down on ctrl-C
     signal.signal(signal.SIGINT, signal_handler)
     self.connect_mqtt()
@@ -98,6 +103,8 @@ class UService:
     self.th.start()
     self.th2 = Thread(target=service.runOut);
     self.th2.start()
+    self.thAlive = Thread(target=service.runAlive);
+    self.thAlive.start()
     self.wait4mqttConnection()
     # do the setup and check of data streams
     # enable interface logging (into teensy_interface/build/log_2025...)
@@ -110,6 +117,11 @@ class UService:
     cam.setup()
     edge.setup()
     print(f"% (uservice.py) Setup finished with connected={self.connected}")
+    if self.args.level:
+      print(f"% Command line argument '--level'={self.args.level} but not implemented")
+      self.stop = True
+    if self.args.silent:
+      print(f"% Command line argument '--silent'={self.args.silent}")
 
   def run(self):
     # print("% MQTT service - thread running")
@@ -126,6 +138,20 @@ class UService:
     while not self.stop:
       self.clientOut.loop()
     print("% Service - thread stopped")
+
+  def runAlive(self):
+    loop = 0;
+    while not self.stop:
+      # tell interface that we are alive
+      if loop % 10 == 0:
+        service.send(service.topicCmd + "ti/alive",str(service.startTime))
+        # print(f"% sent Alive {datetime.now()}")
+      if gpio.test_stop_button():
+        self.terminate()
+      t.sleep(0.05)
+      loop += 1
+    pass
+
 
   def on_connect(self, client, userdata, flags, rc):
     if rc == 0:
@@ -216,8 +242,8 @@ class UService:
         pass
       else:
         used = False
-    #if not used:
-      #print("% Service:: message not used " + topic + " " + msg)
+    if not used:
+      print("% Service:: message not used " + topic + " " + msg)
     return used
 
   def send(self, topic, param):
@@ -245,6 +271,11 @@ class UService:
     return r[0] == 0
     pass
 
+  def process_running(self, process_name):
+    for process in psutil.process_iter(['pid', 'name']):
+      if process.info['name'] == process_name:
+        return True
+    return False
 
   def terminate(self):
     from ulog import flog
@@ -252,14 +283,23 @@ class UService:
       return
     print("% shutting down")
     if self.connected and not self.confirmedNotMaster:
-      service.send(service.topicCmd + "T0/stop","")
-      service.send(service.topicCmd + "T0/leds","14 0 0 0")
-      t.sleep(0.01)
-      service.send(service.topicCmd + "T0/leds","15 0 0 0")
-      service.send(service.topicCmd + "T0/leds","16 0 0 0")
-      t.sleep(0.01)
-      # stop interface logging
-      service.send("robobot/cmd/ti/log", "0")
+      edge.lineControl(0, 0) # make sure line control is off
+      try:
+        t.sleep(0.02)
+        service.send(service.topicCmd + "ti/rc","0 0") # stop robot control loop
+        t.sleep(0.02)
+        service.send(service.topicCmd + "T0/stop","") # should not be needed
+        # turn off LEDs
+        service.send(service.topicCmd + "T0/leds","14 0 0 0")
+        t.sleep(0.01)
+        service.send(service.topicCmd + "T0/leds","15 0 0 0")
+        service.send(service.topicCmd + "T0/leds","16 0 0 0")
+        t.sleep(0.01)
+        # stop interface logging
+        service.send("robobot/cmd/ti/log", "0")
+      except:
+        print("% Failed to send terminate commands to robot - lost mqtt server connection?")
+        pass
     self.terminating = True
     self.stop = True
     try:
@@ -269,7 +309,11 @@ class UService:
     try:
       self.th2.join()
     except:
-      print("% Service thread not running")
+      print("% Service thread 2 not running")
+    try:
+      self.thAlive.join()
+    except:
+      print("% Service thread Alive not running")
     imu.terminate()
     robot.terminate()
     pose.terminate()
@@ -281,4 +325,3 @@ class UService:
 
 # create the service object
 service = UService()
-
