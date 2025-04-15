@@ -127,7 +127,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 220  # ========== START STATE ===============
+                state = 200  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -205,7 +205,7 @@ def loop():
             Revise!!!
             """
             ia.drive2ball(2)  # drive to the orange ball
-            state = 220
+            state = 225
 
         elif state == 220:
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
@@ -250,14 +250,14 @@ def loop():
 
         elif state == 240:
             edge.lineControl(0.1, 0)
-            t.sleep(5)
+            t.sleep(6.5)
             edge.lineControl(0, 0)
             state = 255
 
         elif state == 255:
             # service.send(service.topicCmd + "T0/servo", "1 -175 0")
             turnInPlace(63, 1)
-            driveXMeters(x=1.1, vel=0.35)
+            driveXMeters(x=1, vel=0.35)
             driveUntilLine(600)
             turnInPlace(45, dir=1)
             state = 260
@@ -342,7 +342,7 @@ def loop():
 
         elif state == 280:
             # ------------- BALL IN THE HOLE -------------------------------------------
-            driveUntilLine(300, vel=-0.15)
+            driveUntilLine(250, vel=-0.15)
             turnInPlace(50, dir=1)
             edge.lineControl(0.1, 0)  # follow line
             t.sleep(2)
@@ -405,17 +405,50 @@ def loop():
         ############################## STAIRS SECTION (400-499) #################################
         #                *** might be skipped to implement 5 instead
 
-        elif state == 400:  # Roger + Arnau
-            # ------------- GO DOWN STAIRS -------------------------------------------
+        elif state == 400:  # Arnau + Roger
             service.send(service.topicCmd + "T0/servo", "1 -800 200")
+            edge.lineControl(0.05, 0)
+            t.sleep(6)
+            edge.lineControl(0.0, 0.0)
+            service.send(service.topicCmd + "ti/rc", "0.0 0.0")
+            state = 405
+
+        elif state == 405:  # Roger + Arnau
+            # ------------- GO DOWN STAIRS -------------------------------------------
             steps = 0
             while steps < 5:
                 stairStep(60, 0.1)  # go down one step
+                if steps == 1:
+                    print(edge.edge_n)
+                    # Calculate the average intensity for left and right side
+                    left_avg = sum(edge.edge_n[:4])
+                    right_avg = sum(edge.edge_n[4:])
+
+                    if right_avg > left_avg:
+                        print("Line is to the right, turning right")
+                        turnInPlace(5, dir=1)  # turn right
+                    elif left_avg > right_avg:
+                        print("Line is to the left, turning left")
+                        turnInPlace(5, dir=0)  # turn left
+                    else:
+                        print("Line is centered, no turn")
+
                 steps += 1
                 print(f"% ----------------- steps = {steps} ------------")
 
             driveXMeters(0.1, vel=0.2)
-            state = 405
+            state = 410
+
+        elif state == 410:
+            if not edge.lineValid:
+                turnInPlace(20, dir=1)  # turn to the right
+                driveUntilLine(300, vel=0.15)  # drive until line
+                turnInPlace(5, dir=0)  # turn to the right
+            edge.lineControl(0.1, 0)  # follow line
+            t.sleep(5)
+            edge.lineControl(0, 0)  # stop following line
+            driveXMeters(1, vel=0.35)  # drive until the end of the ramp
+            state = 415
 
         # once down the stairs, code can be adapted from the downramp section
 

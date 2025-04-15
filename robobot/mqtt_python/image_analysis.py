@@ -94,7 +94,7 @@ def ball(image, color: int):
                     + image[:, :, 2].astype(np.int32)
                 )
                 < 650
-            )  # color is not whit
+            )  # color is not white
         )
     elif color == 1:  # orange
         mask = (
@@ -110,11 +110,6 @@ def ball(image, color: int):
             & (image[:, :, 1] >= g_low[color])
             & (image[:, :, 1] <= g_high[color])  # green
             & (image[:, :, 2] >= r_low[color])  # red
-            & ~(
-                (image[:, :, 0] >= 253)
-                & (image[:, :, 1] >= 253)
-                & (image[:, :, 2] >= 253)
-            )  # color is not white
         )
 
     # clean up the picture
@@ -143,28 +138,23 @@ def ball(image, color: int):
         by="centroid-0", ascending=False
     )  # sort by y coordinate
 
-    status = 99
     xy = []
     width = 0
 
     if len(pd_regions) == 1:
         xy = tuple(map(int, regions[0].centroid[::-1]))
-        width = pd_regions.iloc[0]["axis_major_length"]
+        # width = pd_regions.iloc[0]["axis_major_length"]
         status = 1
-
-    elif pd_regions.empty:
-        status = 0
 
     else:
         xy = (
             int(pd_regions.iloc[0]["centroid-1"]),
             int(pd_regions.iloc[0]["centroid-0"]),
         )
-        width = pd_regions.iloc[0]["axis_major_length"]
-        status = 2
+        # width = pd_regions.iloc[0]["axis_major_length"]
 
     # gives back a tuple with the pixel position of the (roughly) middle of the ball and the result
-    return xy, width
+    return xy  # , width
 
 
 def move_middle(xy, range, color):
@@ -250,7 +240,7 @@ def distance_calc(xy, color: int):
 
 
 # move to the ball
-def move_straight(xy, distance, state: int, line: int, color: int):
+def move_straight(xy, distance, state: int, line: int, color: int, whiggle=1):
     """
     Moves the robot straight to the ball.
         xy: the coordinates of the ball in the picture
@@ -298,6 +288,7 @@ def move_straight(xy, distance, state: int, line: int, color: int):
         state = 0
 
         if line == 0:
+            whiggle = 0
             print("MS: Move straight")
 
             if distance > 500.0:
@@ -326,16 +317,17 @@ def move_straight(xy, distance, state: int, line: int, color: int):
             print("MS: Pick up ball")
             state = 100
             servo_down()
-            for i in range(3):
-                print("MS: Shaking")
-                service.send(service.topicCmd + "ti/rc", "0.1 0.6")
-                time.sleep(0.2)
-                service.send(service.topicCmd + "ti/rc", "0 0")
-                time.sleep(0.1)
-                service.send(service.topicCmd + "ti/rc", "-0.1 -0.6")
-                time.sleep(0.2)
-                service.send(service.topicCmd + "ti/rc", "0 0")
-                time.sleep(0.1)
+            if whiggle:
+                for i in range(2):
+                    print("MS: Shaking")
+                    service.send(service.topicCmd + "ti/rc", "0.1 0.6")
+                    time.sleep(0.2)
+                    service.send(service.topicCmd + "ti/rc", "0 0")
+                    time.sleep(0.1)
+                    service.send(service.topicCmd + "ti/rc", "-0.1 -0.6")
+                    time.sleep(0.2)
+                    service.send(service.topicCmd + "ti/rc", "0 0")
+                    time.sleep(0.1)
             service.send(service.topicCmd + "ti/rc", "0 0")
 
     else:
@@ -401,7 +393,7 @@ def hole(image):
 def drive2ball(case: int):
     """
     Drive to the ball and pick it up.
-        case: the type of the object (0 = oval blue ball, 1 = orange golf ball without line, 2 = orange golf ball with line, 3 = hole)
+        case: the type of the object (0 = oval blue ball, 1 = orange golf ball without line, 2 = orange golf ball with line)
     """
 
     img_num = 0
@@ -412,18 +404,17 @@ def drive2ball(case: int):
         state_straight_init = 2  # move object to middle first
         color = 0  # blue
         state = 0  # start with the first state
+        whiggle = 1
     elif case == 1:
         state_straight_init = 2  # move object to middle first
         color = 1  # orange
         state = 0  # start with the first state
+        whiggle = 1
     elif case == 2:
         state_straight_init = 1  # just move straight
         color = 1  # orange
         state = 1  # start with the first state
-    elif case == 3:  # find hole
-        state_straight_init = 2
-        color = -1  # hole
-        state = 0
+        whiggle = 0
 
     state_straight = state_straight_init  # state of the straight movement
 
@@ -438,13 +429,8 @@ def drive2ball(case: int):
             img_num += 1
 
         # find ball in the picture
-        xy = []
-        if case != 3:
-            xy, width = ball(img, color)
-            print("DB: Ball found:", xy)
-        else:
-            xy, state, width = hole(img)
-            print("DB: Hole found:", xy)
+        xy = ball(img, color)
+        print("DB: Ball found:", xy)
 
         # Visualize the ball in the picture
         if len(xy) == 2:
@@ -481,7 +467,7 @@ def drive2ball(case: int):
 
                 print("DB: State straight:", state_straight)
                 state_straight = move_straight(
-                    xy, distance, state_straight, case == 2, color
+                    xy, distance, state_straight, case == 2, color, whiggle
                 )
 
             else:

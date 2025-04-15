@@ -485,6 +485,8 @@ def driveUntilWall_measure_gate_dist(d=0.2, ir_id=1, vel=0.2):
 
 
 def stairStep(acc=50, vel=0.1):
+    from sedge import edge
+
     """
     driveUntilWall(d=0.2) - drive until a certain acceleration is detected
     acc = acceleration in m/s^2 to stop at
