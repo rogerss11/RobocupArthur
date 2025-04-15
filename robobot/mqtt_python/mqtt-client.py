@@ -246,22 +246,17 @@ def loop():
                 service.send(service.topicCmd + "T0/servo", "1 -150 25")
                 state = 240
                 pose.tripBreset()
+                print("end of seesaw")
 
         elif state == 240:
             edge.lineControl(0.1, 0)
-            if pose.tripBtimePassed() > 3:
-                edge.lineControl(0, 0)
-                pose.tripBreset()
-                state = 241
-
-        elif state == 241:  # White horizontal line in front of seasaw
-            driveUntilNOLine_auto(0.2, 350)
-            pose.tripBreset()
+            t.sleep(5)
+            edge.lineControl(0, 0)
             state = 255
 
         elif state == 255:
-            service.send(service.topicCmd + "T0/servo", "1 -175 0")
-            turnInPlace(72, 1)
+            # service.send(service.topicCmd + "T0/servo", "1 -175 0")
+            turnInPlace(63, 1)
             driveXMeters(x=1.1, vel=0.35)
             driveUntilLine(600)
             turnInPlace(45, dir=1)
@@ -343,11 +338,15 @@ def loop():
             driveXMeters(0.05, vel=0.1)
             turnInPlace(8, 0)
             wiggle(width=50, ang_speed=0.4, N_wiggles=3)
-            state = 299
+            state = 280
 
         elif state == 280:
-            turnInPlace(5, 0)
-            state = 282
+            # ------------- BALL IN THE HOLE -------------------------------------------
+            driveUntilLine(300, vel=-0.15)
+            turnInPlace(50, dir=1)
+            edge.lineControl(0.1, 0)  # follow line
+            t.sleep(2)
+            state = 285
 
         elif state == 282:
             turnInPlace(15, 0)
