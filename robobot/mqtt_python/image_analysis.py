@@ -80,35 +80,18 @@ def ball(image, color: int):
     # color of the thresholds (for images in BGR)
     if color == 0:  # blue
         mask = (
-            (image[:, :, 0] > image[:, :, 1])
-            & (
-                image[:, :, 0] > image[:, :, 2] + 20
-            )  # blue intensity is higher than green and red
+            (image[:, :, 0] > image[:, :, 1]) & (image[:, :, 0] > image[:, :, 2] + 20)  # blue intensity is higher than green and red
             & (image[:, :, 0] >= b_low[color])  # blue
             & (image[:, :, 1] >= g_low[color])  # green
             & (image[:, :, 2] >= r_low[color])  # red
-            & (
-                (
-                    image[:, :, 0].astype(np.int32)
-                    + image[:, :, 1].astype(np.int32)
-                    + image[:, :, 2].astype(np.int32)
-                )
-                < 650
-            )  # color is not white
+            & ((image[:, :, 0].astype(np.int32) + image[:, :, 1].astype(np.int32)+ image[:, :, 2].astype(np.int32))< 650)  # color is not white
         )
     elif color == 1:  # orange
         mask = (
-            (image[:, :, 2] > image[:, :, 0])
-            & (
-                image[:, :, 2] > image[:, :, 1]
-            )  # red intensity is higher than green and blue
-            & (
-                (image[:, :, 1] + 10) > image[:, :, 0]
-            )  # green intensity is higher than blue
-            & (image[:, :, 0] >= b_low[color])
-            & (image[:, :, 0] <= b_high[color])  # blue
-            & (image[:, :, 1] >= g_low[color])
-            & (image[:, :, 1] <= g_high[color])  # green
+            (image[:, :, 2] > image[:, :, 0]) & (image[:, :, 2] > image[:, :, 1])  # red intensity is higher than green and blue
+            & ((image[:, :, 1] + 10) > image[:, :, 0])  # green intensity is higher than blue
+            & (image[:, :, 0] >= b_low[color]) & (image[:, :, 0] <= b_high[color])  # blue
+            & (image[:, :, 1] >= g_low[color]) & (image[:, :, 1] <= g_high[color])  # green
             & (image[:, :, 2] >= r_low[color])  # red
         )
 
@@ -122,7 +105,7 @@ def ball(image, color: int):
     # prevent detecting the arm or the background
     mask[:300, :] = 0  # remove the upper part of the picture
     mask[:, :70] = 0  # Left side (0 to 70 pixels)
-    mask[:, 700:] = 0  # Right side (750 to 820 pixels)
+    mask[:, 700:] = 0  # Right side (700 to 820 pixels)
 
     # find the middle of the ball from the up left corner
     labeled_image, n_labels = label(mask, background=0, return_num=True, connectivity=1)
@@ -131,7 +114,7 @@ def ball(image, color: int):
     # create a table with the properties of the regions
     # centroid = (y,x) = (row, column)
     region_table = regionprops_table(
-        labeled_image, properties=["centroid", "axis_major_length"]
+        labeled_image, properties=["centroid"]
     )
     pd_regions = pd.DataFrame(region_table)
     pd_regions = pd_regions.sort_values(
@@ -139,22 +122,18 @@ def ball(image, color: int):
     )  # sort by y coordinate
 
     xy = []
-    width = 0
 
     if len(pd_regions) == 1:
         xy = tuple(map(int, regions[0].centroid[::-1]))
-        # width = pd_regions.iloc[0]["axis_major_length"]
-        status = 1
 
     else:
         xy = (
             int(pd_regions.iloc[0]["centroid-1"]),
             int(pd_regions.iloc[0]["centroid-0"]),
         )
-        # width = pd_regions.iloc[0]["axis_major_length"]
 
-    # gives back a tuple with the pixel position of the (roughly) middle of the ball and the result
-    return xy  # , width
+    # gives back a tuple with the pixel position of the (roughly) middle of the ball 
+    return xy  
 
 
 def move_middle(xy, range, color):
@@ -233,6 +212,7 @@ def distance_calc(xy, color: int):
         distance = distance - arm_length  # in mm
         status = 1
     else:
+        drive.driveXMeters(x=-0.1, vel=0.2)  # move back a little bit
         distance = 0.0
         status = -1
 

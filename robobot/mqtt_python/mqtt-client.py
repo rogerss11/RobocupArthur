@@ -41,7 +41,8 @@ from uservice import service
 from simu import imu
 
 from drive import *
-from arucode import aru
+from aruco_new import aru #eva needs this to test
+from evas_image import *
 import image_analysis as ia
 
 ############################################################
@@ -127,7 +128,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 200  # ========== START STATE ===============
+                state = 100  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -356,7 +357,10 @@ def loop():
 
         ############################ TOP GOLF BALL (300-399) ####################################
 
-        elif state == 300:  # find the orange ball
+        elif state == 300: # move from the hole to the starting position
+            pass 
+        
+        elif state == 310:  # find the orange ball
             xy = []
             image_ia, ok = ia.imageAnalysis(0)
 
@@ -379,13 +383,13 @@ def loop():
                 t.sleep(0.1)
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")  # stop
             else:
-                state = 301  # ball detected
+                state = 320  # ball detected
 
-        elif state == 301:  # drive to orange ball
+        elif state == 320:  # drive to orange ball
             ia.drive2ball(1)
-            state = 302
+            state = 330
 
-        elif state == 302:  # move to hole
+        elif state == 330:  # move to hole
             driveUntilLine(300, vel=-0.15)
             # edge.lineUpWithLine()
             turnInPlace(deg=50, dir=1)
@@ -600,32 +604,54 @@ def loop():
             # ------------- LEAVE CIRCLE -------------------------------------------
 
             driveXMeters(min_d + 0.30, vel=0.3)
-            driveUntilWall(0.3, ir_id=1, vel=0.0)
 
-            # OPTION A: Go through the gate
-            t.sleep(1)
+            state = 720  # go to blue ball sorting section
+
+        elif state == 720:
+            driveUntilWall(0.3, ir_id=1, vel=0.0) # waiting for birtle
+            t.sleep(0.7) # wait for birtle to pass
             driveUntilLine(300)
-            turnInPlace(50, dir=1)  # turn clockwise 65=90deg
+            turnInPlace(40, dir=1)  # turn clockwise 65=90deg
             edge.lineControl(0.2, 0)  # follow line
-            t.sleep(4)
+            t.sleep(1.5)
+            edge.lineControl(0, 0)
+            driveUntilWall(0.3, ir_id=1, vel=0.0) # waiting for birtle
+            t.sleep(1) # wait for birtle to pass
+
+            edge.lineControl(0.1, 0)  # follow line
+            edge.stopAtNthIntersection(['l'], 1)
+            t.sleep(5)
             edge.lineControl(0, 0)  # stop following line
-            driveXMeters(0.3, vel=0.4)
-
-            """
-            # OPTION B: Go straight until line
-            turnInPlace(5, dir=1)
-            t.sleep(7)
-            driveXMeters(1, vel=0.2)
+            
+            turnInPlace(63,0)
+            driveXMeters(0.2,0.2)
             driveUntilLine(300)
-            turnInPlace(63, dir=1)  # turn clockwise 65=90deg
-            """
 
-            state = 800  # go to blue ball sorting section
+            state = 800
 
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
 
-        elif state == 800:  # Eva + Leona
-            pass
+        elif state == 800:  # turn left at intersection, raise arm and hit basket 
+             service.send(service.topicCmd + "T0/servo", "1 -600 0")
+             edge.lineControl(0.07, 0)
+             edge.stopAtNthIntersection([], 1)
+             t.sleep(0.05)
+             if edge.hasArrivedAtNthIntersection():
+                 print("Move after intersection")
+                 edge.lineControl(0, 0)  # stop following line
+                 turnInPlace(45, 0, 0.4)  # turn left
+                 #edge.lineControl(0.1, 0)  # follow line
+                 driveXMeters(0.2, 0.2)
+                 turnInPlace(20, 0, 0.5)  # turn left
+                 turnInPlace(20, 1, 0.5)  # turn left
+                 service.send(service.topicCmd + "T0/servo", "1 -400000 0")
+                 state = 805
+        
+        elif state == 805: #turn backwards and do an arc
+             aru.after_hitting_basket()
+             #turnInPlace(20, 1, 0.2)
+             driveXMeters(0.1, 0.2)
+             state = 810
 
         elif state == 810:  # find the blue ball
             xy = []
@@ -635,15 +661,40 @@ def loop():
                 xy = ia.ball(image_ia, 0)  # detect blue ball
 
             if xy == []:  # no ball detected
-                # turn right
-                service.send(service.topicCmd + "ti/rc", "0.0 0.3")  # turn right
-                t.sleep(0.1)
-                service.send(service.topicCmd + "ti/rc", "0.0 0.0")  # stop
+                turnInPlace(20, 1, 0.2) 
             else:
                 state = 811
 
         elif state == 811:  # drive to the blue oval ball
             status = ia.drive2ball(0)
+            state = 815
+ 
+        elif state == 815:
+            img = imageAnalysis(0)
+            #service.send(service.topicCmd + "T0/servo", "1 -4500000 0")
+            aru.after_catching_blue_ball(img)
+            #aru.turn_left_until_ID13_disappears(img)
+            state = 99
+
+        elif state == 820:
+            aru.start_looking_for_ID16(img)
+            state = 99 
+
+        elif state == 850: #Finishing
+            ia.servo_up()
+            print("Go back")
+            driveXMeters(-0.1)
+            print("Find line")
+            driveUntilLine(300,-0.2) #drive back until the line
+            turnInPlace(63, 1)
+            print("Line Control")
+            edge.setIgnoreIntersections(True)
+            edge.adjustSpeed = True
+            edge.lineControl(0.3, 0)
+            t.sleep(6)
+            edge.lineControl(0, 0)
+            state = 900
+            # How can we detect, that we finished? (Distance or Aruco?)
 
         #################################### TESTS (9000-9999) ###################################
 
