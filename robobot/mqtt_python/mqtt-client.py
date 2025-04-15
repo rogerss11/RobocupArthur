@@ -41,7 +41,9 @@ from uservice import service
 from simu import imu
 
 from drive import *
-from arucode import aru
+#from arucode import aru 
+from aruco_new import aru #eva needs this to test
+from evas_image import *
 import image_analysis as ia
 
 ############################################################
@@ -51,10 +53,7 @@ stateTime = datetime.now()
 
 def stateTimePassed():
     return (datetime.now() - stateTime).total_seconds()
-
-
 ############################################################
-
 
 def loop():
     """
@@ -127,7 +126,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 9200  # ========== START STATE ===============
+                state = 815  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -584,9 +583,38 @@ def loop():
 
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
 
-        elif state == 800:  # Eva + Leona
-            pass
-
+        elif state == 800:  # turn left at intersection, raise arm and hit basket 
+            service.send(service.topicCmd + "T0/servo", "1 -600 0")
+            edge.lineControl(0.07, 0)
+            edge.stopAtNthIntersection([], 1)
+            t.sleep(0.05)
+            if edge.hasArrivedAtNthIntersection():
+                print("whats happening")
+                edge.lineControl(0, 0)  # stop following line
+                turnInPlace(45, 0, 0.4)  # turn left
+                #edge.lineControl(0.1, 0)  # follow line
+                driveXMeters(0.2, 0.2)
+                turnInPlace(20, 0, 0.5)  # turn left
+                turnInPlace(20, 1, 0.5)  # turn left
+                service.send(service.topicCmd + "T0/servo", "1 -400000 0")
+                state = 805
+            # edge.stopAtNthIntersection([], 1)
+            # t.sleep(1)
+            # turnInPlace(63, 0, 0.2)  # turn left
+            # t.sleep(0.5)
+            # edge.lineControl(0.08, 0) # speed and position.
+            # t.sleep(2)
+            # edge.lineControl(0, 0) # stop following line
+            #service.send(service.topicCmd + "T0/servo", "1 -400000 0")
+            #follow line for some seconds
+            #have some sleep stuff?
+            #stop
+            #state = 99
+        elif state == 805: #turn backwards and do an arc
+            aru.after_hitting_basket()
+            #turnInPlace(20, 1, 0.2)
+            driveXMeters(0.1, 0.2)
+            state = 810
         elif state == 810:  # find the blue ball
             xy = []
             image_ia, ok = ia.imageAnalysis(0)
@@ -596,14 +624,27 @@ def loop():
 
             if xy == []:  # no ball detected
                 # turn right
-                service.send(service.topicCmd + "ti/rc", "0.0 0.3")  # turn right
-                t.sleep(0.1)
-                service.send(service.topicCmd + "ti/rc", "0.0 0.0")  # stop
+                #print("Are you turning around? ")
+                turnInPlace(20, 1, 0.2)  # turn right
+                #service.send(service.topicCmd + "ti/rc", "0.0 0.3")  # turn right
+                #t.sleep(0.1)
+                #service.send(service.topicCmd + "ti/rc", "0.0 0.0")  # stop
             else:
                 state = 811
 
         elif state == 811:  # drive to the blue oval ball
             status = ia.drive2ball(0)
+            state = 815
+
+        elif state == 815:
+            img = imageAnalysis(0)
+            #service.send(service.topicCmd + "T0/servo", "1 -4500000 0")
+            aru.after_catching_blue_ball(img)
+            #aru.turn_left_until_ID13_disappears(img)
+            state = 99
+        elif state == 820:
+            aru.start_looking_for_ID16(img)
+            state = 99 
 
         #################################### TESTS (9000-9999) ###################################
 
@@ -730,7 +771,7 @@ if __name__ == "__main__":
         # where is the MQTT data server:
         # service.setup("localhost")  # localhost
         service.setup("10.197.218.235")  # Arthur
-        # service.setup("10.197.218.184") # Gandalf
+        #service.setup("10.197.218.11") # Gandalf
 
         if service.connected:
             loop()

@@ -85,16 +85,12 @@ def driveUntilWall(d=0.2, ir_id=1, vel=0.2):
             if abs(pose.velocity()) < 0.001:
                 state = 99
         else:
-            print(
-                f"# drive drove {pose.tripB:.3f}m. Stopped at {ir.ir[ir_id]:.3f}m from the wall. {pose.tripBtimePassed():.3f} seconds"
-            )
+            print(f"# drive drove {pose.tripB:.3f}m. Stopped at {ir.ir[ir_id]:.3f}m from the wall. {pose.tripBtimePassed():.3f} seconds")
             service.send(
                 "robobot/cmd/ti/rc", "0.0 0.0"
             )  # (forward m/s, turn-rate rad/sec)
             break
-        print(
-            f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-        )
+        #print(f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
         t.sleep(0.05)
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
@@ -232,9 +228,7 @@ def turnInPlace(deg=90, dir=0, ang_speed=0.8):
                 "robobot/cmd/ti/rc", "0.0 0.0"
             )  # (forward m/s, turn-rate rad/sec)
             break
-        print(
-            f"# turn {state}, now {pose.tripBh:.3f} rad in {pose.tripBtimePassed():.3f} seconds"
-        )
+        #print(f"# turn {state}, now {pose.tripBh:.3f} rad in {pose.tripBtimePassed():.3f} seconds")
         t.sleep(0.05)
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end

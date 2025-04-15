@@ -42,6 +42,7 @@ def imageAnalysis(save):
             pass
         pass
     pass
+    return img, ok
 
 
 def servo_up():
@@ -244,6 +245,7 @@ def distance_calc(xy, color: int):
         distance = distance - arm_length  # in mm
         status = 1
     else:
+        drive.driveXMeters(x=-0.1, vel=0.2)  # move back a little bit
         distance = 0.0
         status = -1
 
