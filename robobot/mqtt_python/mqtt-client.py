@@ -361,7 +361,7 @@ def loop():
             image_ia, ok = ia.imageAnalysis(0)
 
             if ok:
-                xy, width = ia.ball(image_ia, 1)  # detect orange ball
+                xy = ia.ball(image_ia, 1)  # detect orange ball
 
             # Visualize the ball in the picture
             if len(xy) == 2:
@@ -632,7 +632,7 @@ def loop():
             image_ia, ok = ia.imageAnalysis(0)
 
             if ok:
-                xy, width = ia.ball(image_ia, 0)  # detect blue ball
+                xy = ia.ball(image_ia, 0)  # detect blue ball
 
             if xy == []:  # no ball detected
                 # turn right
