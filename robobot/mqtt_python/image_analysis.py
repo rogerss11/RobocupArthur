@@ -146,7 +146,7 @@ def ball(image, color: int):
     if len(pd_regions) == 1:
         xy = tuple(map(int, regions[0].centroid[::-1]))
 
-    else:
+    elif len(pd_regions) > 1:
         xy = (
             int(pd_regions.iloc[0]["centroid-1"]),
             int(pd_regions.iloc[0]["centroid-0"]),
@@ -240,7 +240,7 @@ def distance_calc(xy, color: int):
 
 
 # move to the ball
-def move_straight(xy, distance, state: int, line: int, color: int, whiggle=1):
+def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
     """
     Moves the robot straight to the ball.
         xy: the coordinates of the ball in the picture
@@ -288,7 +288,6 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle=1):
         state = 0
 
         if line == 0:
-            whiggle = 0
             print("MS: Move straight")
 
             if distance > 500.0:
@@ -334,59 +333,6 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle=1):
         state = -1
 
     return state
-
-
-# detect holes on black surface in the pictures
-def hole(image):
-    """
-    Detects a hole in the image.
-        image: the image to be analyzed
-    """
-    # calculate the differences between the main color values in the picture with some blurring
-    d_B = gaussian_filter(image, sigma=1, order=(0, 0, 1))
-
-    # mark the areas below a threshold
-    mask = np.zeros_like(d_B)
-    mask = d_B[:, :, 2] < 40
-    mask_cl = remove_small_objects(mask, min_size=1000, connectivity=1)
-
-    # mark the areas, which are black in the picture and fill in the spaces in between
-    black = (
-        (image[:, :, 0] > 60)
-        & (image[:, :, 0] < 110)
-        & (image[:, :, 1] > 60)
-        & (image[:, :, 1] < 120)
-        & (image[:, :, 2] > 55)
-        & (image[:, :, 2] < 110)
-    )
-    black_cl = binary_erosion(
-        black, footprint=[(np.ones((20, 1)), 1), (np.ones((1, 20)), 1)]
-    )
-    black_cl = remove_small_holes(black_cl, 10000, 1)
-
-    # find the space on the black surface, which has changes in color -> hole
-    hole = (black_cl == 1) & (mask_cl == 1)
-
-    # calculate the middle
-    labeled_image, n_labels = label(hole, background=0, return_num=True, connectivity=2)
-    regions = regionprops(label_image=labeled_image)
-
-    # region detected correctly
-    if regions:
-        xy = regions[0].centroid
-        width = regions[0].axis_major_length
-        state = 1
-    else:
-        xy = []
-        width = 0
-        state = 0
-        # no hole detected
-
-    return (
-        xy,
-        state,
-        width,
-    )  # gives back a tuple with the pixel position of the (roughly) middle of the hole
 
 
 # drive to the ball

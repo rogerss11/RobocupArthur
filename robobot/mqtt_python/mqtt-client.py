@@ -128,7 +128,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 100  # ========== START STATE ===============
+                state = 400  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -170,7 +170,7 @@ def loop():
                 pose.tripBreset()
 
         elif state == 140:
-            if pose.tripB > 1.8:
+            if pose.tripB > 1.5:
                 edge.adjustSpeed = False
                 edge.lineControl(0.05, 0)
                 state = 150
@@ -345,22 +345,21 @@ def loop():
             # ------------- BALL IN THE HOLE -------------------------------------------
             driveUntilLine(250, vel=-0.15)
             turnInPlace(50, dir=1)
+            edge.stopAtNthIntersection([], 1)
             edge.lineControl(0.1, 0)  # follow line
-            t.sleep(2)
-            state = 285
-
-        elif state == 282:
-            turnInPlace(15, 0)
-            turnInPlace(40, 1)
-            turnInPlace(15, 0)
-            driveXMeters(x=0.025)
-
-        ############################ TOP GOLF BALL (300-399) ####################################
-
-        elif state == 300: # move from the hole to the starting position
-            pass 
+            t.sleep(4)
+            edge.lineControl(0.05, 0)
+            state = 290
         
-        elif state == 310:  # find the orange ball
+        elif state == 290:
+            if edge.ArrivedAtNthIntersection:
+                driveXMeters(0.15)
+                turnInPlace(35, 1)
+                state = 300
+
+        ############################ TOP GOLF BALL (300-399) #################################### 
+        
+        elif state == 300:  # find the orange ball
             xy = []
             image_ia, ok = ia.imageAnalysis(0)
 
@@ -394,6 +393,7 @@ def loop():
             # edge.lineUpWithLine()
             turnInPlace(deg=50, dir=1)
             driveXMeters(x=0.15)
+            edge.setIgnoreIntersections(True)
             edge.lineControl(0.15, 0.0)
             t.sleep(1.5)
             edge.lineControl(0.0, 0.0)
@@ -401,18 +401,25 @@ def loop():
             driveXMeters(x=0.22)
             print("Wiggle")
             speed = 0.5
-            turnInPlace(30, dir=1, ang_speed=speed)
-            wiggle(width=50, ang_speed=0.5, N_wiggles=3)
+            turnInPlace(20, dir=1, ang_speed=speed)
+            wiggle()
 
+            state = 340
+        
+        elif state == 340: # drive to the stairs
+            driveUntilLine(300, vel=-0.2)
+            driveXMeters(-0.05)
+            driveUntilLine(300, vel=-0.10)
+            turnInPlace(70,0)
             state = 400
-
+            
         ############################## STAIRS SECTION (400-499) #################################
         #                *** might be skipped to implement 5 instead
 
         elif state == 400:  # Arnau + Roger
             service.send(service.topicCmd + "T0/servo", "1 -800 200")
             edge.lineControl(0.05, 0)
-            t.sleep(6)
+            t.sleep(5)
             edge.lineControl(0.0, 0.0)
             service.send(service.topicCmd + "ti/rc", "0.0 0.0")
             state = 405
@@ -422,20 +429,32 @@ def loop():
             steps = 0
             while steps < 5:
                 stairStep(60, 0.1)  # go down one step
-                if steps == 1:
-                    print(edge.edge_n)
-                    # Calculate the average intensity for left and right side
-                    left_avg = sum(edge.edge_n[:4])
-                    right_avg = sum(edge.edge_n[4:])
+                if True: # steps == 1:
+                    #print(edge.edge_n)
+                    #left_avg = sum(edge.edge_n[:4])
+                    #right_avg = sum(edge.edge_n[4:])
 
-                    if right_avg > left_avg:
-                        print("Line is to the right, turning right")
-                        turnInPlace(5, dir=1)  # turn right
-                    elif left_avg > right_avg:
-                        print("Line is to the left, turning left")
-                        turnInPlace(5, dir=0)  # turn left
-                    else:
-                        print("Line is centered, no turn")
+                    #if right_avg > left_avg:
+                    #    print("Line is to the right, turning right")
+                    #    turnInPlace(5, dir=1)  # turn right
+                    #elif left_avg > right_avg:
+                    #    print("Line is to the left, turning left")
+                    #    turnInPlace(5, dir=0)  # turn left
+                    #else:
+                    #    print("Line is centered, no turn")
+
+                    print("aaaaaaaaaaaaaaaaaaaaaaaaaaaa: ", edge_n) # Calculate the average intensity for left and right side
+                    
+                    sum_values = sum(edge.edge_n)
+                    pos_sum = sum((i + 1) * v for i, v in enumerate(edge.edge_n))
+                    position = (pos_sum / sum_values - 4.5)
+
+                    print("position: ", position)
+                    
+                    turnInPlace(abs(position), dir=0 if position > 0 else 1)  # turn to the left
+
+
+
 
                 steps += 1
                 print(f"% ----------------- steps = {steps} ------------")
@@ -444,15 +463,46 @@ def loop():
             state = 410
 
         elif state == 410:
+            edge.lineControl(0.05, 0)
+            t.sleep(1)
+            edge.lineControl(0, 0)
             if not edge.lineValid:
-                turnInPlace(20, dir=1)  # turn to the right
-                driveUntilLine(300, vel=0.15)  # drive until line
-                turnInPlace(5, dir=0)  # turn to the right
-            edge.lineControl(0.1, 0)  # follow line
+                turnInPlace(50, dir=-1)  # turn to the left
+                edge.setDriveUntilLine(0.15, 300)
+                pose.tripBreset()
+                state = 411
+
+            else:
+                state = 415
+                
+        elif state == 411:
+            if edge.reachedLine():
+                turnInPlace(50, dir=1)  # turn to the right
+
+            elif pose.tripBtimePassed() > 1.5: # turn all the way around
+                turnInPlace(110, dir=1)  # turn to the right
+                edge.setDriveUntilLine(0.15, 300)
+                state = 412
+        
+        elif state == 412:
+            if edge.reachedLine():
+                turnInPlace(50, dir=0)  # turn to the left
+                state = 415
+
+        elif state == 415:
+            edge.lineControl(0.05)  # follow line
             t.sleep(5)
             edge.lineControl(0, 0)  # stop following line
-            driveXMeters(1, vel=0.35)  # drive until the end of the ramp
-            state = 415
+            pose.tripBreset()
+            driveXMeters(0.8)
+            pose.tripBreset()
+            state = 420
+
+        elif state == 420:
+            driveUntilLine(500,0.2)
+            state = 600
+
+
 
         # once down the stairs, code can be adapted from the downramp section
 
@@ -512,7 +562,9 @@ def loop():
 
         # Vojta + Arnau + Andrea
         elif state == 600:  # follow line until end
+            service.send(service.topicCmd + "ti/servo", "1 -900 0")
             edge.lineControl(0.1, 0)
+            edge.setIgnoreIntersections(True)
             state = 605
             pose.tripBreset()
 
