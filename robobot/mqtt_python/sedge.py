@@ -179,6 +179,7 @@ class SEdge:
             print("Path length does not match the number of intersections.")
             return
         self.setIntersectionPath(path)
+        self.ignoreIntersections = False
         self.stopAtIntersectionN = n
         self.ArrivedAtNthIntersection = False
 
@@ -473,7 +474,7 @@ class SEdge:
             #! maybe adjust the 4 to 5?
             # if we arrived at a straight and left intersection
             elif all(value > 0 for value in values[:4]): 
-                print("arrived at left and straight intersection")
+                #print("arrived at left and straight intersection")
                 if path == 'l':
                     self.position = -4
                 elif path == 'r':
@@ -485,7 +486,7 @@ class SEdge:
               
             # if we arrived at a straight and right intersection
             elif all(value > 0 for value in values[-4:]):
-                print("arrived at right and straight intersection")
+                #print("arrived at right and straight intersection")
                 if path == 'l':
                     self.position = 0
                 elif path == 'r':
