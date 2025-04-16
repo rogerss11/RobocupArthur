@@ -217,6 +217,7 @@ class ArucoDetector:
         turnInPlace(10,0)
         print("🚗 Driving until line")
         driveUntilLine()
+        turnInPlace(55,1) #turn to the right to look for line
         edge.lineControl(0.03, 0) # speed and position (slooow line control so it can catch up)
 
     # --- This will drive on the line and look for the ID 16 marker --- #
@@ -224,7 +225,7 @@ class ArucoDetector:
         print("🔍 Looking for ID 16...")
         edge.lineControl(0.05, 0)
         #if pose.tripBtimePassed()>1: #if more than 3 secs pass, stop line control, look right and check aruco
-        t.sleep(8) #change based on when we want to turn to look for ID 16. Do we even need this? can we hardcode to turn and drive towards line after x secs? 
+        t.sleep(15) #change based on when we want to turn to look for ID 16. Do we even need this? can we hardcode to turn and drive towards line after x secs? 
         edge.lineControl(0,0) #stop line control
         turnInPlace(59, dir=1) #turn towards the arucos
 

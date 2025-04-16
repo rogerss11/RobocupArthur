@@ -126,7 +126,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 820 # ========== START STATE ===============
+                state = 800 # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -594,9 +594,9 @@ def loop():
         elif state == 801:
             if edge.hasArrivedAtNthIntersection():
                 #driveXMeters(0.02, 0.1)
-                turnInPlace(40, 0, 0.4)  # turn left
+                turnInPlace(45, 0, 0.4)  # turn left
                 #service.send(service.topicCmd + "T0/servo", "1 -600 0")
-                #driveXMeters(0.05, 0.1)
+                driveXMeters(0.02, 0.1)
                 edge.setIgnoreIntersections(True)
                 edge.lineControl(0.1, 0) # follow line
                 t.sleep(2)
@@ -618,7 +618,7 @@ def loop():
         elif state == 805: #turn backwards and do an arc
             aru.after_hitting_basket()
             #driveXMeters(0.05, 0.1)
-            turnInPlace(20, 1, 0.2)
+            turnInPlace(25, 1, 0.2)
             state = 810
             #t.sleep(10)
         elif state == 810:  # find the blue ball
@@ -653,19 +653,21 @@ def loop():
             img = imageAnalysis(0)
             aru.start_looking_for_ID16(img)
             state = 825 
-        elif state == 825: 
-            service.send(service.topicCmd + "T0/servo", "1 -600 200")
+        elif state == 825: #he is on the line, he needs to turn right and follow line until intersection
+            #service.send(service.topicCmd + "T0/servo", "1 -600 200")
+            service.send(service.topicCmd + "T0/servo", "1 -150 200")
             driveXMeters(0.02, 0.1)
             turnInPlace(63, 1) #turn right 
             #t.sleep(0.05)
-            edge.stopAtNthIntersection([], 1)
             edge.lineControl(0.07, 0) # follow line
+            edge.setIgnoreIntersections(False)
+            edge.stopAtNthIntersection([], 1)
             state = 830
 
         elif state == 830:
             if edge.hasArrivedAtNthIntersection():
                 driveXMeters(0.03, 0.1)
-                turnInPlace(50, 1) #turn right
+                turnInPlace(45, 1) #turn right
                 driveXMeters(0.4, 0.1)
                 service.send(service.topicCmd + "T0/servo", "1 -900 200")
                 state = 99
