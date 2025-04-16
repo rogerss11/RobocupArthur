@@ -126,7 +126,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 815  # ========== START STATE ===============
+                state = 820 # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -583,20 +583,25 @@ def loop():
 
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
 
-        elif state == 800:  # turn left at intersection, raise arm and hit basket 
+        elif state == 800:  # turn left at intersection, raise arm and hit basket
+            #service.send(service.topicCmd + "T0/servo", "1 -9000000 200")
+            #state = 99 
             service.send(service.topicCmd + "T0/servo", "1 -600 0")
             edge.lineControl(0.07, 0)
-            edge.stopAtNthIntersection([], 1)
-            t.sleep(0.05)
+            edge.stopAtNthIntersection([], 1) #left or right, n number of intersection
+            state = 801
+        
+        elif state == 801:
             if edge.hasArrivedAtNthIntersection():
-                print("whats happening")
-                edge.lineControl(0, 0)  # stop following line
-                turnInPlace(45, 0, 0.4)  # turn left
-                #edge.lineControl(0.1, 0)  # follow line
-                driveXMeters(0.2, 0.2)
-                turnInPlace(20, 0, 0.5)  # turn left
-                turnInPlace(20, 1, 0.5)  # turn left
-                service.send(service.topicCmd + "T0/servo", "1 -400000 0")
+                #driveXMeters(0.02, 0.1)
+                turnInPlace(40, 0, 0.4)  # turn left
+                #service.send(service.topicCmd + "T0/servo", "1 -600 0")
+                #driveXMeters(0.05, 0.1)
+                edge.setIgnoreIntersections(True)
+                edge.lineControl(0.1, 0) # follow line
+                t.sleep(2)
+                edge.lineControl(0, 0) # stop following line
+                service.send(service.topicCmd + "T0/servo", "1 -6000000 0")
                 state = 805
             # edge.stopAtNthIntersection([], 1)
             # t.sleep(1)
@@ -612,9 +617,10 @@ def loop():
             #state = 99
         elif state == 805: #turn backwards and do an arc
             aru.after_hitting_basket()
-            #turnInPlace(20, 1, 0.2)
-            driveXMeters(0.1, 0.2)
+            #driveXMeters(0.05, 0.1)
+            turnInPlace(20, 1, 0.2)
             state = 810
+            #t.sleep(10)
         elif state == 810:  # find the blue ball
             xy = []
             image_ia, ok = ia.imageAnalysis(0)
@@ -640,12 +646,50 @@ def loop():
             img = imageAnalysis(0)
             #service.send(service.topicCmd + "T0/servo", "1 -4500000 0")
             aru.after_catching_blue_ball(img)
-            #aru.turn_left_until_ID13_disappears(img)
-            state = 99
+            aru.turn_left_until_ID13_disappears(img)
+            service.send(service.topicCmd + "T0/servo", "1 -9000000 200")
+            state = 820
         elif state == 820:
+            img = imageAnalysis(0)
             aru.start_looking_for_ID16(img)
-            state = 99 
+            state = 825 
+        elif state == 825: 
+            service.send(service.topicCmd + "T0/servo", "1 -600 200")
+            driveXMeters(0.02, 0.1)
+            turnInPlace(63, 1) #turn right 
+            #t.sleep(0.05)
+            edge.stopAtNthIntersection([], 1)
+            edge.lineControl(0.07, 0) # follow line
+            state = 830
 
+        elif state == 830:
+            if edge.hasArrivedAtNthIntersection():
+                driveXMeters(0.03, 0.1)
+                turnInPlace(50, 1) #turn right
+                driveXMeters(0.4, 0.1)
+                service.send(service.topicCmd + "T0/servo", "1 -900 200")
+                state = 99
+
+            #driveXMeters(0.45, vel=0.3)
+            #driveXMeters(0, vel=0)
+            #service.send(service.topicCmd + "T0/servo", "1 -900 200")
+            #driveXMeters(0.45, vel=-0.3)
+            #t.sleep(3)
+            #edge.stopAtNthIntersection([], 1)
+            #if edge.hasArrivedAtNthIntersection():
+                #print("edge.hasArrivedAtNthIntersection: ", edge.hasArrivedAtNthIntersection())
+                #print("did you find the intersection?")
+                #edge.lineControl(0, 0) # stop following line
+                #turnInPlace(63, 1, 0.2) #turn left
+                #driveXMeters(0.20, 0.2)
+                #driveUntilLine()
+                #service.send(service.topicCmd + "T0/servo", "1 -900 200")
+                #state = 99 
+            #service.send(service.topicCmd + "T0/servo", "1 -900000 200")
+            #pose.tripBreset()
+            #if pose.tripAtimePassed() > 5:
+                #service.send(service.topicCmd + "T0/servo", "1 -900000 200")
+                #state = 99
         #################################### TESTS (9000-9999) ###################################
 
         elif state == 9000:
