@@ -59,19 +59,19 @@ def ball(image, color: int):
     """
     Detects a ball of a certain color in the image.
      image: the image to be analyzed
-     color: the color of the ball (0 = blue, 1 = orange)
+     color: the color of the ball (0 = blue, 1 = orange, 2 = red)
     """
-    # color thresholds element 0 = blue, 1 = orange
+    # color thresholds element 0 = blue, 1 = orange, 2 = red
     # Blue
-    b_low = [190, 0]
-    b_high = [255, 30]
+    b_low = [190, 0, 0]
+    b_high = [255, 30, 100]
 
     # Green
-    g_low = [60, 0]
-    g_high = [255, 100]
+    g_low = [60, 0, 0]
+    g_high = [255, 100, 40]
 
     # Red
-    r_low = [10, 80]
+    r_low = [10, 80, 150]
 
     mask = np.zeros_like(
         image[:, :, 0], dtype=bool
@@ -94,18 +94,38 @@ def ball(image, color: int):
             & (image[:, :, 1] >= g_low[color]) & (image[:, :, 1] <= g_high[color])  # green
             & (image[:, :, 2] >= r_low[color])  # red
         )
+    elif color ==  2: #red
+        mask = (
+            (image[:, :, 2] > image[:, :, 0]) & (image[:, :, 2] > image[:, :, 1])  # red intensity is higher than green and blue
+            & (image[:, :, 0]  > image[:, :, 1])  # green intensity is lower than blue
+            & (image[:, :, 0] >= b_low[color]) & (image[:, :, 0] <= b_high[color])  # blue
+            & (image[:, :, 1] >= g_low[color]) & (image[:, :, 1] <= g_high[color])  # green
+            & (image[:, :, 2] >= r_low[color])  # red
+        )
 
-    # clean up the picture
-    mask = remove_small_holes(mask, 500)
-    mask = binary_closing(mask, disk(5))
-    mask = remove_small_objects(mask, 200)
-    mask = binary_opening(mask, disk(5))
-    mask = remove_small_objects(mask, 300)
 
-    # prevent detecting the arm or the background
-    mask[:300, :] = 0  # remove the upper part of the picture
-    mask[:, :70] = 0  # Left side (0 to 70 pixels)
-    mask[:, 700:] = 0  # Right side (700 to 820 pixels)
+    if color < 2:
+        # clean up the picture
+        mask = remove_small_holes(mask, 500)
+        mask = binary_closing(mask, disk(5))
+        mask = remove_small_objects(mask, 200)
+        mask = binary_opening(mask, disk(5))
+        mask = remove_small_objects(mask, 300)
+
+        # prevent detecting the arm or the background
+        mask[:300, :] = 0  # remove the upper part of the picture
+        mask[:, :70] = 0  # Left side (0 to 70 pixels)
+        mask[:, 700:] = 0  # Right side (700 to 820 pixels)
+    else:
+        mask = remove_small_holes(mask, 500)
+        mask = binary_closing(mask, disk(5))
+        mask = remove_small_objects(mask, 100)
+        mask = remove_small_objects(mask, 300)
+
+        #prevent detecting the arm or the background
+        mask[:150,:] = 0      # remove the upper part of the picture
+        mask[:, :70] = 0      # Left side (0 to 70 pixels)
+        mask[:, 700:] = 0     # Right side (750 to 820 pixels)
 
     # find the middle of the ball from the up left corner
     labeled_image, n_labels = label(mask, background=0, return_num=True, connectivity=1)
