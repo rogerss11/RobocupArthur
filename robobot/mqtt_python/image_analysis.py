@@ -68,7 +68,7 @@ def ball(image, color: int):
 
     # Green
     g_low = [60, 0, 0]
-    g_high = [255, 100, 40]
+    g_high = [255, 100, 50]
 
     # Red
     r_low = [10, 80, 150]

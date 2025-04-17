@@ -417,6 +417,7 @@ class SEdge:
 
         # Check if the line is valid (high above threshold)
         self.lineValid = high >= self.lineValidThreshold
+        
 
         # Update lineValidCnt
         # -1 if there's no line, +1 up to 20 if there is
@@ -425,6 +426,8 @@ class SEdge:
             if self.lineValid
             else max(self.lineValidCnt - 1, 0)
         )
+
+        #print(self.lineValidCnt)
 
         if not self.ignoreIntersections:
         # Detect if we have a crossing line

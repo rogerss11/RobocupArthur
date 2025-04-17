@@ -128,10 +128,11 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 400  # ========== START STATE ===============
+                state = 100  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
+                service.send(service.topicCmd + "T0/servo", "1 -900 200")
                 pose.tripBreset()
                 # 9200 turn test
                 # 9210 put arm down test
@@ -190,14 +191,14 @@ def loop():
                 edge.lineControl(0.0, 0)
                 driveXMeters(0.2, 0.1)
                 pose.tripBreset()
-                edge.lineControl(0.05, 0)
+                edge.lineControl(0.1, 0)
                 state = 170
 
         elif state == 170:  # drive until line
-            if pose.tripBtimePassed() > 7:
+            if pose.tripBtimePassed() > 4:
                 edge.lineControl(0.0, 0)
                 pose.tripBreset()
-                state = 200
+                state = 200 
 
         ######################### SEESAW + SEESAW GOLF BALL (200-299) ###########################
 
@@ -206,7 +207,7 @@ def loop():
             Revise!!!
             """
             ia.drive2ball(2)  # drive to the orange ball
-            state = 225
+            state = 220
 
         elif state == 220:
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
@@ -224,7 +225,7 @@ def loop():
 
         elif state == 230:
             edge.lineControl(0.05, 0)
-            if ir.ir[1] < 0.43 or pose.tripBtimePassed() > 11.5:  # going down
+            if ir.ir[1] < 0.43 or pose.tripBtimePassed() > 20:  # going down
                 # print("end of ramp")
                 service.send(service.topicCmd + "T0/servo", "1 -200 300")
                 state = 231
@@ -259,7 +260,7 @@ def loop():
             # service.send(service.topicCmd + "T0/servo", "1 -175 0")
             turnInPlace(63, 1)
             driveXMeters(x=1, vel=0.35)
-            driveUntilLine(600)
+            driveUntilLine(550)
             turnInPlace(45, dir=1)
             state = 260
 
@@ -421,8 +422,10 @@ def loop():
             edge.lineControl(0.05, 0)
             t.sleep(5)
             edge.lineControl(0.0, 0.0)
+            edge.setIgnoreIntersections(True)
             service.send(service.topicCmd + "ti/rc", "0.0 0.0")
             state = 405
+              
 
         elif state == 405:  # Roger + Arnau
             # ------------- GO DOWN STAIRS -------------------------------------------
@@ -443,58 +446,66 @@ def loop():
                     #else:
                     #    print("Line is centered, no turn")
 
-                    print("aaaaaaaaaaaaaaaaaaaaaaaaaaaa: ", edge_n) # Calculate the average intensity for left and right side
                     
                     sum_values = sum(edge.edge_n)
                     pos_sum = sum((i + 1) * v for i, v in enumerate(edge.edge_n))
-                    position = (pos_sum / sum_values - 4.5)
+                    position = (pos_sum / sum_values - 4.4) # middle is 4.5 but the sensor seems to be more on the left side of the robot
 
-                    print("position: ", position)
+                    direction = 1 if position > 0 else 0
+
+                    print("position: ", position, " -> turn ", abs(position), " to ", "left" if direction == 0 else "right") 
                     
-                    turnInPlace(abs(position), dir=0 if position > 0 else 1)  # turn to the left
-
-
-
+                    turnInPlace(abs(position)*1.4, direction)  # turn left or right based on how much of center we are
 
                 steps += 1
                 print(f"% ----------------- steps = {steps} ------------")
 
-            driveXMeters(0.1, vel=0.2)
             state = 410
 
         elif state == 410:
+            edge.lineValidCnt = 0
             edge.lineControl(0.05, 0)
-            t.sleep(1)
+            t.sleep(0.1)
             edge.lineControl(0, 0)
-            if not edge.lineValid:
-                turnInPlace(50, dir=-1)  # turn to the left
+            if edge.lineValidCnt <= 3:
+                print("not on line -> look for line on the left side first")
+                turnInPlace(50, dir=0)  # turn to the left
                 edge.setDriveUntilLine(0.15, 300)
                 pose.tripBreset()
                 state = 411
 
             else:
+                print("ended up on line")
                 state = 415
                 
         elif state == 411:
             if edge.reachedLine():
-                turnInPlace(50, dir=1)  # turn to the right
+                print("found line on the left side")
+                driveXMeters(0.025, 0.1)
+                turnInPlace(45, dir=1)  # turn to the right
+                state = 415
 
-            elif pose.tripBtimePassed() > 1.5: # turn all the way around
+            elif pose.tripBtimePassed() > 1: # turn all the way around
+                print("didnt dind line on the left side, turn around and look for it on the right side")
                 turnInPlace(110, dir=1)  # turn to the right
                 edge.setDriveUntilLine(0.15, 300)
                 state = 412
         
         elif state == 412:
             if edge.reachedLine():
-                turnInPlace(50, dir=0)  # turn to the left
+                print("found line on the right side")
+                driveXMeters(0.025, 0.1)
+                turnInPlace(45, dir=0)  # turn to the left
                 state = 415
 
         elif state == 415:
+            edge.lineControl(0.1)  # follow line
+            t.sleep(6)
             edge.lineControl(0.05)  # follow line
-            t.sleep(5)
+            t.sleep(3)
             edge.lineControl(0, 0)  # stop following line
             pose.tripBreset()
-            driveXMeters(0.8)
+            driveXMeters(0.5)
             pose.tripBreset()
             state = 420
 
@@ -563,10 +574,19 @@ def loop():
         # Vojta + Arnau + Andrea
         elif state == 600:  # follow line until end
             service.send(service.topicCmd + "ti/servo", "1 -900 0")
-            edge.lineControl(0.1, 0)
             edge.setIgnoreIntersections(True)
-            state = 605
+            edge.lineControl(0.1, 0)
+            t.sleep(2)
+            edge.lineControl(0.2, 0)
             pose.tripBreset()
+
+        elif state == 601:
+            if edge.lineValidCnt == 0:
+                state = 605
+            elif pose.tripBtimePassed() > 2:
+                edge.lineControl(0.1, 0)
+                state = 605
+
 
         elif state == 605:
             if edge.lineValidCnt == 0:  # when line finishes, stop
@@ -609,17 +629,39 @@ def loop():
             if edge.hasArrivedAtNthIntersection():
                 turnInPlace(63, 0)
                 driveXMeters(0.05, 0.1)
-                edge.lineControl(0.05, 0)
                 edge.stopAtNthIntersection([], 1)
+                edge.lineControl(0.1, 0)
+                t.sleep(2)
+                edge.lineControl(0.5, 0)
                 state = 650
 
         elif state == 650:
             if edge.hasArrivedAtNthIntersection():
+                turnInPlace(10, 1)
+                driveXMeters(0.05, 0.1)
+                turnInPlace(60, 1)
+                t.sleep(0.5)
                 state = 660
 
         elif state == 660:
-            aru.turning_to_center()
-            state = 665
+            ok = False
+            while not ok:
+                img, ok = ia.imageAnalysis(0)
+
+            xy = ia.ball(img,2)
+
+            if xy == []:
+                pass
+                #turnInPlace(0, 1)
+
+            else:
+                xy[0] = xy[0] - 10 # we need to be facing the e rather than middle of the poster
+                Status = ia.move_middle(xy, 2, 0)
+
+                if Status == 0:
+                    state = 700
+
+        
 
         ####################### FIGURE-8 + ROUNDABOUT SECTION (700-799) #########################
 
