@@ -217,10 +217,10 @@ def distance_calc(xy, color: int):
             d = 997.518
 
         elif color == 1:  # orange ball
-            a = -0.00000502
-            b = 0.00765108
-            c = -4.0016825
-            d = 751.342459
+            a = -0.000004773
+            b = 0.0071798
+            c = -3.7170159
+            d = 690.2428101
 
         distance = (a * xy[1] ** 3 + b * xy[1] ** 2 + c * xy[1] + d) * 10  # in mm
 

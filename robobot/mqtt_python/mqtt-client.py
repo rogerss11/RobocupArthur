@@ -128,12 +128,13 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 140  # ========== START STATE ===============
+                state = 635  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
                 service.send(service.topicCmd + "T0/servo", "1 -900 200")
                 pose.tripBreset()
+                edge.adjustSpeed = False
                 # 9200 turn test
                 # 9210 put arm down test
                 # 9213 put arm up test
@@ -178,8 +179,7 @@ def loop():
                 pose.tripBreset()
 
         elif state == 140:
-            if True: #pose.tripB > 1.58:
-                edge.stopAtNthIntersection([], 1)
+            if pose.tripB > 1.58:
                 edge.adjustSpeed = False
                 edge.setIgnoreIntersections(False)
                 edge.lineControl(0.1, 0)
@@ -195,7 +195,7 @@ def loop():
                 pose.tripBreset()
 
         elif state == 160:
-            if pose.tripBtimePassed() > 0.9:
+            if pose.tripBtimePassed() > 1.3:
                 edge.lineControl(0.0, 0)
                 driveXMeters(0.2, 0.1)
                 pose.tripBreset()
@@ -439,7 +439,7 @@ def loop():
             # ------------- GO DOWN STAIRS -------------------------------------------
             steps = 0
             while steps < 5:
-                stairStep(60, 0.1)  # go down one step
+                stairStep(60, 0.2)  # go down one step
                 if True: # steps == 1:
                     #print(edge.edge_n)
                     #left_avg = sum(edge.edge_n[:4])
@@ -507,18 +507,21 @@ def loop():
                 state = 415
 
         elif state == 415:
-            edge.lineControl(0.1)  # follow line
-            t.sleep(6)
-            edge.lineControl(0.05)  # follow line
+            edge.lineControl(0.15)  # follow line
+            pose.tripBreset()
             t.sleep(3)
-            edge.lineControl(0, 0)  # stop following line
-            pose.tripBreset()
-            driveXMeters(0.5)
-            pose.tripBreset()
+            edge.stopAtNthIntersection([], 1)
             state = 420
 
         elif state == 420:
-            driveUntilLine(500,0.2)
+            if pose.tripBtimePassed() > 5 or edge.hasArrivedAtNthIntersection():
+                edge.lineControl(0, 0)
+                pose.tripBreset()
+                state = 430
+                driveXMeters(0.5)
+
+        elif state == 430:
+            driveUntilLine(500,0.35)
             state = 600
 
 
@@ -585,13 +588,14 @@ def loop():
             edge.setIgnoreIntersections(True)
             edge.lineControl(0.1, 0)
             t.sleep(2)
-            edge.lineControl(0.2, 0)
+            edge.lineControl(0.22, 0)
             pose.tripBreset()
+            state = 601
 
         elif state == 601:
             if edge.lineValidCnt == 0:
                 state = 605
-            elif pose.tripBtimePassed() > 2:
+            elif pose.tripBtimePassed() > 2.5:
                 edge.lineControl(0.1, 0)
                 state = 605
 
@@ -604,15 +608,15 @@ def loop():
 
         elif state == 610:
             service.send(
-                service.topicCmd + "ti/rc", "0 0.2"
+                service.topicCmd + "ti/rc", "0 0.45"
             )  # turn slightly to not miss the axe line
-            if pose.tripBtimePassed() > 1:
+            if pose.tripBtimePassed() > 0.65:
                 service.send(service.topicCmd + "ti/rc", "0 0")
                 state = 615
                 pose.tripBreset()
 
         elif state == 615:
-            edge.setDriveUntilLine(0.25, 300)
+            edge.setDriveUntilLine(0.3, 335)
             state = 620
 
         elif state == 620:  # drive until line
@@ -627,7 +631,7 @@ def loop():
             state = 635
 
         elif state == 635:  # wait for it to get past the axe
-            if not ir.axeActive:
+            if True: #not ir.axeActive:
                 edge.setIgnoreIntersections(False)
                 edge.stopAtNthIntersection([], 1)
                 edge.lineControl(0.05, 0.0)
@@ -638,15 +642,13 @@ def loop():
                 turnInPlace(63, 0)
                 driveXMeters(0.05, 0.1)
                 edge.stopAtNthIntersection([], 1)
-                edge.lineControl(0.1, 0)
-                t.sleep(2)
-                edge.lineControl(0.5, 0)
+                edge.lineControl(0.2, 0)
                 state = 650
 
         elif state == 650:
             if edge.hasArrivedAtNthIntersection():
-                turnInPlace(10, 1)
-                driveXMeters(0.05, 0.1)
+                turnInPlace(13, 1)
+                driveXMeters(0.075, 0.1)
                 turnInPlace(60, 1)
                 t.sleep(0.5)
                 state = 660
@@ -663,8 +665,8 @@ def loop():
                 #turnInPlace(0, 1)
 
             else:
-                xy[0] = xy[0] - 10 # we need to be facing the e rather than middle of the poster
-                Status = ia.move_middle(xy, 2, 0)
+                xy = (xy[0]-10, xy[1])
+                Status = ia.move_middle(xy, 20, 0)
 
                 if Status == 0:
                     state = 700
@@ -679,8 +681,28 @@ def loop():
             driveXMeters(0.45, vel=0.3)
             driveUntilWall(0.30, ir_id=1, vel=0.0)
             t.sleep(3)
-            driveXMeters(1.45, vel=0.3)
-            state = 705
+            driveXMeters(0.9, vel=0.3)
+            state = 701
+
+
+        elif state == 701:
+            ok = False
+            while not ok:
+                img, ok = ia.imageAnalysis(0)
+
+            xy = ia.ball(img,2)
+
+            if xy == []:
+                pass
+                #turnInPlace(0, 1)
+
+            else:
+                xy = (xy[0]-5, xy[1])
+                Status = ia.move_middle(xy, 20, 0)
+
+                if Status == 0:
+                    state = 705
+                    driveXMeters(0.55, vel=0.3)
 
         elif state == 705:
             # ------------- CLIMB CIRCLE MISSION -------------------------------------------

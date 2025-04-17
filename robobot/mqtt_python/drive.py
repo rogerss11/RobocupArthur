@@ -20,7 +20,6 @@ def driveXMeters(x=1.0, vel=0.2):
     state = 0
     pose.tripBreset()
     print(f"% Driving {x}m -------------------------")
-    service.send(service.topicCmd + "T0/leds", "16 0 100 0")  # green
     while not (service.stop):
         if state == 0:  # wait for start signal
             vel = vel if x > 0 else -vel
@@ -507,8 +506,8 @@ def stairStep(acc=50, vel=0.1):
             gyro = [abs(g) for g in gyro]  # absolute value
             gyro = max(gyro)  # max of all 3 axes
             if gyro > acc or pose.tripBtimePassed() > 15:
-                service.send("robobot/cmd/ti/rc", "0.05 0.0")
-                t.sleep(3.5)
+                service.send("robobot/cmd/ti/rc", "0.1 0.0")
+                t.sleep(1.65)
                 service.send(
                     "robobot/cmd/ti/rc", "0.0 0.0"
                 )  # (forward m/s, turn-rate rad/sec)
