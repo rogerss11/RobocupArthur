@@ -576,7 +576,7 @@ def wiggle(width=60, ang_speed=0.5, N_wiggles=3, x=0.03):
 
         elif state == 4:  # Drive forward x meters
             pose.tripBreset()
-            cmnd_msg = f"{0.07:.2f} 0.0"  # Drive forward slowly
+            cmnd_msg = f"{0.15:.2f} 0.0"  # Drive forward slowly
             service.send("robobot/cmd/ti/rc", cmnd_msg)
             state = 5
 

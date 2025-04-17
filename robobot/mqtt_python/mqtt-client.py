@@ -119,7 +119,7 @@ def loop():
 
     # MAIN STATE MACHINE
     edge.lineControl(0, 0)  # make sure line control is off
-    while not (service.stop):
+    while not (service.stop):   
         if state == 0:  # wait for start signal
             start = True  # gpio.start() or service.args.now
             if start:
@@ -128,7 +128,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 100  # ========== START STATE ===============
+                state = 140  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -145,49 +145,57 @@ def loop():
 
         elif state == 100:
             service.send(service.topicCmd + "T0/servo", "1 -900 200")  # arm up
-            edge.lineControl(0.2, 0.0)  # m/s and position on line
+            edge.lineControl(0.225, 0.0)  # m/s and position on line
             edge.adjustSpeed = False  # adjust speed to follow line
+            edge.setIgnoreIntersections(True)  # ignore intersections
             edge.stopAtNthIntersection(["r"], 2)
-            state = 110
+            state = 105
             pose.tripBreset()
-            state = 110
+        
+        elif state == 105:
+            if pose.tripBtimePassed() > 7:
+                edge.lineControl(0.2, 0)
+                edge.setIgnoreIntersections(False)
+                state = 110
 
         elif state == 110:
-            if pose.tripBtimePassed() > 13.5:
+            if pose.tripBtimePassed() > 11.5:
                 edge.adjustSpeed = True
+                edge.setIgnoreIntersections(True)
                 state = 120
                 pose.tripBreset()
 
         elif state == 120:
-            if pose.tripB > 1.85:
+            if pose.tripB > 1.88:
                 edge.adjustSpeed = False
                 state = 130
                 pose.tripBreset()
 
         elif state == 130:
-            if pose.tripBtimePassed() > 4.5:
+            if pose.tripBtimePassed() > 4.4:
                 edge.adjustSpeed = True
                 state = 140
                 pose.tripBreset()
 
         elif state == 140:
-            if pose.tripB > 1.5:
+            if True: #pose.tripB > 1.58:
+                edge.stopAtNthIntersection([], 1)
                 edge.adjustSpeed = False
-                edge.lineControl(0.05, 0)
+                edge.setIgnoreIntersections(False)
+                edge.lineControl(0.1, 0)
                 state = 150
                 pose.tripBreset()
 
         elif state == 150:  # drive until line
             if edge.hasArrivedAtNthIntersection():
-                driveXMeters(0.025, 0.1)
-                turnInPlace(48, 0)
+                turnInPlace(40, 0)
                 edge.setIgnoreIntersections(True)
-                edge.lineControl(0.05, 0)
+                edge.lineControl(0.17, 0)
                 state = 160
                 pose.tripBreset()
 
         elif state == 160:
-            if pose.tripBtimePassed() > 2.2:
+            if pose.tripBtimePassed() > 0.9:
                 edge.lineControl(0.0, 0)
                 driveXMeters(0.2, 0.1)
                 pose.tripBreset()
@@ -195,7 +203,7 @@ def loop():
                 state = 170
 
         elif state == 170:  # drive until line
-            if pose.tripBtimePassed() > 4:
+            if pose.tripBtimePassed() > 3.8:
                 edge.lineControl(0.0, 0)
                 pose.tripBreset()
                 state = 200 
@@ -339,7 +347,7 @@ def loop():
             driveUntilNOLine_manual(0.05, 0)
             driveXMeters(0.05, vel=0.1)
             turnInPlace(8, 0)
-            wiggle(width=50, ang_speed=0.4, N_wiggles=3)
+            wiggle(width=50, ang_speed=0.75, N_wiggles=3)
             state = 280
 
         elif state == 280:
@@ -403,14 +411,14 @@ def loop():
             print("Wiggle")
             speed = 0.5
             turnInPlace(20, dir=1, ang_speed=speed)
-            wiggle()
+            wiggle(width=50, ang_speed=0.75, N_wiggles=3)
 
             state = 340
         
         elif state == 340: # drive to the stairs
-            driveUntilLine(300, vel=-0.2)
-            driveXMeters(-0.05)
-            driveUntilLine(300, vel=-0.10)
+            driveUntilLine(450, vel=-0.2)
+            driveXMeters(-0.075)
+            driveUntilLine(450, vel=-0.10)
             turnInPlace(70,0)
             state = 400
             
