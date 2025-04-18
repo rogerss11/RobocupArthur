@@ -631,18 +631,19 @@ def loop():
             state = 635
 
         elif state == 635:  # wait for it to get past the axe
-            if True: #not ir.axeActive:
+            if not ir.axeActive:
                 edge.setIgnoreIntersections(False)
                 edge.stopAtNthIntersection([], 1)
-                edge.lineControl(0.05, 0.0)
+                edge.lineControl(0.06, 0.0)
                 state = 640
 
         elif state == 640:
             if edge.hasArrivedAtNthIntersection():
+                t.sleep(0.5)
                 turnInPlace(63, 0)
-                driveXMeters(0.05, 0.1)
+                driveXMeters(0.05, 0.15)
                 edge.stopAtNthIntersection([], 1)
-                edge.lineControl(0.2, 0)
+                edge.lineControl(0.17, 0)
                 state = 650
 
         elif state == 650:
@@ -711,7 +712,7 @@ def loop():
             turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
             driveXMeters(gate_dist)
             turnInPlace(25, dir=1)
-            climbCircle(45, vel=0.45)
+            climbCircle(50, vel=0.45)
             state = 710  # inside circle
 
         elif state == 710:
@@ -740,7 +741,7 @@ def loop():
             t.sleep(1.5)
             edge.lineControl(0, 0)
             driveUntilWall(0.3, ir_id=1, vel=0.0) # waiting for birtle
-            t.sleep(1) # wait for birtle to pass
+            t.sleep(1.5) # wait for birtle to pass
 
             edge.lineControl(0.1, 0)  # follow line
             edge.stopAtNthIntersection(['l'], 1)
@@ -750,7 +751,6 @@ def loop():
             turnInPlace(63,0)
             driveXMeters(0.2,0.2)
             driveUntilLine(300)
-
             state = 800
 
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
