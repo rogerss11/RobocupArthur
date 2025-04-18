@@ -82,6 +82,7 @@ class SEdge:
     intersectionPath = ['r', 'r', 'r', 'r'] # l = choose left line, r = choose right line, m = choose middle line
     navigatingIntersection = False # if we are currently navigating an intersection
     ArrivedAtNthIntersection = False
+    valuesAboveZeroCutoff = 4 # number of sensors above zero to detect a line
 
     adjustSpeed = False # if we should adjust speed based on error
 
@@ -431,7 +432,7 @@ class SEdge:
 
         if not self.ignoreIntersections:
         # Detect if we have a crossing line
-            if valuesAboveZero >= 4: #! maybe change to 4
+            if valuesAboveZero >= valuesAboveZeroCutoff: #! maybe change to 4
                 self.atIntersection = True
             else:
                 self.atIntersection = False

@@ -87,7 +87,9 @@ def driveUntilWall(d=0.2, ir_id=1, vel=0.2):
                 "robobot/cmd/ti/rc", "0.0 0.0"
             )  # (forward m/s, turn-rate rad/sec)
             break
-        #print(f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
+        print(
+            f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
+        )
         t.sleep(0.05)
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
