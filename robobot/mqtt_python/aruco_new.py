@@ -138,33 +138,17 @@ class ArucoDetector:
         print("Distance captured: ", min_d) 
         if min_d < 0.7: 
             driveXMeters(x=-0.2, vel=0.2) #back away from the basket
-            #driveUntilWall(0.7, 1, -0.2) #back away until distance
             print("I am driving backwards!!!!!")
-            #service.send(service.topicCmd + "T0/servo", "1 -4500000 0")
-            #found_13 = True
         print("🔍 Looking for ID 13...")
 
         while not found_13:
             turnInPlace(deg=10, dir=1, ang_speed=0.2) #turn clockwise
-            #turnInPlace(deg=20, dir=0, ang_speed=0.2) #turn counterclockwise
-            #pose.tripBreset() #reset time
-            #service.send(service.topicCmd + "ti/rc", "0.05 0.1") #turn right 
-            #if pose.tripBtimePassed() > 2: # if more than 2.5 secs pass, stop turning
-                #service.send(service.topicCmd + "ti/rc", "0.0 0.0")
-            #pose.tripBreset() #reset time
-            #service.send(service.topicCmd + "ti/rc", "0.05 -0.1") #turn left
-            #if pose.tripBtimePassed() > 2: # if more than 2.5 secs pass, stop turning
-                #service.send(service.topicCmd + "ti/rc", "0.0 0.0") 
         
             # Get image and check
             ok, img, _ = cam.getImage()
             if not ok:
                 print("No image from camera.")
                 break
-            
-            #img[:300, :]= 0
-            #img[:, :100]= 0
-            #img[:, 100:] = 0 
 
             ids, _, _, _, img = self.detect_markers(img) #detect aruco markers
             if ids:
@@ -173,21 +157,14 @@ class ArucoDetector:
                     print("✅ Found ID 13!")
                     service.send(service.topicCmd + "ti/rc", "0 0")  # stop turning
 
-                    #TRIGGER SENSOR
                     min_d = ir.ir[1] # Get distance from IR sensor
                     print("Distance captured: ", min_d)
-                    #if min_d > 0.7: # if the object is detected less than 70 cm
-                        #driveUntilWall(0.7, 1, 0.2)  # drive until wall
-                        #service.send(service.topicCmd + "T0/servo", "1 -4500000 0")
-                        #break  
                     #if min_d < 0.7: 
-                        #driveUntilWall(0.7, 1, -0.2) #back away until distance@
-                        #print("I am driving backwards!!!!!")
-                        #service.send(service.topicCmd + "T0/servo", "1 -4500000 0")
+                        #driveXMeters(x=-0.2, vel=0.2) #back away from the basket
+                        #print("Too close to ID 13, driving backwards")
                     found_13 = True  
-                    #break
 
-            t.sleep(0.3)  # Pause briefly before switching direction
+            t.sleep(0.5)  # Pause briefly before switching direction
 
     # --- After finding ID 13, turn left until it disappears --- #
     def turn_left_until_ID13_disappears(self, img):
@@ -202,30 +179,31 @@ class ArucoDetector:
                 print(f"Still detecting: {ids}")
                 print("🔄 Turning left until ID 13 disappears...")
                 service.send(service.topicCmd + "ti/rc", "0 0.25")  # Slow turn left
+                print(f"# Finished turning {pose.tripBh:.3f}")
                 if 13 not in ids:
                     service.send(service.topicCmd + "ti/rc", "0 0")
                     print("❌ ID 13 gone — stop turning") 
                     break
             else:
-                print("No marker visible — this should not happen")
+                print("No marker visible — this should not happen?")
                 break
 
             t.sleep(0.1)
 
         # Final step
-        print("Turning a little to the left to look for line")
-        turnInPlace(10,0)
-        print("🚗 Driving until line")
-        driveUntilLine()
-        turnInPlace(55,1) #turn to the right to look for line
-        edge.lineControl(0.03, 0) # speed and position (slooow line control so it can catch up)
+        #print("Turning a little to the left to look for line")
+        #turnInPlace(15,0)
+        #print("🚗 Driving until line")
+        #driveUntilLine()
+        #turnInPlace(55,1) #turn to the right to look for line
+        #edge.lineControl(0.03, 0) # speed and position (slooow line control so it can catch up)
 
     # --- This will drive on the line and look for the ID 16 marker --- #
     def start_looking_for_ID16(self, img):
         print("🔍 Looking for ID 16...")
-        edge.lineControl(0.05, 0)
+        edge.lineControl(0.1, 0)
         #if pose.tripBtimePassed()>1: #if more than 3 secs pass, stop line control, look right and check aruco
-        t.sleep(15) #change based on when we want to turn to look for ID 16. Do we even need this? can we hardcode to turn and drive towards line after x secs? 
+        t.sleep(9) #change based on when we want to turn to look for ID 16. Do we even need this? can we hardcode to turn and drive towards line after x secs? 
         edge.lineControl(0,0) #stop line control
         turnInPlace(59, dir=1) #turn towards the arucos
 

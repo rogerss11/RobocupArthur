@@ -614,7 +614,7 @@ class SEdge:
 
     def PIDrecalculate(self):
       """ Recalculate the PID parameters. """
-      print(f"LineCtrl:: PIDrecalculate: T={self.edgeIntervalSetup:.2f} -> {self.edge_nInterval:.2f} ms")
+      #print(f"LineCtrl:: PIDrecalculate: T={self.edgeIntervalSetup:.2f} -> {self.edge_nInterval:.2f} ms")
       Tsec = self.edge_nInterval/1000
       self.tauP2pT = self.lineTauP * 2.0 + Tsec
       self.tauP2mT = self.lineTauP * 2.0 - Tsec
