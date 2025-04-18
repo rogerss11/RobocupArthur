@@ -93,6 +93,13 @@ class UService:
                 help='set mission state to this value')
     self.parser.add_argument('-d', '--distance', action='store_true',
                 help='wait for someone to touch side distance sensor before start')
+    
+    #! just for testing, didnt want to put it in the main loop all the time
+    self.parser.add_argument('-armup', action='store_true',
+                help='move arm up')
+    self.parser.add_argument('-armdown', action='store_true',
+                help='move arm down')
+
     self.args = self.parser.parse_args()
     # print(f"% command line arguments: white {self.args.white}, gyro={self.args.gyro}, level={self.args.level}")
     # allow close down on ctrl-C

@@ -110,12 +110,24 @@ def loop():
     tripTime = datetime.now()
     oldstate = -1
 
+    #! just for testing, didnt want to put it in the main loop all the time
+    if service.args.armup:
+        service.send(service.topicCmd + "T0/servo", "1 -850 200")
+        service.send(service.topicCmd + "T0/servo", "1 -900 200")
+        t.sleep(1)
+        service.send(service.topicCmd + "T0/servo", "1 -123456789 200")
+        return
+    elif service.args.armdown:
+        service.send(service.topicCmd + "T0/servo", "1 -200 200")
+        service.send(service.topicCmd + "T0/servo", "1 -150 200")
+        t.sleep(1)
+        service.send(service.topicCmd + "T0/servo", "1 -123456789 200")
+        return
+
     # START
     service.send(service.topicCmd + "T0/leds", "16 30 30 0")  # LED 16: yellow - waiting
     flog.write(state)
     print(f"% Using state {state}")
-    # elif not service.args.now:
-    #   print("% Ready, press start button")
 
     # MAIN STATE MACHINE
     edge.lineControl(0, 0)  # make sure line control is off
