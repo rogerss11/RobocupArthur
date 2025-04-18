@@ -670,7 +670,7 @@ def loop():
             state = 635
 
         elif state == 635:  # wait for it to get past the axe
-            if not ir.axeActive:
+            if True: #not ir.axeActive:
                 edge.setIgnoreIntersections(False)
                 edge.stopAtNthIntersection([], 1)
                 edge.lineControl(0.06, 0.0)
@@ -679,18 +679,24 @@ def loop():
         elif state == 640:
             if edge.hasArrivedAtNthIntersection():
                 t.sleep(0.5)
+                driveXMeters(0.015, 0.15)
                 turnInPlace(63, 0)
                 driveXMeters(0.05, 0.15)
                 edge.stopAtNthIntersection([], 1)
-                edge.lineControl(0.17, 0)
+                edge.lineControl(0.2, 0)
+                t.sleep(4)
+                edge.lineControl(0.1, 0)
+                edge.valuesAboveZeroCutoff = 3
                 state = 650
 
         elif state == 650:
             if edge.hasArrivedAtNthIntersection():
-                turnInPlace(13, 1)
-                driveXMeters(0.075, 0.1)
-                turnInPlace(60, 1)
+                edge.valuesAboveZeroCutoff = 4
+                turnInPlace(10, 1)
+                driveXMeters(0.065, 0.1)
+                turnInPlace(55, 1)
                 t.sleep(0.5)
+                service.send(service.topicCmd + "ti/servo", "1 -900 200")
                 state = 660
 
         elif state == 660:
@@ -705,8 +711,8 @@ def loop():
                 #turnInPlace(0, 1)
 
             else:
-                xy = (xy[0]-10, xy[1])
-                Status = ia.move_middle(xy, 20, 0)
+                xy = (xy[0]-20, xy[1])
+                Status = ia.move_middle(xy, 18, 0)
 
                 if Status == 0:
                     state = 700
@@ -718,14 +724,28 @@ def loop():
         elif state == 700:  # Roger
             # ------------- PASS BIRTLE (start from line) -------------------------------------------
             service.send(service.topicCmd + "T0/servo", "1 -900 200")
-            driveXMeters(0.45, vel=0.3)
-            driveUntilWall(0.30, ir_id=1, vel=0.0)
-            t.sleep(3)
-            driveXMeters(0.9, vel=0.3)
+            pose.tripBreset()
+            service.send("robobot/cmd/ti/rc", "0.15 0.0")
             state = 701
 
-
         elif state == 701:
+            if pose.tripB > 0.05:
+                 service.send("robobot/cmd/ti/rc", "0.3 0.0")
+                 state = 702
+
+        elif state == 702:
+            if pose.tripB > 0.32:
+                service.send("robobot/cmd/ti/rc", "0.0 0.0")
+                driveUntilWall(0.4, ir_id=1, vel=0.0)
+                pose.tripBreset()
+                while ir.ir[1] > 1 or pose.tripBtimePassed() > 4:
+                    pass
+                t.sleep(4)
+                driveXMeters(0.9, vel=0.3)
+                state = 703
+
+
+        elif state == 703:
             ok = False
             while not ok:
                 img, ok = ia.imageAnalysis(0)
@@ -737,12 +757,13 @@ def loop():
                 #turnInPlace(0, 1)
 
             else:
-                xy = (xy[0]-5, xy[1])
-                Status = ia.move_middle(xy, 20, 0)
+                xy = (xy[0]+5, xy[1])
+                Status = ia.move_middle(xy, 12, 0)
 
                 if Status == 0:
                     state = 705
                     driveXMeters(0.55, vel=0.3)
+
 
         elif state == 705:
             # ------------- CLIMB CIRCLE MISSION -------------------------------------------
@@ -760,46 +781,43 @@ def loop():
             min_d = driveUntilWall(0.3, ir_id=0, vel=0.1)
             print(f"% min_d = {min_d:.2f}")
             turn_rad = min_d + 0.13  # 0.1 is the 1/2 of the wheel base
-            turnInPlace(8, dir=1, ang_speed=0.3)  # Adjust position
+            turnInPlace(5, dir=1, ang_speed=0.3) #8 # Adjust position
             rotateCircle(r=turn_rad, deg=310, dir=1)
             state = 715
 
         elif state == 715:
             # ------------- LEAVE CIRCLE -------------------------------------------
 
-            driveXMeters(min_d + 0.30, vel=0.3)
-
+            driveXMeters(min_d*0.5 + 0.4, vel=0.3)
+            turnInPlace(10, dir=1)  # turn to the right
             state = 720  # go to blue ball sorting section
 
         elif state == 720:
-            driveUntilWall(0.3, ir_id=1, vel=0.0) # waiting for birtle
-            t.sleep(0.7) # wait for birtle to pass
-            edge.setDriveUntilLine(0.25, 300)
+            driveUntilWall(0.4, ir_id=1, vel=0.0) # waiting for birtle
+            t.sleep(1) # wait for birtle to pass
+            edge.setDriveUntilLine(0.25, 450)
             state = 730
 
         elif state == 730: # drive until line
             if edge.reachedLine():
-                turnInPlace(40, dir=1)  # turn clockwise 65=90deg
-                edge.lineControl(0.2, 0)  # follow line
-                t.sleep(1.5)
-                edge.lineControl(0, 0)
-                driveUntilWall(0.3, ir_id=1, vel=0.0) # waiting for birtle
-                t.sleep(1.5) # wait for birtle to pass
-
-                edge.lineControl(0.1, 0)  # follow line
-                edge.stopAtNthIntersection(['l'], 1)
-                t.sleep(5)
-                edge.lineControl(0, 0)  # stop following line
-                
-                turnInPlace(63,0)
-                driveXMeters(0.2,0.2)
+                driveXMeters(0.2, vel=0.2)
+                pose.tripBreset()
+                state = 99
+        
+        elif state == 740:
+            if ir.ir[1] < 1 or pose.tripBtimePassed() > 7:
+                t.sleep(1)
+                turnInPlace(10, 1)  # turn to the left
+                driveXMeters(0.3, vel=0.2)
                 edge.setDriveUntilLine(0.25, 300)
-                state = 740
+                state = 750
 
-        elif state == 740: # drive until line
+        elif state == 750: # drive until line
             if edge.reachedLine():
-                state = 800
+                turnInPlace(63, 1)  # turn to the left
+                state = 4656
 
+    
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
 
         elif state == 800:  # turn left at intersection, raise arm and hit basket 
