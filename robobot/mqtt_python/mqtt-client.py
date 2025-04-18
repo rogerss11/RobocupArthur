@@ -132,22 +132,20 @@ def loop():
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
-                service.send(service.topicCmd + "T0/servo", "1 -900 200")
                 pose.tripBreset()
-                edge.adjustSpeed = False
                 # 9200 turn test
                 # 9210 put arm down test
                 # 9213 put arm up test
                 # 9220 driveUntilNOLine_auto test
                 # 9221 driveUntilNOLine_manual test
                 # 9230 driveUntilLine test
+                service.send(service.topicCmd + "T0/servo", "1 -900 200")
 
         ############################### START FUNCTIONS (100-199) ###############################
 
         elif state == 100:
             service.send(service.topicCmd + "T0/servo", "1 -900 200")  # arm up
             edge.lineControl(0.225, 0.0)  # m/s and position on line
-            edge.adjustSpeed = False  # adjust speed to follow line
             edge.setIgnoreIntersections(True)  # ignore intersections
             edge.stopAtNthIntersection(["r"], 2)
             state = 105
@@ -268,9 +266,14 @@ def loop():
             # service.send(service.topicCmd + "T0/servo", "1 -175 0")
             turnInPlace(63, 1)
             driveXMeters(x=1, vel=0.35)
-            driveUntilLine(550)
-            turnInPlace(45, dir=1)
-            state = 260
+            edge.setDriveUntilLine(0.25, 550)
+            state = 256
+
+        elif state == 256: # drive until line
+            if edge.reachedLine():
+                turnInPlace(45, dir=1)
+                state = 260
+
 
         elif state == 260:  # Climb the ramp
             edge.lineControl(0.06, 0)
@@ -352,13 +355,17 @@ def loop():
 
         elif state == 280:
             # ------------- BALL IN THE HOLE -------------------------------------------
-            driveUntilLine(250, vel=-0.15)
-            turnInPlace(50, dir=1)
-            edge.stopAtNthIntersection([], 1)
-            edge.lineControl(0.1, 0)  # follow line
-            t.sleep(4)
-            edge.lineControl(0.05, 0)
-            state = 290
+            edge.setDriveUntilLine(-0.15, 250)
+            state = 285
+
+        elif state == 285: # drive until line
+            if edge.reachedLine():
+                turnInPlace(50, dir=1)
+                edge.stopAtNthIntersection([], 1)
+                edge.lineControl(0.1, 0)  # follow line
+                t.sleep(4)
+                edge.lineControl(0.05, 0)
+                state = 290
         
         elif state == 290:
             if edge.ArrivedAtNthIntersection:
@@ -398,29 +405,41 @@ def loop():
             state = 330
 
         elif state == 330:  # move to hole
-            driveUntilLine(300, vel=-0.15)
-            # edge.lineUpWithLine()
-            turnInPlace(deg=50, dir=1)
-            driveXMeters(x=0.15)
-            edge.setIgnoreIntersections(True)
-            edge.lineControl(0.15, 0.0)
-            t.sleep(1.5)
-            edge.lineControl(0.0, 0.0)
+            edge.setDriveUntilLine(-0.15, 300)
+            state = 331
 
-            driveXMeters(x=0.22)
-            print("Wiggle")
-            speed = 0.5
-            turnInPlace(20, dir=1, ang_speed=speed)
-            wiggle(width=50, ang_speed=0.75, N_wiggles=3)
+        elif state == 331: # drive until line
+            if edge.reachedLine():
+                # edge.lineUpWithLine()
+                turnInPlace(deg=50, dir=1)
+                driveXMeters(x=0.15)
+                edge.setIgnoreIntersections(True)
+                edge.lineControl(0.15, 0.0)
+                t.sleep(1.5)
+                edge.lineControl(0.0, 0.0)
 
-            state = 340
+                driveXMeters(x=0.22)
+                print("Wiggle")
+                speed = 0.5
+                turnInPlace(20, dir=1, ang_speed=speed)
+                wiggle(width=50, ang_speed=0.75, N_wiggles=3)
+
+                state = 340
         
         elif state == 340: # drive to the stairs
-            driveUntilLine(450, vel=-0.2)
-            driveXMeters(-0.075)
-            driveUntilLine(450, vel=-0.10)
-            turnInPlace(70,0)
-            state = 400
+            edge.setDriveUntilLine(-0.2, 450)
+            state = 350
+
+        elif state == 350: # drive until line
+            if edge.reachedLine():
+                driveXMeters(-0.075)
+                edge.setDriveUntilLine(-0.1, 450)
+                state = 360
+
+        elif state == 360: # drive until line
+            if edge.reachedLine():
+                turnInPlace(70,0)
+                state = 400
             
         ############################## STAIRS SECTION (400-499) #################################
         #                *** might be skipped to implement 5 instead
@@ -521,8 +540,12 @@ def loop():
                 driveXMeters(0.5)
 
         elif state == 430:
-            driveUntilLine(500,0.35)
-            state = 600
+            edge.setDriveUntilLine(0.4, 500)
+            state = 440
+
+        elif state == 440: # drive until line
+            if edge.reachedLine():
+                state = 600
 
 
 
@@ -564,9 +587,13 @@ def loop():
                 state = 535
 
         elif state == 535:  # driveUntilLine
-            driveUntilLine()
-            pose.tripBreset()
-            state = 540
+            edge.setDriveUntilLine(0.25, 300)
+            state = 536
+
+        elif state == 536: # drive until line
+            if edge.reachedLine():
+                pose.tripBreset()
+                state = 540
 
         elif state == 545:
             service.send(service.topicCmd + "ti/rc", "0 -0.5")
@@ -735,23 +762,31 @@ def loop():
         elif state == 720:
             driveUntilWall(0.3, ir_id=1, vel=0.0) # waiting for birtle
             t.sleep(0.7) # wait for birtle to pass
-            driveUntilLine(300)
-            turnInPlace(40, dir=1)  # turn clockwise 65=90deg
-            edge.lineControl(0.2, 0)  # follow line
-            t.sleep(1.5)
-            edge.lineControl(0, 0)
-            driveUntilWall(0.3, ir_id=1, vel=0.0) # waiting for birtle
-            t.sleep(1.5) # wait for birtle to pass
+            edge.setDriveUntilLine(0.25, 300)
+            state = 730
 
-            edge.lineControl(0.1, 0)  # follow line
-            edge.stopAtNthIntersection(['l'], 1)
-            t.sleep(5)
-            edge.lineControl(0, 0)  # stop following line
-            
-            turnInPlace(63,0)
-            driveXMeters(0.2,0.2)
-            driveUntilLine(300)
-            state = 800
+        elif state == 730: # drive until line
+            if edge.reachedLine():
+                turnInPlace(40, dir=1)  # turn clockwise 65=90deg
+                edge.lineControl(0.2, 0)  # follow line
+                t.sleep(1.5)
+                edge.lineControl(0, 0)
+                driveUntilWall(0.3, ir_id=1, vel=0.0) # waiting for birtle
+                t.sleep(1.5) # wait for birtle to pass
+
+                edge.lineControl(0.1, 0)  # follow line
+                edge.stopAtNthIntersection(['l'], 1)
+                t.sleep(5)
+                edge.lineControl(0, 0)  # stop following line
+                
+                turnInPlace(63,0)
+                driveXMeters(0.2,0.2)
+                edge.setDriveUntilLine(0.25, 300)
+                state = 740
+
+        elif state == 740: # drive until line
+            if edge.reachedLine():
+                state = 800
 
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
 
@@ -809,16 +844,20 @@ def loop():
             print("Go back")
             driveXMeters(-0.1)
             print("Find line")
-            driveUntilLine(300,-0.2) #drive back until the line
-            turnInPlace(63, 1)
-            print("Line Control")
-            edge.setIgnoreIntersections(True)
-            edge.adjustSpeed = True
-            edge.lineControl(0.3, 0)
-            t.sleep(6)
-            edge.lineControl(0, 0)
-            state = 900
-            # How can we detect, that we finished? (Distance or Aruco?)
+            edge.setDriveUntilLine(-0.2, 300)
+            state = 860
+
+        elif state == 860: # drive until line
+            if edge.reachedLine():
+                turnInPlace(63, 1)
+                print("Line Control")
+                edge.setIgnoreIntersections(True)
+                edge.adjustSpeed = True
+                edge.lineControl(0.3, 0)
+                t.sleep(6)
+                edge.lineControl(0, 0)
+                state = 900
+                # How can we detect, that we finished? (Distance or Aruco?)
 
         #################################### TESTS (9000-9999) ###################################
 
