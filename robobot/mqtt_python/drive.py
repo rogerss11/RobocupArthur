@@ -39,9 +39,7 @@ def driveXMeters(x=1.0, vel=0.2):
             if abs(pose.velocity()) < 0.001:
                 state = 99
         else:
-            print(
-                f"# drive {x}m drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-            )
+            #print(f"# drive {x}m drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
             service.send(
                 "robobot/cmd/ti/rc", "0.0 0.0"
             )  # (forward m/s, turn-rate rad/sec)
@@ -89,9 +87,9 @@ def driveUntilWall(d=0.2, ir_id=1, vel=0.2):
                 "robobot/cmd/ti/rc", "0.0 0.0"
             )  # (forward m/s, turn-rate rad/sec)
             break
-        #print(
-        #    f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-        #)
+        print(
+            f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
+        )
         t.sleep(0.05)
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
@@ -126,9 +124,7 @@ def driveUntilLine(threshold=300, vel=0.2):
             if abs(pose.velocity()) < 0.001:
                 state = 99
         else:
-            print(
-                f"# drive drove {pose.tripB:.3f}m. Stopped at line values {edge.edge_n}. {pose.tripBtimePassed():.3f} seconds"
-            )
+            #print(f"# drive drove {pose.tripB:.3f}m. Stopped at line values {edge.edge_n}. {pose.tripBtimePassed():.3f} seconds")
             service.send(
                 "robobot/cmd/ti/rc", "0.0 0.0"
             )  # (forward m/s, turn-rate rad/sec)
@@ -173,9 +169,7 @@ def climbCircle(acc=50, vel=0.5):
             if abs(pose.velocity()) < 0.001:
                 state = 99
         else:
-            print(
-                f"# Max acc = {max_acc}, drive drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-            )
+            print(f"# Max acc = {max_acc}, drive drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
             service.send(
                 "robobot/cmd/ti/rc", "0.0 0.0"
             )  # (forward m/s, turn-rate rad/sec)
@@ -220,9 +214,7 @@ def turnInPlace(deg=90, dir=0, ang_speed=0.8):
             if abs(pose.velocity()) < 0.001 and abs(pose.turnrate()) < 0.001:
                 state = 99
         else:
-            print(
-                f"# drive turned {pose.tripBh:.3f} rad in {pose.tripBtimePassed():.3f} seconds"
-            )
+            #print(f"# drive turned {pose.tripBh:.3f} rad in {pose.tripBtimePassed():.3f} seconds")
             service.send(
                 "robobot/cmd/ti/rc", "0.0 0.0"
             )  # (forward m/s, turn-rate rad/sec)
@@ -231,7 +223,7 @@ def turnInPlace(deg=90, dir=0, ang_speed=0.8):
         t.sleep(0.05)
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
-    print(f"% Truning {rad} rad ------------------------- end")
+    #print(f"% Truning {rad} rad ------------------------- end")
 
 
 from collections import deque
