@@ -140,7 +140,9 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 800  # ========== START STATE ===============
+                
+                
+                state = 635  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -736,7 +738,7 @@ def loop():
         elif state == 702:
             if pose.tripB > 0.32:
                 service.send("robobot/cmd/ti/rc", "0.0 0.0")
-                driveUntilWall(0.4, ir_id=1, vel=0.0)
+                driveUntilWall(0.45, ir_id=1, vel=0.0)
                 pose.tripBreset()
                 while ir.ir[1] > 1 or pose.tripBtimePassed() > 4:
                     pass
@@ -781,7 +783,7 @@ def loop():
             min_d = driveUntilWall(0.3, ir_id=0, vel=0.1)
             print(f"% min_d = {min_d:.2f}")
             turn_rad = min_d + 0.13  # 0.1 is the 1/2 of the wheel base
-            turnInPlace(8, dir=1, ang_speed=0.3) #8 # Adjust position
+            turnInPlace(5, dir=1, ang_speed=0.3) #8 # Adjust position
             rotateCircle(r=turn_rad, deg=310, dir=1)
             state = 715
 
@@ -796,39 +798,50 @@ def loop():
             driveUntilWall(0.25, ir_id=1, vel=0.0) # waiting for birtle
             t.sleep(5) # wait for birtle to pass
             edge.setDriveUntilLine(0.2, 450)
-            t.sleep(0.5)
+            #t.sleep(0.5)
             state = 730
+            
+        #        elif state == 430:
+           #        edge.setDriveUntilLine(0.4, 500)
+           #        state = 440
+   #
+        #    elif state == 440: # drive until line
+           #        if edge.reachedLine():
+           #            state = 600   
+
 
         elif state == 730: # drive until 1st line of the 8
             if edge.reachedLine():
-                driveXMeters(0.3, vel=0.2)
+                driveXMeters(0.25, vel=0.2)
+                t.sleep(2)
                 pose.tripBreset()
                 state = 740
 
         elif state == 740:
-            edge.setDriveUntilLine(0.25, 450)
-            t.sleep(0.5)
+            edge.setDriveUntilLine(0.15, 450)
+            #t.sleep(1)
             state = 750
 
-        elif state == 750: # drive until 1st line of the 8
+        elif state == 750: # drive until 2nd line of the 8
             if edge.reachedLine():
                 driveXMeters(0.3, vel=0.2)
+                #t.sleep(0.5)
                 turnInPlace(15, dir=1)  # turn to the right
                 pose.tripBreset()
-                state = 99
+                state = 760
 
-        elif state == 760: # drive until horizontal line
-            if edge.reachedLine():
-                driveXMeters(0.1, vel=0.2)
-                pose.tripBreset()
-                state = 770
+        elif state == 760: # # drive until horizontal line
+            edge.setDriveUntilLine(0.2, 450)
+            #t.sleep(1)
+            state = 770
         
         elif state == 770: #turn to the right to allign to the line
-            turnInPlace(10, 1)
-            driveXMeters(0.065, 0.1)
-            turnInPlace(55, 1)
-            t.sleep(0.5)
-            state = 99
+            if edge.reachedLine(): 
+                turnInPlace(10, 1)
+                driveXMeters(0.065, 0.1)
+                turnInPlace(30, 1)
+                t.sleep(0.5)
+                state = 800
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
 
         elif state == 800:  #take down arm, follow line, stop and intersection
