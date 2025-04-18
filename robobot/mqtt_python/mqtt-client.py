@@ -781,7 +781,7 @@ def loop():
             min_d = driveUntilWall(0.3, ir_id=0, vel=0.1)
             print(f"% min_d = {min_d:.2f}")
             turn_rad = min_d + 0.13  # 0.1 is the 1/2 of the wheel base
-            turnInPlace(5, dir=1, ang_speed=0.3) #8 # Adjust position
+            turnInPlace(8, dir=1, ang_speed=0.3) #8 # Adjust position
             rotateCircle(r=turn_rad, deg=310, dir=1)
             state = 715
 
@@ -793,31 +793,42 @@ def loop():
             state = 720  # go to blue ball sorting section
 
         elif state == 720:
-            driveUntilWall(0.4, ir_id=1, vel=0.0) # waiting for birtle
-            t.sleep(1) # wait for birtle to pass
-            edge.setDriveUntilLine(0.25, 450)
+            driveUntilWall(0.25, ir_id=1, vel=0.0) # waiting for birtle
+            t.sleep(5) # wait for birtle to pass
+            edge.setDriveUntilLine(0.2, 450)
+            t.sleep(0.5)
             state = 730
 
-        elif state == 730: # drive until line
+        elif state == 730: # drive until 1st line of the 8
             if edge.reachedLine():
-                driveXMeters(0.2, vel=0.2)
+                driveXMeters(0.3, vel=0.2)
+                pose.tripBreset()
+                state = 740
+
+        elif state == 740:
+            edge.setDriveUntilLine(0.25, 450)
+            t.sleep(0.5)
+            state = 750
+
+        elif state == 750: # drive until 1st line of the 8
+            if edge.reachedLine():
+                driveXMeters(0.3, vel=0.2)
+                turnInPlace(15, dir=1)  # turn to the right
                 pose.tripBreset()
                 state = 99
-        
-        elif state == 740:
-            if ir.ir[1] < 1 or pose.tripBtimePassed() > 7:
-                t.sleep(1)
-                turnInPlace(10, 1)  # turn to the left
-                driveXMeters(0.3, vel=0.2)
-                edge.setDriveUntilLine(0.25, 300)
-                state = 750
 
-        elif state == 750: # drive until line
+        elif state == 760: # drive until horizontal line
             if edge.reachedLine():
-                turnInPlace(63, 1)  # turn to the left
-                state = 4656
-
-    
+                driveXMeters(0.1, vel=0.2)
+                pose.tripBreset()
+                state = 770
+        
+        elif state == 770: #turn to the right to allign to the line
+            turnInPlace(10, 1)
+            driveXMeters(0.065, 0.1)
+            turnInPlace(55, 1)
+            t.sleep(0.5)
+            state = 99
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
 
         elif state == 800:  # turn left at intersection, raise arm and hit basket 
