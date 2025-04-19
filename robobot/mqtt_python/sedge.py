@@ -432,7 +432,7 @@ class SEdge:
 
         if not self.ignoreIntersections:
         # Detect if we have a crossing line
-            if valuesAboveZero >= valuesAboveZeroCutoff: #! maybe change to 4
+            if valuesAboveZero >= self.valuesAboveZeroCutoff: #! maybe change to 4
                 self.atIntersection = True
             else:
                 self.atIntersection = False
