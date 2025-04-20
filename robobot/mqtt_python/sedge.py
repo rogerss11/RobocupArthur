@@ -60,7 +60,7 @@ class SEdge:
     edgeIntervalSetup = 0.1
 
     # line detection levels
-    lineValidThreshold = 750 # 1000 is calibrated white
+    lineValidThreshold = 750 # 1000 is calibrated white #750
     # level for relevant white values
     low = lineValidThreshold - 100
     woodenLow = 800 #! test this
@@ -537,6 +537,7 @@ class SEdge:
     def followLine(self):
         """ Follow the line using PID-Lead control. """
         from uservice import service
+        #print("🔄 Running followLine with position:", self.position)
 
         # some parameters depend on sample time, adjust
         if abs(self.edge_nInterval - self.edgeIntervalSetup) > 1.0: # ms #? why

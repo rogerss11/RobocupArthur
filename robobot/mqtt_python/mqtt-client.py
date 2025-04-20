@@ -142,7 +142,7 @@ def loop():
 
                 
                 
-                state = 635  # ========== START STATE ===============
+                state = 100  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -160,6 +160,7 @@ def loop():
         elif state == 100:
             service.send(service.topicCmd + "T0/servo", "1 -900 200")  # arm up
             edge.lineControl(0.225, 0.0)  # m/s and position on line
+            #print("Edge n values:", self.edge_n) 
             edge.setIgnoreIntersections(True)  # ignore intersections
             edge.stopAtNthIntersection(["r"], 2)
             state = 105
@@ -168,6 +169,7 @@ def loop():
         elif state == 105:
             if pose.tripBtimePassed() > 7:
                 edge.lineControl(0.2, 0)
+                print("accelerating")
                 edge.setIgnoreIntersections(False)
                 state = 110
 
@@ -307,25 +309,25 @@ def loop():
 
         elif state == 2615:
             service.send(service.topicCmd + "T0/servo", "1 -210 0")
-            if pose.tripBtimePassed() > 0.2:
+            if pose.tripBtimePassed() > 0.1:
                 pose.tripBreset()
                 state = 262
 
         elif state == 262:
             service.send(service.topicCmd + "T0/servo", "1 -235 0")
-            if pose.tripBtimePassed() > 0.3:
+            if pose.tripBtimePassed() > 0.1:
                 pose.tripBreset()
                 state = 2625
 
         elif state == 2625:
             service.send(service.topicCmd + "T0/servo", "1 -265 0")
-            if pose.tripBtimePassed() > 0.3:
+            if pose.tripBtimePassed() > 0.1:
                 pose.tripBreset()
                 state = 263
 
         elif state == 263:
             service.send(service.topicCmd + "T0/servo", "1 -265 0")
-            if pose.tripBtimePassed() > 0.2:
+            if pose.tripBtimePassed() > 0.1:
                 pose.tripBreset()
                 state = 2635
 
@@ -344,7 +346,7 @@ def loop():
         elif state == 265:
             # ------------- TOP OF THE RAMP -------------------------------------------
             edge.lineControl(0.25, 0)
-            if pose.tripBtimePassed() > 4.5:
+            if pose.tripBtimePassed() > 5.1:
                 # service.send(service.topicCmd + "T0/servo", "1 -100 10")
                 pose.tripBreset()
                 state = 267
@@ -718,8 +720,6 @@ def loop():
 
                 if Status == 0:
                     state = 700
-
-        
 
         ####################### FIGURE-8 + ROUNDABOUT SECTION (700-799) #########################
 

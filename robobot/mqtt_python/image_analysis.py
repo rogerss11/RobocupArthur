@@ -68,7 +68,7 @@ def ball(image, color: int):
 
     # Green
     g_low = [60, 0, 0]
-    g_high = [255, 100, 50]
+    g_high = [255, 100, 40] #50
 
     # Red
     r_low = [10, 80, 150]
@@ -217,10 +217,15 @@ def distance_calc(xy, color: int):
             d = 997.518
 
         elif color == 1:  # orange ball
-            a = -0.000004773
-            b = 0.0071798
-            c = -3.7170159
-            d = 690.2428101
+            #a = -0.000004773
+            #b = 0.0071798
+            #c = -3.7170159
+            #d = 690.2428101
+
+            a = -0.00000502
+            b = 0.00765108
+            c = -4.0016825
+            d = 751.342459
 
         distance = (a * xy[1] ** 3 + b * xy[1] ** 2 + c * xy[1] + d) * 10  # in mm
 
@@ -401,7 +406,7 @@ def drive2ball(case: int):
                     state = 1
                     print("DB: Ball in the middle. Move straight.")
         elif state == 1:
-            print("DB: State 1")
+            print("DB: State 1") #try to maybe only do the backwards thing when its blue!!! 
             # move straight to the ball
             if xy == []:
                 drive.driveXMeters(x=-0.07, vel=0.2)  # move back a little bit
