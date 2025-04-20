@@ -232,9 +232,9 @@ class UService:
         pass
       elif gpio.decode(subtopic, msg):
         pass
-      elif subtopic == "T0/info":
-        if not self.args.silent:
-          print(f"% Teensy info {msg}", end="")
+      #elif subtopic == "T0/info":
+        #if not self.args.silent:
+          #print(f"% Teensy info {msg}", end="")
       elif subtopic == "master":
         # skip timestamp to get real masters starttime
         realMasterTime = msg[msg.find(" ")+1:]

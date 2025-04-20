@@ -87,9 +87,7 @@ def driveUntilWall(d=0.2, ir_id=1, vel=0.2):
                 "robobot/cmd/ti/rc", "0.0 0.0"
             )  # (forward m/s, turn-rate rad/sec)
             break
-        print(
-            f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-        )
+        #print(f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
         t.sleep(0.05)
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
@@ -169,14 +167,12 @@ def climbCircle(acc=50, vel=0.5):
             if abs(pose.velocity()) < 0.001:
                 state = 99
         else:
-            print(f"# Max acc = {max_acc}, drive drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
+            #print(f"# Max acc = {max_acc}, drive drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
             service.send(
                 "robobot/cmd/ti/rc", "0.0 0.0"
             )  # (forward m/s, turn-rate rad/sec)
             break
-        print(
-            f"# drive {state}, acc {imu.acc}, gyro {imu.gyro} now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-        )
+        #print(f"# drive {state}, acc {imu.acc}, gyro {imu.gyro} now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
         t.sleep(0.05)
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
@@ -262,13 +258,11 @@ def orientateToWall(ir_id=1, dir=0, tolerance=0.01, window=5, timeout=10):
                 if avg < min_avg:
                     min_avg = avg
                 elif avg > min_avg + tolerance:
-                    print(
-                        f"% Detected increase in IR avg: {avg:.3f} > {min_avg + tolerance:.3f}"
-                    )
+                    #print(f"% Detected increase in IR avg: {avg:.3f} > {min_avg + tolerance:.3f}")
                     service.send("robobot/cmd/ti/rc", "0.0 0.0")
                     state = 2
 
-                print(f"# IR avg: {avg:.3f}, min_avg: {min_avg:.3f}")
+                #print(f"# IR avg: {avg:.3f}, min_avg: {min_avg:.3f}")
 
         elif state == 2:
             if abs(pose.velocity()) < 0.001 and abs(pose.turnrate()) < 0.001:
@@ -331,9 +325,9 @@ def followWall(d=0.3, velocity=0.2, time=60.0, d_front=0.1, Kp=1.3, Ki=0.0, Kd=2
                 filtered_ir = 0.8 * filtered_ir + 0.2 * raw_distance
                 distance = filtered_ir
 
-                print(f"# Searching... IR={distance:.3f}m")
+                #print(f"# Searching... IR={distance:.3f}m")
                 if 0.1 < distance < 0.5:
-                    print("# Wall reacquired, resuming wall following.")
+                    #print("# Wall reacquired, resuming wall following.")
                     pose.tripBreset()
                     break
                 t.sleep(0.05)
@@ -353,9 +347,7 @@ def followWall(d=0.3, velocity=0.2, time=60.0, d_front=0.1, Kp=1.3, Ki=0.0, Kd=2
 
         if state == 0:
             service.send("robobot/cmd/ti/rc", f"{velocity:.2f} {turn:.2f}")
-            print(
-                f"# Wall follow: IR={distance:.3f}m, error={error:.3f}, turn={turn:.3f}"
-            )
+            #print(f"# Wall follow: IR={distance:.3f}m, error={error:.3f}, turn={turn:.3f}")
             if pose.tripBtimePassed() > time:
                 state = 1
         elif state == 1:
@@ -411,9 +403,7 @@ def rotateCircle(r=0.5, deg=360, dir=0):
             break
 
         # Logging for debugging
-        print(
-            f"# drive {state}, rot {rotation:.3f}, dist {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} sec"
-        )
+       #print(f"# drive {state}, rot {rotation:.3f}, dist {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} sec")
         t.sleep(0.05)
 
     # Stop everything and reset LED
@@ -452,20 +442,16 @@ def driveUntilWall_measure_gate_dist(d=0.2, ir_id=1, vel=0.2):
             if abs(pose.velocity()) < 0.001:
                 state = 99
         else:
-            print(
-                f"# drive drove {pose.tripB:.3f}m. Stopped at {ir.ir[ir_id]:.3f}m from the wall. {pose.tripBtimePassed():.3f} seconds"
-            )
+            #print(f"# drive drove {pose.tripB:.3f}m. Stopped at {ir.ir[ir_id]:.3f}m from the wall. {pose.tripBtimePassed():.3f} seconds")
             service.send(
                 "robobot/cmd/ti/rc", "0.0 0.0"
             )  # (forward m/s, turn-rate rad/sec)
             break
-        print(
-            f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-        )
+        #print(f"# drive {state}, ir: {ir.ir}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
         t.sleep(0.05)
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
-    print("% Driving until wall ------------------------- end")
+    #print("% Driving until wall ------------------------- end")
     return min_d
 
 
@@ -504,20 +490,16 @@ def stairStep(acc=50, vel=0.1):
             if abs(pose.velocity()) < 0.001:
                 state = 99
         else:
-            print(
-                f"# Max acc = {max_acc}, drive drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-            )
+            #print(f"# Max acc = {max_acc}, drive drove {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
             service.send(
                 "robobot/cmd/ti/rc", "0.0 0.0"
             )  # (forward m/s, turn-rate rad/sec)
             break
-        print(
-            f"# drive {state}, acc {imu.acc}, gyro {imu.gyro} now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-        )
+        #print(f"# drive {state}, acc {imu.acc}, gyro {imu.gyro} now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
         t.sleep(0.05)
     pass
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
-    print("% Stairs step ------------------------- end")
+    #print("% Stairs step ------------------------- end")
 
 
 def wiggle(width=60, ang_speed=0.5, N_wiggles=3, x=0.03):
@@ -582,9 +564,7 @@ def wiggle(width=60, ang_speed=0.5, N_wiggles=3, x=0.03):
             service.send("robobot/cmd/ti/rc", "0.0 0.0")
             break
 
-        print(
-            f"# state {state}, turn {pose.tripBh:.3f} rad, time {pose.tripBtimePassed():.3f} s"
-        )
+        #print(f"# state {state}, turn {pose.tripBh:.3f} rad, time {pose.tripBtimePassed():.3f} s")
         t.sleep(0.05)
 
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # LEDs off
@@ -616,14 +596,10 @@ def driveUntilNOLine_auto(forward_speed=0.2, threshold=300):
             if abs(pose.velocity()) < 0.001:
                 state = 99
         else:
-            print(
-                f"# drive stopped after {pose.tripB:.3f}m. Last line values: {edge.edge_n}. {pose.tripBtimePassed():.3f} seconds"
-            )
+            #print(f"# drive stopped after {pose.tripB:.3f}m. Last line values: {edge.edge_n}. {pose.tripBtimePassed():.3f} seconds")
             edge.lineControl(0.0, 0.0)
             break
-        print(
-            f"# drive {state}, line: {edge.edge_n}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-        )
+        #print(f"# drive {state}, line: {edge.edge_n}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
         t.sleep(0.05)
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Driving until NO line ------------------------- end")
@@ -652,14 +628,10 @@ def driveUntilNOLine_manual(forward_speed=0.2, turn_rate=0.0, threshold=300):
             if abs(pose.velocity()) < 0.001:
                 state = 99
         else:
-            print(
-                f"# manual drive stopped after {pose.tripB:.3f}m. Last line values: {edge.edge_n}. {pose.tripBtimePassed():.3f} seconds"
-            )
+            #print(f"# manual drive stopped after {pose.tripB:.3f}m. Last line values: {edge.edge_n}. {pose.tripBtimePassed():.3f} seconds")
             service.send("robobot/cmd/ti/rc", "0.0 0.0")
             break
-        print(
-            f"# drive {state}, line: {edge.edge_n}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds"
-        )
+        #print(f"# drive {state}, line: {edge.edge_n}, now {pose.tripB:.3f}m in {pose.tripBtimePassed():.3f} seconds")
         t.sleep(0.05)
     service.send(service.topicCmd + "T0/leds", "16 0 0 0")  # end
     print("% Manual drive until NO line ------------------------- end")

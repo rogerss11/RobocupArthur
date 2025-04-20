@@ -676,17 +676,21 @@ def loop():
         elif state == 635:  # wait for it to get past the axe
             if ir.axeActive == False:
                 edge.setIgnoreIntersections(False)
-                edge.lineControl(0.06, 0.0)
                 edge.stopAtNthIntersection([], 1)
+                edge.lineControl(0.06, 0.0)
+                #edge.stopAtNthIntersection([], 1)
                 state = 640
 
-        elif state == 640:
-            if edge.hasArrivedAtNthIntersection():
-                print("hello")
+        elif state == 640: #after the axe, it should be in front of the intersection now
+            service.send(service.topicCmd + "T0/servo", "1 -150 0")
+            t.sleep(0.1)
+            #if edge.hasArrivedAtNthIntersection():
+            if True: 
+                print("i am past the axe, at the intersection")
                 t.sleep(0.5)
                 driveXMeters(0.015, 0.15)
                 turnInPlace(63, 0)
-                driveXMeters(0.05, 0.15)
+                driveXMeters(0.05, 0.15) #why do we not use line control here? 
                 edge.stopAtNthIntersection([], 1)
                 edge.lineControl(0.2, 0)
                 t.sleep(4)
@@ -698,13 +702,13 @@ def loop():
             if edge.hasArrivedAtNthIntersection():
                 edge.valuesAboveZeroCutoff = 4
                 turnInPlace(10, 1)
+                t.sleep(0.5)
                 driveXMeters(0.065, 0.1)
                 turnInPlace(55, 1)
                 t.sleep(0.5)
-                service.send(service.topicCmd + "ti/servo", "1 -900 200")
                 state = 660
 
-        elif state == 660:
+        elif state == 660: #to align with the sign in the background
             ok = False
             while not ok:
                 img, ok = ia.imageAnalysis(0)
@@ -722,13 +726,12 @@ def loop():
                 if Status == 0:
                     state = 700
 
-        
-
+    
         ####################### FIGURE-8 + ROUNDABOUT SECTION (700-799) #########################
 
         elif state == 700:  # Roger
             # ------------- PASS BIRTLE (start from line) -------------------------------------------
-            service.send(service.topicCmd + "T0/servo", "1 -900 200")
+            service.send(service.topicCmd + "T0/servo", "1 -900 200") #put the arm up again 
             pose.tripBreset()
             service.send("robobot/cmd/ti/rc", "0.15 0.0")
             state = 701
@@ -738,7 +741,7 @@ def loop():
                  service.send("robobot/cmd/ti/rc", "0.3 0.0")
                  state = 702
 
-        elif state == 702:
+        elif state == 702: #wait for birdie? 
             if pose.tripB > 0.32:
                 service.send("robobot/cmd/ti/rc", "0.0 0.0")
                 driveUntilWall(0.45, ir_id=1, vel=0.0)
@@ -750,7 +753,7 @@ def loop():
                 state = 703
 
 
-        elif state == 703:
+        elif state == 703: #align with the sign again
             ok = False
             while not ok:
                 img, ok = ia.imageAnalysis(0)
@@ -774,7 +777,7 @@ def loop():
             # ------------- CLIMB CIRCLE MISSION -------------------------------------------
             gate_dist = driveUntilWall_measure_gate_dist(0.30, ir_id=1)
             print(f"% gate_dist = {gate_dist:.2f}")
-            turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg
+            turnInPlace(63, dir=1)  # turn counter-clockwise 65=90deg to the circle
             driveXMeters(gate_dist)
             turnInPlace(25, dir=1)
             climbCircle(50, vel=0.45)
@@ -816,25 +819,29 @@ def loop():
         elif state == 730: # drive until 1st line of the 8
             if edge.reachedLine():
                 driveXMeters(0.25, vel=0.2)
-                t.sleep(2)
+                print("Is he in the circle now?")
+                t.sleep(1) #time he sleeps inside the circle?
                 pose.tripBreset()
                 state = 740
 
-        elif state == 740:
-            edge.setDriveUntilLine(0.15, 450)
+        elif state == 740: #drive to the right a little 
+            turnInPlace(15, 1) 
+            driveXMeters(0.3, vel=0.2)
+            #edge.setDriveUntilLine(0.15, 450) 
             #t.sleep(1)
-            state = 750
+            state = 760
 
-        elif state == 750: # drive until 2nd line of the 8
-            if edge.reachedLine():
-                driveXMeters(0.3, vel=0.2)
+        #elif state == 750: # drive until 2nd line of the 8, why? cant it just go straight drivexmeters and then follow line?
+            #if edge.reachedLine():
+                #driveXMeters(0.3, vel=0.2)
                 #t.sleep(0.5)
-                turnInPlace(15, dir=1)  # turn to the right
-                pose.tripBreset()
-                state = 760
+                #turnInPlace(15, dir=1)  # turn to the right
+                #driveXMeters(0.2, vel=0.2) #eva added this, he has to drive first before doing drive to line
+                #pose.tripBreset
+                #state = 760
 
         elif state == 760: # # drive until horizontal line
-            edge.setDriveUntilLine(0.2, 450)
+            edge.setDriveUntilLine(0.2, 450) #this did not work
             #t.sleep(1)
             state = 770
         
@@ -842,7 +849,7 @@ def loop():
             if edge.reachedLine(): 
                 turnInPlace(10, 1)
                 driveXMeters(0.065, 0.1)
-                turnInPlace(30, 1)
+                turnInPlace(30, 1) #what is this? 
                 t.sleep(0.5)
                 state = 800
         ######################### BLUE BALL SORTING SECTION (800-899) ###########################
@@ -892,13 +899,14 @@ def loop():
             #service.send(service.topicCmd + "T0/servo", "1 -4500000 0")
             aru.after_catching_blue_ball(img)
             aru.turn_left_until_ID13_disappears(img)
-            service.send(service.topicCmd + "T0/servo", "1 -9000000 200")
-            state = 9900
-            #state = 820
+            #service.send(service.topicCmd + "T0/servo", "1 -9000000 200")
+            state = 820
+
         elif state == 820: #look for ID 16 
             img = imageAnalysis(0)
             aru.start_looking_for_ID16(img)
             state = 825 
+
         elif state == 825: #he is on the line, he needs to turn right and follow line until intersection
             #service.send(service.topicCmd + "T0/servo", "1 -600 200")
             service.send(service.topicCmd + "T0/servo", "1 -150 200")
@@ -912,7 +920,7 @@ def loop():
 
         elif state == 830:
             if edge.hasArrivedAtNthIntersection():
-                driveXMeters(0.03, 0.1)
+                #driveXMeters(0.03, 0.1) he turns too far 
                 turnInPlace(45, 1) #turn right
                 driveXMeters(0.4, 0.1)
                 service.send(service.topicCmd + "T0/servo", "1 -900 200")

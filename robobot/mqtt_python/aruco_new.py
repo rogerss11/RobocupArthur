@@ -13,7 +13,8 @@ from sir import ir
 class ArucoDetector:
     def __init__(self):
         self.aruco_dict = cv.aruco.getPredefinedDictionary(cv.aruco.DICT_4X4_250)
-        self.parameters = cv.aruco.DetectorParameters()
+        self.parameters = cv.aruco.DetectorParameters_create()
+        #self.parameters = cv.aruco.DetectorParameters()
 
         # --- Load calibration --- #this does not really work tho
         #calib_data = np.load("calibration_data.npz")
@@ -25,11 +26,13 @@ class ArucoDetector:
 
     # --- Detect markers --- # it detects the arucos and gives the center and angle of the marker
     def detect_markers(self, frame): 
+
         if frame is None or frame.size == 0:
             print("Warning: Invalid image received.")
-            return None, None, None, None, frame
+            return None, None, None, None, None #frame instead of None at the last one
 
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        #corners, ids, rejected = [], [], []
         corners, ids, _ = cv.aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
 
         centers = []
@@ -103,7 +106,7 @@ class ArucoDetector:
                 break
             t.sleep(0.1)  # Small delay to avoid rapid commands
         
-    # --- Find and orient to marker B (ID 13) --- #
+
     def after_hitting_basket(self):
         driveXMeters(x=-0.1, vel=0.2) #back away from the basket
         service.send(service.topicCmd + "T0/servo", "1 -900 0") #lower servo, remove when we merge with Leona blue ball detection, the arm needs to be up 
@@ -137,8 +140,8 @@ class ArucoDetector:
         min_d = ir.ir[1] # Get distance from IR sensor
         print("Distance captured: ", min_d) 
         if min_d < 0.7: 
-            driveXMeters(x=-0.2, vel=0.2) #back away from the basket
             print("I am driving backwards!!!!!")
+            driveXMeters(x=-0.2, vel=0.2) #back away from the basket
         print("🔍 Looking for ID 13...")
 
         while not found_13:
@@ -146,10 +149,10 @@ class ArucoDetector:
         
             # Get image and check
             ok, img, _ = cam.getImage()
-            if not ok:
+            if not ok: #if not ok:
                 print("No image from camera.")
-                break
-
+                continue #break 
+            print("Got image, running marker detection")
             ids, _, _, _, img = self.detect_markers(img) #detect aruco markers
             if ids:
                 print(f"Detected: {ids}")
@@ -178,32 +181,34 @@ class ArucoDetector:
             if ids:
                 print(f"Still detecting: {ids}")
                 print("🔄 Turning left until ID 13 disappears...")
-                service.send(service.topicCmd + "ti/rc", "0 0.25")  # Slow turn left
+                service.send(service.topicCmd + "ti/rc", "0 0.20")  # Slow turn left
                 print(f"# Finished turning {pose.tripBh:.3f}")
                 if 13 not in ids:
                     service.send(service.topicCmd + "ti/rc", "0 0")
                     print("❌ ID 13 gone — stop turning") 
                     break
             else:
-                print("No marker visible — this should not happen?")
+                print("No marker visible")
                 break
 
             t.sleep(0.1)
 
-        # Final step
-        #print("Turning a little to the left to look for line")
-        #turnInPlace(15,0)
-        #print("🚗 Driving until line")
-        #driveUntilLine()
-        #turnInPlace(55,1) #turn to the right to look for line
-        #edge.lineControl(0.03, 0) # speed and position (slooow line control so it can catch up)
+        print("Turning a little more to face white line")
+        turnInPlace(10, 0)
+        print("🚗 Driving until line")
+        #t.sleep(0.5)
+        #edge.setDriveUntilLine(0.2, 500)
+        driveXMeters(0.2, 0.2) #drive a little forward
+        driveUntilLine(500, 0.2) #drive until line
+        #turnInPlace(35,1) #turn to the right to look for line
+        edge.lineControl(0.03, 0) # speed and position (slooow line control so it can catch up)
 
     # --- This will drive on the line and look for the ID 16 marker --- #
     def start_looking_for_ID16(self, img):
         print("🔍 Looking for ID 16...")
         edge.lineControl(0.1, 0)
         #if pose.tripBtimePassed()>1: #if more than 3 secs pass, stop line control, look right and check aruco
-        t.sleep(9) #change based on when we want to turn to look for ID 16. Do we even need this? can we hardcode to turn and drive towards line after x secs? 
+        t.sleep(6) #change based on when we want to turn to look for ID 16. Do we even need this? can we hardcode to turn and drive towards line after x secs? 
         edge.lineControl(0,0) #stop line control
         turnInPlace(59, dir=1) #turn towards the arucos
 
@@ -224,7 +229,7 @@ class ArucoDetector:
             turnInPlace(59, dir=0)
             ok, new_img, _ = cam.getImage()
             if ok: 
-                self.start_looking_for_ID16(img)
+                self.start_looking_for_ID16(new_img)
 
     def release(self):
         cv.destroyAllWindows()
