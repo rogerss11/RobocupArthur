@@ -658,7 +658,7 @@ class SEdge:
     def driveUntilLineFunc(self):
       """ Drive until we see a line. """
       maxValue = max(self.edge_n)
-      print(edge.edge_n, " -> ", maxValue)
+      #print(edge.edge_n, " -> ", maxValue)
       if maxValue >= self.driveUntilLineThreshold:
         from uservice import service
         self.driveUntilLine = False

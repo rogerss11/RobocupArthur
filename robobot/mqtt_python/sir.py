@@ -149,6 +149,7 @@ class SIr:
                 print("# Object detected less than 20 cm, stops.")
                 edge.lineControl(0.0, 0.0)
                 self.passedAxe = False
+                t.sleep(0.5)
                 self.axeState = 5
             elif ir.ir[1] > 1:  # if the axe is not in front of us, dont move (we cant see the distance)
                 edge.lineControl(0.0, 0.0)

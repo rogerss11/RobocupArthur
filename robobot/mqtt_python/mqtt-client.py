@@ -140,27 +140,25 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                
-                
                 state = 100  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
                 pose.tripBreset()
+                # 9000 sleep test
                 # 9200 turn test
                 # 9210 put arm down test
                 # 9213 put arm up test
                 # 9220 driveUntilNOLine_auto test
                 # 9221 driveUntilNOLine_manual test
                 # 9230 driveUntilLine test
-                service.send(service.topicCmd + "T0/servo", "1 -900 200")
+                # service.send(service.topicCmd + "T0/servo", "1 -900 200")
 
         ############################### START FUNCTIONS (100-199) ###############################
 
         elif state == 100:
             service.send(service.topicCmd + "T0/servo", "1 -900 200")  # arm up
             edge.lineControl(0.225, 0.0)  # m/s and position on line
-            #print("Edge n values:", self.edge_n) 
             edge.setIgnoreIntersections(True)  # ignore intersections
             edge.stopAtNthIntersection(["r"], 2)
             state = 105
@@ -169,7 +167,6 @@ def loop():
         elif state == 105:
             if pose.tripBtimePassed() > 7:
                 edge.lineControl(0.2, 0)
-                print("accelerating")
                 edge.setIgnoreIntersections(False)
                 state = 110
 
@@ -288,6 +285,7 @@ def loop():
         elif state == 256: # drive until line
             if edge.reachedLine():
                 turnInPlace(45, dir=1)
+                pose.tripBreset()
                 state = 260
 
 
@@ -295,7 +293,7 @@ def loop():
             edge.lineControl(0.06, 0)
             t.sleep(1.5)
             print(f"ir: {ir.ir[1]}")
-            if ir.ir[1] < 0.38:  # going up
+            if ir.ir[1] < 0.38 or pose.tripBtimePassed() > 6:  # going up
                 pose.tripBreset()
                 state = 261
 
@@ -309,25 +307,25 @@ def loop():
 
         elif state == 2615:
             service.send(service.topicCmd + "T0/servo", "1 -210 0")
-            if pose.tripBtimePassed() > 0.1:
+            if pose.tripBtimePassed() > 0.2:
                 pose.tripBreset()
                 state = 262
 
         elif state == 262:
             service.send(service.topicCmd + "T0/servo", "1 -235 0")
-            if pose.tripBtimePassed() > 0.1:
+            if pose.tripBtimePassed() > 0.3:
                 pose.tripBreset()
                 state = 2625
 
         elif state == 2625:
             service.send(service.topicCmd + "T0/servo", "1 -265 0")
-            if pose.tripBtimePassed() > 0.1:
+            if pose.tripBtimePassed() > 0.3:
                 pose.tripBreset()
                 state = 263
 
         elif state == 263:
             service.send(service.topicCmd + "T0/servo", "1 -265 0")
-            if pose.tripBtimePassed() > 0.1:
+            if pose.tripBtimePassed() > 0.2:
                 pose.tripBreset()
                 state = 2635
 
@@ -346,7 +344,7 @@ def loop():
         elif state == 265:
             # ------------- TOP OF THE RAMP -------------------------------------------
             edge.lineControl(0.25, 0)
-            if pose.tripBtimePassed() > 5.1:
+            if pose.tripBtimePassed() > 4.5:
                 # service.send(service.topicCmd + "T0/servo", "1 -100 10")
                 pose.tripBreset()
                 state = 267
@@ -354,6 +352,7 @@ def loop():
         elif state == 267:
             # -------------- DETECT GATE AND LOWER ARM --------------
             edge.lineControl(0.1, 0)
+            print("Distance measured at ramp", ir.ir[0])
             if ir.ir[0] < 0.35:
                 service.send(service.topicCmd + "ti/rc", "0.05 0.0")
                 service.send(service.topicCmd + "T0/servo", "1 -50 0")
@@ -659,6 +658,7 @@ def loop():
                 pose.tripBreset()
 
         elif state == 615:
+            driveXMeters(x=1)
             edge.setDriveUntilLine(0.3, 335)
             state = 620
 
@@ -674,14 +674,15 @@ def loop():
             state = 635
 
         elif state == 635:  # wait for it to get past the axe
-            if True: #not ir.axeActive:
+            if ir.axeActive == False:
                 edge.setIgnoreIntersections(False)
-                edge.stopAtNthIntersection([], 1)
                 edge.lineControl(0.06, 0.0)
+                edge.stopAtNthIntersection([], 1)
                 state = 640
 
         elif state == 640:
             if edge.hasArrivedAtNthIntersection():
+                print("hello")
                 t.sleep(0.5)
                 driveXMeters(0.015, 0.15)
                 turnInPlace(63, 0)
@@ -720,6 +721,8 @@ def loop():
 
                 if Status == 0:
                     state = 700
+
+        
 
         ####################### FIGURE-8 + ROUNDABOUT SECTION (700-799) #########################
 
@@ -940,7 +943,7 @@ def loop():
         elif state == 9000:
             # ------ TESTS --------------------------------------------------------
             t.sleep(30)
-            state = 9100
+            state = 910098686
 
         elif state == 9200:  # TURNING TEST
             service.send(service.topicCmd + "ti/rc", "0.0 1")
