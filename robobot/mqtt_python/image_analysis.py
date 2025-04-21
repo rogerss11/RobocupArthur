@@ -165,14 +165,15 @@ def move_middle(xy, range, color):
     middle_x = 410
     status = 99
     wait = 0.0
-    if color == 0:
-        velocity = 0.6
-    else:
-        velocity = 0.9
 
     # distance of the object to the middle of the picture
     e = abs(xy[0] - middle_x)
     print("MM: Distance to middle: ", e)
+
+    if color == 0:
+        velocity = min(1.2, max(0.6, abs(0.003*e)))
+    else:
+        velocity = min(1.5, max(0.8, abs(0.0035*e)))
 
     if xy[0] > middle_x + range:
         # then turn left
@@ -188,9 +189,10 @@ def move_middle(xy, range, color):
         service.send(service.topicCmd + "ti/rc", "0 0")
 
     if color == 0:
-        wait = (e / middle_x) * 0.6 + 0.05
+        wait = (e / middle_x) * 0.175 + 0.075
     else:
-        wait = (e / middle_x) * 0.6 + 0.025
+        wait = (e / middle_x) * 0.18 + 0.05
+
     # stop to update the picture and the ball detection
     time.sleep(wait)
     service.send(service.topicCmd + "ti/rc", "0 0")
@@ -211,21 +213,16 @@ def distance_calc(xy, color: int):
     if xy != []:
         # calculate the distance to the ball by the coordinates of the ball
         if color == 0:  # blue ball
-            a = -0.0000079881
-            b = 0.011625897
-            c = -5.74405
-            d = 997.518
+            a = -5.7835E-06
+            b = 0.00858235
+            c = -4.3603647
+            d = 786.882
 
         elif color == 1:  # orange ball
-            #a = -0.000004773
-            #b = 0.0071798
-            #c = -3.7170159
-            #d = 690.2428101
-
-            a = -0.00000502
-            b = 0.00765108
-            c = -4.0016825
-            d = 751.342459
+            a = -3.8639e-6
+            b = 0.0060393
+            c = -3.260825
+            d = 634.463
 
         distance = (a * xy[1] ** 3 + b * xy[1] ** 2 + c * xy[1] + d) * 10  # in mm
 
@@ -261,7 +258,7 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
     elif color == 1:  # orange
         final_distance = 250
 
-    if state == 3:
+    """ if state == 3:
         print("MS: Remove obstacles")
         # remove obstacles in the way
         drive.turnInPlace(deg=30, dir=0)
@@ -269,9 +266,9 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
         drive.turnInPlace(deg=60, dir=1)
         servo_up()
         drive.turnInPlace(deg=30, dir=0)
-        state = 2
+        state = 2 """
 
-    elif state == 2:
+    if state == 2:
         # adjust the position of the ball in the middle of the picture
 
         print("MS: Move to the middle")
@@ -288,7 +285,8 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
             state = 1
     elif state == 1:
         # move for 20 cm
-        velocity = 0.1  # in m/s
+        #velocity = 0.1  # in m/s
+        velocity = 0.2
 
         state = 0
 
@@ -296,10 +294,13 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
             print("MS: Move straight")
 
             if distance > 500.0:
-                drive.driveXMeters(x=0.10, vel=velocity)
+                #drive.driveXMeters(x=0.10, vel=velocity)
+                drive.driveXMeters(x=distance/2000, vel=velocity) #drive half of the distance
             elif distance > final_distance:
-                drive.driveXMeters(x=0.05, vel=velocity)
+                #drive.driveXMeters(x=0.05, vel=velocity)
+                drive.driveXMeters(x=distance/4000, vel=velocity)
             else:
+                velocity = 0.1  # in m/s
                 if color == 0:
                     drive.driveXMeters(x=(distance - 45) / 1000, vel=velocity)
                 if color == 1:
@@ -308,7 +309,7 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
 
         else:
             if distance > final_distance:
-                wait = 100.0 / 1000 / velocity
+                wait = distance / 3000 / velocity
             else:
                 wait = distance / 1000 / velocity
             print("MS: Move straight on line")

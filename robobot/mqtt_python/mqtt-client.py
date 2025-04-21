@@ -222,18 +222,8 @@ def loop():
         ######################### SEESAW + SEESAW GOLF BALL (200-299) ###########################
 
         elif state == 200:  # Arnau + Leona
-            """
-            Revise!!!
-            """
             ia.drive2ball(2)  # drive to the orange ball
-            state = 220
-
-        elif state == 220:
-            service.send(service.topicCmd + "T0/servo", "1 -900 200")
-            if pose.tripBtimePassed() > 2:
-                service.send(service.topicCmd + "T0/servo", "1 2309823809 200")
-                pose.tripBreset()
-                state = 225
+            state = 225
 
         elif state == 225:
             service.send(service.topicCmd + "T0/servo", "1 -150 200")
@@ -243,27 +233,27 @@ def loop():
                 state = 230
 
         elif state == 230:
-            edge.lineControl(0.05, 0)
-            if ir.ir[1] < 0.43 or pose.tripBtimePassed() > 20:  # going down
+            edge.lineControl(0.075, 0)
+            if ir.ir[1] < 0.43 or pose.tripBtimePassed() > 13.33:#20:  # going down
                 # print("end of ramp")
                 service.send(service.topicCmd + "T0/servo", "1 -200 300")
                 state = 231
                 pose.tripBreset()
 
         elif state == 231:
-            if pose.tripBtimePassed() > 0.5:
+            if pose.tripBtimePassed() > 0.33: 
                 service.send(service.topicCmd + "T0/servo", "1 -250 300")
                 state = 232
                 pose.tripBreset()
 
         elif state == 232:
-            if pose.tripBtimePassed() > 0.3:
+            if pose.tripBtimePassed() > 0.2:
                 service.send(service.topicCmd + "T0/servo", "1 -350 100")
                 state = 235
                 pose.tripBreset()
 
         elif state == 235:
-            if pose.tripBtimePassed() > 3:
+            if pose.tripBtimePassed() > 2:
                 service.send(service.topicCmd + "T0/servo", "1 -150 25")
                 state = 240
                 pose.tripBreset()
