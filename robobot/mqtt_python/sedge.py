@@ -85,6 +85,9 @@ class SEdge:
     valuesAboveZeroCutoff = 4 # number of sensors above zero to detect a line
 
     adjustSpeed = False # if we should adjust speed based on error
+    max_velocity_factor = 1.8  # 180% of velocity
+    min_velocity_factor = 0.5  # 50% of velocity
+
 
     average = 0 # avarage edge_n[] value
     high = 0 # highest reflectivity
@@ -600,9 +603,9 @@ class SEdge:
             # Linear scaling based on error where:
             # error = 0 -> 200% of velocity
             # error >= 1 -> 30% of velocity
-            scale_factor = 2.0 - (1.7 * e)
+            scale_factor = self.max_velocity_factor - (self.max_velocity_factor - self.min_velocity_factor) * e
 
-            scale_factor = max(0.3, min(2.0, scale_factor))  # limit the range
+            scale_factor = max(self.min_velocity_factor, min(self.max_velocity_factor, scale_factor))
 
             adjusted_speed = self.velocity * scale_factor
         else:
