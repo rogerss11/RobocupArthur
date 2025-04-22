@@ -140,7 +140,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 100  # ========== START STATE ===============
+                state = 630  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -190,7 +190,8 @@ def loop():
                 pose.tripBreset()
 
         elif state == 140:
-            if pose.tripB > 1.58:
+            if pose.tripB > 1.61:
+                t.sleep(0.125)
                 edge.adjustSpeed = False
                 edge.setIgnoreIntersections(False)
                 edge.lineControl(0.1, 0)
@@ -210,11 +211,11 @@ def loop():
                 edge.lineControl(0.0, 0)
                 driveXMeters(0.1, 0.1) #0.2 arnau
                 pose.tripBreset()
-                edge.lineControl(0.1, 0)
+                edge.lineControl(0.15, 0)
                 state = 170
 
         elif state == 170:  # drive until line
-            if pose.tripBtimePassed() > 3.8:
+            if pose.tripBtimePassed() > 2.3:
                 edge.lineControl(0.0, 0)
                 pose.tripBreset()
                 state = 200 
@@ -233,7 +234,7 @@ def loop():
                 state = 230
 
         elif state == 230:
-            edge.lineControl(0.075, 0)
+            edge.lineControl(0.125, 0)
             if ir.ir[1] < 0.43 or pose.tripBtimePassed() > 13.33:#20:  # going down
                 # print("end of ramp")
                 service.send(service.topicCmd + "T0/servo", "1 -180 300")
@@ -261,9 +262,9 @@ def loop():
 
         elif state == 240: #KEEP THIS 
             edge.lineControl(0.1, 0)
-            t.sleep(1.5)
+            t.sleep(1.3)
             edge.lineControl(0.3, 0)
-            t.sleep(1.6)
+            t.sleep(1.1)
             edge.lineControl(0, 0)
             state = 255
 
@@ -276,6 +277,7 @@ def loop():
 
         elif state == 256: # drive until line
             if edge.reachedLine():
+                service.send(service.topicCmd + "T0/servo", "1 -165 25")
                 turnInPlace(45, dir=1)
                 pose.tripBreset()
                 state = 260
@@ -283,7 +285,9 @@ def loop():
 
         elif state == 260:  # Climb the ramp, keep this 
             edge.lineControl(0.06, 0)
-            t.sleep(1.5)
+            state = 2601
+
+        elif state == 2601:
             print(f"ir: {ir.ir[1]}")
             if ir.ir[1] < 0.38 or pose.tripBtimePassed() > 4.5:  # going up
                 pose.tripBreset()
@@ -291,21 +295,21 @@ def loop():
 
         elif state == 261:
             # ------------ ARM MOVEMENT BOTTOM ----------------------
-            service.send(service.topicCmd + "T0/servo", "1 -250 0")
+            service.send(service.topicCmd + "T0/servo", "1 -180 0")
             edge.lineControl(0.06, 0)
             if pose.tripBtimePassed() > 0.1:
                 pose.tripBreset()
                 state = 2615
 
         elif state == 2615:
-            service.send(service.topicCmd + "T0/servo", "1 -250 0")
-            if pose.tripBtimePassed() > 0.2:
+            service.send(service.topicCmd + "T0/servo", "1 -240 0")
+            if pose.tripBtimePassed() > 0.3:
                 pose.tripBreset()
                 state = 262
 
         elif state == 262:
             service.send(service.topicCmd + "T0/servo", "1 -200 0")
-            if pose.tripBtimePassed() > 0.3:
+            if pose.tripBtimePassed() > 1:
                 pose.tripBreset()
                 state = 2625
 
@@ -332,7 +336,7 @@ def loop():
             if pose.tripBtimePassed() > 3:
                 pose.tripBreset()
                 state = 265
-
+        
         elif state == 265:
             # ------------- TOP OF THE RAMP -------------------------------------------
             edge.lineControl(0.25, 0)
@@ -354,11 +358,11 @@ def loop():
                 state = 275
 
         elif state == 275:  # On top of the ramp
-            turnInPlace(5,0) #arnau commennted this out
-            driveUntilNOLine_manual(0.05, 0)
-            driveXMeters(0.05, vel=0.1)
+            turnInPlace(3,0) #arnau commennted this out
+            driveUntilNOLine_manual(0.1, 0)
+            driveXMeters(0.05, vel=0.15)
             turnInPlace(8, 0)
-            wiggle(width=50, ang_speed=0.75, N_wiggles=3)
+            wiggle(width=45, ang_speed=-0.85, N_wiggles=3)
             state = 280
 
         elif state == 280:
@@ -369,9 +373,10 @@ def loop():
         elif state == 285: # drive until line
             if edge.reachedLine():
                 turnInPlace(50, dir=1)
-                edge.stopAtNthIntersection([], 1)
+                edge.setIgnoreIntersections(True)
                 edge.lineControl(0.1, 0)  # follow line
                 t.sleep(4)
+                edge.stopAtNthIntersection([], 1)
                 edge.lineControl(0.05, 0)
                 state = 290
         
@@ -430,20 +435,20 @@ def loop():
                 print("Wiggle")
                 speed = 0.5
                 turnInPlace(20, dir=1, ang_speed=speed)
-                wiggle(width=50, ang_speed=0.75, N_wiggles=3)
+                wiggle(width=45, ang_speed=-0.85, N_wiggles=2)
 
                 state = 340
         
         elif state == 340: # drive to the stairs
             #driveXMeters(x=-0.1)
             #edge.setDriveUntilLine(-0.2,450)
-            edge.setDriveUntilLine(-0.2, 450)
+            edge.setDriveUntilLine(-0.2, 420)
             state = 350
 
         elif state == 350: # drive until line
             if edge.reachedLine():
                 driveXMeters(x=-0.075)
-                edge.setDriveUntilLine(-0.15, 450)
+                edge.setDriveUntilLine(-0.15, 420)
                 state = 360
             #turnInPlace(10,1)
             #driveXMeters(x=-0.1)
@@ -461,7 +466,7 @@ def loop():
         elif state == 400:  # Arnau + Roger
             service.send(service.topicCmd + "T0/servo", "1 -800 200")
             edge.lineControl(0.05, 0) #0.05/0.075
-            t.sleep(5) #try 4/5 
+            t.sleep(3) #try 4/5 
             edge.lineControl(0.0, 0.0)
             edge.setIgnoreIntersections(True)
             service.send(service.topicCmd + "ti/rc", "0.0 0.0")
@@ -496,7 +501,7 @@ def loop():
 
                     print("position: ", position, " -> turn ", abs(position), " to ", "left" if direction == 0 else "right") 
                     
-                    turnInPlace(abs(position)*1.4, direction)  # turn left or right based on how much of center we are
+                    turnInPlace(abs(position)*2, direction)  # turn left or right based on how much of center we are
 
                 steps += 1
                 print(f"% ----------------- steps = {steps} ------------")
@@ -526,9 +531,9 @@ def loop():
                 turnInPlace(45, dir=1)  # turn to the right
                 state = 415
 
-            elif pose.tripBtimePassed() > 1: # turn all the way around
+            elif pose.tripBtimePassed() > 0.7: # turn all the way around
                 print("didnt dind line on the left side, turn around and look for it on the right side")
-                turnInPlace(110, dir=1)  # turn to the right
+                turnInPlace(100, dir=1)  # turn to the right
                 edge.setDriveUntilLine(0.25, 300)
                 state = 412
         
@@ -536,22 +541,23 @@ def loop():
             if edge.reachedLine():
                 print("found line on the right side")
                 driveXMeters(0.025, 0.2) #arnau 0.35, OG 0.1, now 0.2
-                turnInPlace(45, dir=0)  # turn to the left
+                turnInPlace(50, dir=0)  # turn to the left
                 state = 415
 
         elif state == 415:
             edge.lineControl(0.3,0)  # follow line
+            t.sleep(1.25)
+            edge.lineControl(0.15, 0)
             pose.tripBreset()
-            t.sleep(3) #arnau removed sleep 
             edge.stopAtNthIntersection([], 1)
             state = 420
 
         elif state == 420:
-            if pose.tripBtimePassed() > 5 or edge.hasArrivedAtNthIntersection():
+            if pose.tripBtimePassed() > 3.25 or edge.hasArrivedAtNthIntersection():
                 edge.lineControl(0, 0)
                 pose.tripBreset()
                 state = 430
-                driveXMeters(0.3,0.4) #faster 
+                driveXMeters(0.35,0.4) #faster 
 
         elif state == 430:
             edge.setDriveUntilLine(0.25, 500)
@@ -559,23 +565,26 @@ def loop():
 
         elif state == 440: # drive until line
             if edge.reachedLine():
+                turnInPlace(10, 0)
                 state = 600
 
         ############################### AXE SECTION (600-699) ###################################
 
         # Vojta + Arnau + Andrea
         elif state == 600:  # follow line until end
-            service.send(service.topicCmd + "ti/servo", "1 -900 0")
+            service.send(service.topicCmd + "T0/servo", "1 -900 200")
             edge.setIgnoreIntersections(True)
-            edge.lineControl(0.3, 0)
+            edge.lineControl(0.1, 0)
+            t.sleep(2)
+            edge.lineControl(0.2, 0)
             pose.tripBreset()
             state = 601
 
         elif state == 601:
             if edge.lineValidCnt == 0:
                 state = 605
-            elif pose.tripBtimePassed() > 2.5:
-                edge.lineControl(0.3, 0)
+            elif pose.tripBtimePassed() > 2:
+                edge.lineControl(0.1, 0)
                 state = 605
 
 
@@ -619,10 +628,7 @@ def loop():
                 state = 640
 
         elif state == 640: #after the axe, it should be in front of the intersection now
-            service.send(service.topicCmd + "T0/servo", "1 -150 0")
-            t.sleep(0.1)
-            #if edge.hasArrivedAtNthIntersection():
-            if True: 
+            if edge.hasArrivedAtNthIntersection():
                 print("i am past the axe, at the intersection")
                 t.sleep(0.5)
                 driveXMeters(0.015, 0.15)

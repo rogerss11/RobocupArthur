@@ -36,6 +36,7 @@ class SIr:
     axeState = 1
     passedAxe = False
     timeout = 0
+    count = 0
 
     followLineUntilWall = False
     followLineVelocity = 0.0
@@ -131,13 +132,18 @@ class SIr:
     def axe(self):
         if self.axeState == 1: # still furter from the object
             if ir.ir[1] < 1:
-                edge.lineControl(0.165, 0.0)  # slow down
-                self.axeState = 2
+                self.count += 1
+                if self.count > 3:
+                  edge.lineControl(0.165, 0.0)  # slow down
+                  self.axeState = 2
+                  self.count = 0
           
         elif self.axeState == 2:  # still furter from the object
             if ir.ir[1] < 0.8:  # if the object is detected less than 80 cm
-                edge.lineControl(0.1, 0.0)  # slow down
-                self.axeState = 3
+                self.count += 1
+                if self.count > 3:
+                    edge.lineControl(0.075, 0.0)  # slow down
+                    self.axeState = 3
 
         elif self.axeState == 3:  # aproches the object -> slow down more
             if ir.ir[1] < 0.5:  # if the object is detected less than 50 cm
@@ -145,11 +151,11 @@ class SIr:
                 self.axeState = 4
 
         elif self.axeState == 4:  # Approaches the object
-            if ir.ir[1] < 0.20:  # if the object is detected less than 20 cm
+            if ir.ir[1] < 0.19:  # if the object is detected less than 20 cm
                 print("# Object detected less than 20 cm, stops.")
                 edge.lineControl(0.0, 0.0)
                 self.passedAxe = False
-                t.sleep(0.5)
+                t.sleep(0.3)
                 self.axeState = 5
             elif ir.ir[1] > 1:  # if the axe is not in front of us, dont move (we cant see the distance)
                 edge.lineControl(0.0, 0.0)
@@ -158,10 +164,12 @@ class SIr:
 
         elif self.axeState == 5:  # Waiting for the object to be removed
             distance = ir.ir[1]
-            if distance > 0.3 and self.passedAxe:  # if the object is not detected anymore and the axe has at least once passed
+            if distance > 1.1 and self.passedAxe:  # if the object is not detected anymore and the axe has at least once passed
                 print("# Object not detected anymore, accelerate to pass the gate.")
+                self.axeState = 100
+                t.sleep(0.35)
                 self.timeout = t.time()
-                edge.lineControl(0.4, 0.0)
+                edge.lineControl(0.45, 0.0)
                 self.axeState = 6
             else:
                 if self.passedAxe == False:
@@ -169,11 +177,14 @@ class SIr:
                 self.passedAxe = True
 
         elif self.axeState == 6:  # Pass the gate axe and stop
-            if t.time() - self.timeout > 1: # 2 seconds have passed, should be past gate
+            if t.time() - self.timeout > 1.05: # 2 seconds have passed, should be past gate
                 print("# Gate passed, stop.")
                 #service.send("robobot/cmd/ti/rc", "0.0 0.0")  # robot stops
                 edge.lineControl(0.0, 0.0)
                 self.axeState = 99
+
+        elif self.axeState == 100:
+          print("teeeest")
 
         else:  # Final state
             print("% Axe completed -------------------------")

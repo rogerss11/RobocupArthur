@@ -318,7 +318,7 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
                     drive.driveXMeters(x=(distance - 25) / 1000, vel=velocity)
                 if color == 1:
                     velocity = 0.05
-                    drive.driveXMeters(x=(distance) / 1000, vel=velocity)
+                    drive.driveXMeters(x=(distance + 20) / 1000, vel=velocity)
 
         else:
             if distance > final_distance:
@@ -376,7 +376,7 @@ def drive2ball(case: int):
         state = 0  # start with the first state
         whiggle = 1
     elif case == 2:
-        state_straight_init = 1  # just move straight
+        state_straight_init = 2 #1  # just move straight
         color = 1  # orange
         state = 1  # start with the first state
         whiggle = 0
