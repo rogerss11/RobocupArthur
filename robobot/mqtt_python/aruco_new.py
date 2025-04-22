@@ -210,7 +210,7 @@ class ArucoDetector:
         #if pose.tripBtimePassed()>1: #if more than 3 secs pass, stop line control, look right and check aruco
         t.sleep(6) #change based on when we want to turn to look for ID 16. Do we even need this? can we hardcode to turn and drive towards line after x secs? 
         edge.lineControl(0,0) #stop line control
-        turnInPlace(59, dir=1) #turn towards the arucos
+        turnInPlace(55, dir=1) #turn towards the arucos
 
         # Refresh image
         ok, img, _ = cam.getImage()

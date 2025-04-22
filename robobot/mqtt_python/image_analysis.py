@@ -170,8 +170,9 @@ def move_middle(xy, range, color):
     e = abs(xy[0] - middle_x)
     print("MM: Distance to middle: ", e)
 
+    #leona changed these
     if color == 0:
-        velocity = min(1.2, max(0.6, abs(0.003*e)))
+        velocity = min(1.2, max(0.6, abs(0.003*e))) 
     else:
         velocity = min(1.5, max(0.8, abs(0.0035*e)))
 
@@ -188,7 +189,7 @@ def move_middle(xy, range, color):
         status = 0
         service.send(service.topicCmd + "ti/rc", "0 0")
 
-    if color == 0:
+    if color == 0: #she changed these too 
         wait = (e / middle_x) * 0.175 + 0.075
     else:
         wait = (e / middle_x) * 0.18 + 0.05
@@ -212,17 +213,29 @@ def distance_calc(xy, color: int):
 
     if xy != []:
         # calculate the distance to the ball by the coordinates of the ball
+
+        #changed colors 
         if color == 0:  # blue ball
             a = -5.7835E-06
             b = 0.00858235
             c = -4.3603647
-            d = 786.882
-
+            d = 786.882                   
+            #a = -0.0000079881
+            #b = 0.011625897
+            #c = -5.74405
+            #d = 997.518
+        
+        #changed colors 
         elif color == 1:  # orange ball
             a = -3.8639e-6
             b = 0.0060393
             c = -3.260825
             d = 634.463
+
+            #a = -0.00000502
+            #b = 0.00765108
+            #c = -4.0016825
+            #d = 751.342459
 
         distance = (a * xy[1] ** 3 + b * xy[1] ** 2 + c * xy[1] + d) * 10  # in mm
 
@@ -276,7 +289,7 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
             stat_m = move_middle(xy, 10, color)
         else:
             if color == 0:
-                stat_m = move_middle(xy, 5, color)
+                stat_m = move_middle(xy, 3, color)
             else:
                 stat_m = move_middle(xy, 3, color)
 
@@ -302,10 +315,10 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
             else:
                 velocity = 0.1  # in m/s
                 if color == 0:
-                    drive.driveXMeters(x=(distance - 45) / 1000, vel=velocity)
+                    drive.driveXMeters(x=(distance - 25) / 1000, vel=velocity)
                 if color == 1:
                     velocity = 0.05
-                    drive.driveXMeters(x=(distance - 35) / 1000, vel=velocity)
+                    drive.driveXMeters(x=(distance) / 1000, vel=velocity)
 
         else:
             if distance > final_distance:
