@@ -226,7 +226,7 @@ def loop():
             state = 225
 
         elif state == 225:
-            service.send(service.topicCmd + "T0/servo", "1 -150 200")
+            service.send(service.topicCmd + "T0/servo", "1 -160 200")
             if pose.tripBtimePassed() > 2:
                 service.send(service.topicCmd + "T0/servo", "1 2309823809 200")
                 pose.tripBreset()
@@ -236,39 +236,41 @@ def loop():
             edge.lineControl(0.075, 0)
             if ir.ir[1] < 0.43 or pose.tripBtimePassed() > 13.33:#20:  # going down
                 # print("end of ramp")
-                service.send(service.topicCmd + "T0/servo", "1 -200 300")
+                service.send(service.topicCmd + "T0/servo", "1 -180 300")
                 state = 231
                 pose.tripBreset()
 
         elif state == 231:
             if pose.tripBtimePassed() > 0.33: 
-                service.send(service.topicCmd + "T0/servo", "1 -250 300")
+                service.send(service.topicCmd + "T0/servo", "1 -200 300")
                 state = 232
                 pose.tripBreset()
 
         elif state == 232:
             if pose.tripBtimePassed() > 0.2:
-                service.send(service.topicCmd + "T0/servo", "1 -350 100")
+                service.send(service.topicCmd + "T0/servo", "1 -200 100")
                 state = 235
                 pose.tripBreset()
 
         elif state == 235:
             if pose.tripBtimePassed() > 2:
-                service.send(service.topicCmd + "T0/servo", "1 -150 25")
+                service.send(service.topicCmd + "T0/servo", "1 -160 25")
                 state = 240
                 pose.tripBreset()
                 print("end of seesaw")
 
         elif state == 240:
             edge.lineControl(0.1, 0)
-            t.sleep(6.5)
+            t.sleep(1.5)
+            edge.lineControl(0.3, 0)
+            t.sleep(2)
             edge.lineControl(0, 0)
             state = 255
 
         elif state == 255:
             # service.send(service.topicCmd + "T0/servo", "1 -175 0")
             turnInPlace(63, 1)
-            driveXMeters(x=1, vel=0.35)
+            driveXMeters(x=1.1, vel=0.5)
             edge.setDriveUntilLine(0.25, 550)
             state = 256
 
@@ -283,50 +285,50 @@ def loop():
             edge.lineControl(0.06, 0)
             t.sleep(1.5)
             print(f"ir: {ir.ir[1]}")
-            if ir.ir[1] < 0.38 or pose.tripBtimePassed() > 6:  # going up
+            if ir.ir[1] < 0.38 or pose.tripBtimePassed() > 4.5:  # going up
                 pose.tripBreset()
                 state = 261
 
         elif state == 261:
             # ------------ ARM MOVEMENT BOTTOM ----------------------
-            service.send(service.topicCmd + "T0/servo", "1 -190 0")
+            service.send(service.topicCmd + "T0/servo", "1 -250 0")
             edge.lineControl(0.06, 0)
             if pose.tripBtimePassed() > 0.1:
                 pose.tripBreset()
                 state = 2615
 
         elif state == 2615:
-            service.send(service.topicCmd + "T0/servo", "1 -210 0")
+            service.send(service.topicCmd + "T0/servo", "1 -250 0")
             if pose.tripBtimePassed() > 0.2:
                 pose.tripBreset()
                 state = 262
 
         elif state == 262:
-            service.send(service.topicCmd + "T0/servo", "1 -235 0")
+            service.send(service.topicCmd + "T0/servo", "1 -200 0")
             if pose.tripBtimePassed() > 0.3:
                 pose.tripBreset()
                 state = 2625
 
         elif state == 2625:
-            service.send(service.topicCmd + "T0/servo", "1 -265 0")
+            service.send(service.topicCmd + "T0/servo", "1 -200 0")
             if pose.tripBtimePassed() > 0.3:
                 pose.tripBreset()
                 state = 263
 
         elif state == 263:
-            service.send(service.topicCmd + "T0/servo", "1 -265 0")
+            service.send(service.topicCmd + "T0/servo", "1 -200 0")
             if pose.tripBtimePassed() > 0.2:
                 pose.tripBreset()
                 state = 2635
 
         elif state == 2635:
-            service.send(service.topicCmd + "T0/servo", "1 -265 0")
+            service.send(service.topicCmd + "T0/servo", "1 -200 0")
             if pose.tripBtimePassed() > 0.5:
                 pose.tripBreset()
                 state = 264
 
         elif state == 264:
-            service.send(service.topicCmd + "T0/servo", "1 -100 10")
+            service.send(service.topicCmd + "T0/servo", "1 -125 10")
             if pose.tripBtimePassed() > 3:
                 pose.tripBreset()
                 state = 265
@@ -352,6 +354,7 @@ def loop():
                 state = 275
 
         elif state == 275:  # On top of the ramp
+            # turnInPlace(5,0)
             driveUntilNOLine_manual(0.05, 0)
             driveXMeters(0.05, vel=0.1)
             turnInPlace(8, 0)
@@ -374,8 +377,8 @@ def loop():
         
         elif state == 290:
             if edge.ArrivedAtNthIntersection:
-                driveXMeters(0.15)
-                turnInPlace(35, 1)
+                driveXMeters(0.2)
+                turnInPlace(45, 1)
                 state = 300
 
         ############################ TOP GOLF BALL (300-399) #################################### 
@@ -423,7 +426,7 @@ def loop():
                 t.sleep(1.5)
                 edge.lineControl(0.0, 0.0)
 
-                driveXMeters(x=0.22)
+                driveXMeters(x=0.3)
                 print("Wiggle")
                 speed = 0.5
                 turnInPlace(20, dir=1, ang_speed=speed)
@@ -432,14 +435,15 @@ def loop():
                 state = 340
         
         elif state == 340: # drive to the stairs
-            edge.setDriveUntilLine(-0.2, 450)
+            driveXMeters(x=-0.1)
+            edge.setDriveUntilLine(-0.2,450)
             state = 350
 
         elif state == 350: # drive until line
-            if edge.reachedLine():
-                driveXMeters(-0.075)
-                edge.setDriveUntilLine(-0.1, 450)
-                state = 360
+            turnInPlace(10,1)
+            driveXMeters(x=-0.1)
+            edge.setDriveUntilLine(-0.2, 450)
+            state = 360
 
         elif state == 360: # drive until line
             if edge.reachedLine():
@@ -451,8 +455,8 @@ def loop():
 
         elif state == 400:  # Arnau + Roger
             service.send(service.topicCmd + "T0/servo", "1 -800 200")
-            edge.lineControl(0.05, 0)
-            t.sleep(5)
+            edge.lineControl(0.075, 0)
+            t.sleep(4)
             edge.lineControl(0.0, 0.0)
             edge.setIgnoreIntersections(True)
             service.send(service.topicCmd + "ti/rc", "0.0 0.0")
@@ -502,7 +506,7 @@ def loop():
             if edge.lineValidCnt <= 3:
                 print("not on line -> look for line on the left side first")
                 turnInPlace(50, dir=0)  # turn to the left
-                edge.setDriveUntilLine(0.15, 300)
+                edge.setDriveUntilLine(0.3, 300)
                 pose.tripBreset()
                 state = 411
 
@@ -513,27 +517,26 @@ def loop():
         elif state == 411:
             if edge.reachedLine():
                 print("found line on the left side")
-                driveXMeters(0.025, 0.1)
+                driveXMeters(0.025, 0.3)
                 turnInPlace(45, dir=1)  # turn to the right
                 state = 415
 
             elif pose.tripBtimePassed() > 1: # turn all the way around
                 print("didnt dind line on the left side, turn around and look for it on the right side")
                 turnInPlace(110, dir=1)  # turn to the right
-                edge.setDriveUntilLine(0.15, 300)
+                edge.setDriveUntilLine(0.25, 300)
                 state = 412
         
         elif state == 412:
             if edge.reachedLine():
                 print("found line on the right side")
-                driveXMeters(0.025, 0.1)
+                driveXMeters(0.025, 0.35)
                 turnInPlace(45, dir=0)  # turn to the left
                 state = 415
 
         elif state == 415:
-            edge.lineControl(0.15)  # follow line
+            edge.lineControl(0.3,0)  # follow line
             pose.tripBreset()
-            t.sleep(3)
             edge.stopAtNthIntersection([], 1)
             state = 420
 
@@ -542,75 +545,15 @@ def loop():
                 edge.lineControl(0, 0)
                 pose.tripBreset()
                 state = 430
-                driveXMeters(0.5)
+                driveXMeters(0.2,0.3)
 
         elif state == 430:
-            edge.setDriveUntilLine(0.4, 500)
+            edge.setDriveUntilLine(0.25, 500)
             state = 440
 
         elif state == 440: # drive until line
             if edge.reachedLine():
                 state = 600
-
-
-
-        # once down the stairs, code can be adapted from the downramp section
-
-        ############################# DOWNRAMP SECTION (500-599) ################################
-        #                *** might be skipped to implement 4 instead
-
-        elif state == 500:  # Arnau
-            pass
-
-        # missing step from hole to being on the curved line at the top
-
-        elif state == 520:  # START OF DOWNRAMP.
-            # assuming it's already on the line at the top of the ramp
-            # code works best when starting in the middle of the curve
-            edge.lineControl(0.2, 0)
-            if pose.tripBtimePassed() > 11:
-                edge.lineControl(0, 0)
-                pose.tripBreset()
-                state = 525
-
-        elif (
-            state == 525
-        ):  # go straight to skip the trident intersection next to the end
-            service.send(service.topicCmd + "ti/rc", "0.2    0.0")
-            if pose.tripBtimePassed() > 6:
-                service.send(service.topicCmd + "ti/rc", "0 0")
-                pose.tripBreset()
-                state = 530
-
-        elif (
-            state == 530
-        ):  # turn to have the line somewhere in front after the intersection
-            service.send(service.topicCmd + "ti/rc", "0 0.5")
-            if pose.tripBtimePassed() > 3:
-                service.send(service.topicCmd + "ti/rc", "0 0")
-                pose.tripBreset()
-                state = 535
-
-        elif state == 535:  # driveUntilLine
-            edge.setDriveUntilLine(0.25, 300)
-            state = 536
-
-        elif state == 536: # drive until line
-            if edge.reachedLine():
-                pose.tripBreset()
-                state = 540
-
-        elif state == 545:
-            service.send(service.topicCmd + "ti/rc", "0 -0.5")
-            if pose.tripBtimePassed() > 2:
-                service.send(service.topicCmd + "ti/rc", "0 0")
-                pose.tripBreset()
-                state = 550
-
-        elif state == 550:  # slooooowly follow line so that it has time to align itself
-            edge.lineControl(0.05, 0)
-            if pose.tripBtimePassed() > 2:
-                state = 600  # go to axe section
 
         ############################### AXE SECTION (600-699) ###################################
 
@@ -618,9 +561,7 @@ def loop():
         elif state == 600:  # follow line until end
             service.send(service.topicCmd + "ti/servo", "1 -900 0")
             edge.setIgnoreIntersections(True)
-            edge.lineControl(0.1, 0)
-            t.sleep(2)
-            edge.lineControl(0.22, 0)
+            edge.lineControl(0.3, 0)
             pose.tripBreset()
             state = 601
 
@@ -628,7 +569,7 @@ def loop():
             if edge.lineValidCnt == 0:
                 state = 605
             elif pose.tripBtimePassed() > 2.5:
-                edge.lineControl(0.1, 0)
+                edge.lineControl(0.3, 0)
                 state = 605
 
 
@@ -648,8 +589,8 @@ def loop():
                 pose.tripBreset()
 
         elif state == 615:
-            driveXMeters(x=1)
-            edge.setDriveUntilLine(0.3, 335)
+            driveXMeters(0.8, 0.4)
+            edge.setDriveUntilLine(0.2, 335)
             state = 620
 
         elif state == 620:  # drive until line
@@ -866,6 +807,7 @@ def loop():
              aru.after_hitting_basket()
              turnInPlace(10, 1, 0.2)
              driveXMeters(0.1, 0.2)
+             turnInPlace(10,1)
              state = 810
 
         elif state == 810:  # find the blue ball
