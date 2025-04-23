@@ -112,7 +112,7 @@ def loop():
 
     #! just for testing, didnt want to put it in the main loop all the time
     if service.args.armup:
-        service.send(service.topicCmd + "T0/servo", "1 -850 200")
+        service.send(service.topicCmd + "T0/servo", "1 -500 200")
         service.send(service.topicCmd + "T0/servo", "1 -900 200")
         t.sleep(1)
         service.send(service.topicCmd + "T0/servo", "1 -123456789 200")
@@ -140,7 +140,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 300  # ========== START STATE ===============
+                state = 100  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -190,8 +190,7 @@ def loop():
                 pose.tripBreset()
 
         elif state == 140:
-            if pose.tripB > 1.61:
-                t.sleep(0.125)
+            if pose.tripB > 1.9: #1.7
                 edge.adjustSpeed = False
                 edge.setIgnoreIntersections(False)
                 edge.lineControl(0.1, 0)
@@ -374,7 +373,7 @@ def loop():
 
         elif state == 285: # drive until line
             if edge.reachedLine():
-                turnInPlace(50, dir=1)
+                turnInPlace(43, dir=1)
                 edge.setIgnoreIntersections(True)
                 edge.lineControl(0.2, 0)  # follow line
                 t.sleep(2.7)
@@ -451,7 +450,7 @@ def loop():
         elif state == 350: # drive until line
             if edge.reachedLine():
                 driveXMeters(x=-0.075)
-                turnInPlace(5,0)
+                turnInPlace(10,0)
                 edge.setDriveUntilLine(-0.1, 420)
                 state = 360
             #turnInPlace(10,1)
@@ -470,7 +469,7 @@ def loop():
         elif state == 400:  # Arnau + Roger
             service.send(service.topicCmd + "T0/servo", "1 -800 200")
             edge.lineControl(0.1, 0) #0.05/0.075
-            t.sleep(1.95) #try 4/5 
+            t.sleep(1.9) #try 4/5 #1.95
             edge.lineControl(0.0, 0.0)
             edge.setIgnoreIntersections(True)
             service.send(service.topicCmd + "ti/rc", "0.0 0.0")
@@ -513,7 +512,12 @@ def loop():
                     pos_sum = sum((i + 1) * v for i, v in enumerate(edge.edge_n))
                     position = (pos_sum / sum_values - 4.4) # middle is 4.5 but the sensor seems to be more on the left side of the robot
 
-                    direction = 1 if position > 0 else 0
+                    if position < 0:
+                        position = position*1.8
+                        direction = 0
+
+                    else:
+                        direction = 1
 
                     print("position: ", position, " -> turn ", abs(position), " to ", "left" if direction == 0 else "right") 
                     
@@ -526,26 +530,36 @@ def loop():
 
         elif state == 410:
             edge.lineValidCnt = 0
-            edge.lineControl(0.05, 0)
+            edge.lineValidThreshold = 650
+            edge.lineControl(0.01, 0)
             t.sleep(0.1)
             edge.lineControl(0, 0)
             if edge.lineValidCnt <= 3:
-                driveXMeters(0.15, 0.2) # move forward befor looking for the line
-                print("not on line -> look for line on the left side first")
-                turnInPlace(50, dir=0)  # turn to the left
-                edge.setDriveUntilLine(0.3, 300)
-                pose.tripBreset()
-                state = 411
-
+                service.send("robobot/cmd/ti/rc", "-0.1 0.0")
+                t.sleep(1)
+                service.send("robobot/cmd/ti/rc", "0.0 0.0")
+                edge.lineControl(0.01, 0)
+                t.sleep(0.1)
+                edge.lineControl(0, 0)
+                if edge.lineValidCnt <= 3:
+                    driveXMeters(0.05, 0.2) # move forward befor looking for the line
+                    print("not on line -> look for line on the left side first")
+                    turnInPlace(50, dir=0)  # turn to the left
+                    edge.setDriveUntilLine(0.3, 300)
+                    pose.tripBreset()
+                    state = 411
+                else:
+                    state = 415
             else:
                 print("ended up on line")
                 state = 415
+            edge.lineValidThreshold = 750
                 
         elif state == 411:
             if edge.reachedLine():
                 print("found line on the left side")
                 driveXMeters(0.025, 0.3)
-                turnInPlace(45, dir=1)  # turn to the right
+                turnInPlace(20, dir=1)  # turn to the right
                 state = 415
 
             elif pose.tripBtimePassed() > 0.7: # turn all the way around
@@ -562,8 +576,10 @@ def loop():
                 state = 415
 
         elif state == 415:
+            edge.lineControl(0.1, 0)  # follow line
+            t.sleep(1)
             edge.lineControl(0.3,0)  # follow line
-            t.sleep(1.25)
+            t.sleep(1.15)
             edge.lineControl(0.15, 0)
             pose.tripBreset()
             edge.stopAtNthIntersection([], 1)
@@ -582,7 +598,7 @@ def loop():
 
         elif state == 440: # drive until line
             if edge.reachedLine():
-                turnInPlace(10, 0)
+                turnInPlace(10, 0)  # turn to the left
                 state = 600
 
         ############################### AXE SECTION (600-699) ###################################
@@ -672,6 +688,7 @@ def loop():
                 t.sleep(0.5)
                 driveXMeters(0.065, 0.1)
                 turnInPlace(55, 1)
+                driveXMeters(0.15, 0.1)
                 t.sleep(0.5)
                 state = 660
 
@@ -709,9 +726,9 @@ def loop():
                  state = 702
 
         elif state == 702: #wait for birdie? 
-            if pose.tripB > 0.32:
+            if pose.tripB > 0.27:
                 service.send("robobot/cmd/ti/rc", "0.0 0.0")
-                driveUntilWall(0.45, ir_id=1, vel=0.0)
+                driveUntilWall(0.35, ir_id=1, vel=0.0)
                 pose.tripBreset()
                 while ir.ir[1] > 1 or pose.tripBtimePassed() > 4:
                     pass
