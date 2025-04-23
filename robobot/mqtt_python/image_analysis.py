@@ -291,7 +291,7 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
             if color == 0:
                 stat_m = move_middle(xy, 3, color)
             else:
-                stat_m = move_middle(xy, 3, color)
+                stat_m = move_middle(xy, 5, color)
 
         if stat_m == 0:
             # ball is in the middle
@@ -324,7 +324,7 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
             if distance > final_distance:
                 wait = distance / 3000 / velocity
             else:
-                wait = distance / 1000 / velocity
+                wait = (distance + 15) / 1000 / velocity
             print("MS: Move straight on line")
             edge.lineControl(velocity, 0.0)
             time.sleep(wait)
@@ -335,6 +335,7 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
             print("MS: Pick up ball")
             state = 100
             servo_down()
+            '''
             if whiggle:
                 for i in range(2):
                     print("MS: Shaking")
@@ -346,6 +347,7 @@ def move_straight(xy, distance, state: int, line: int, color: int, whiggle):
                     time.sleep(0.2)
                     service.send(service.topicCmd + "ti/rc", "0 0")
                     time.sleep(0.1)
+            '''
             service.send(service.topicCmd + "ti/rc", "0 0")
 
     else:
@@ -376,7 +378,7 @@ def drive2ball(case: int):
         state = 0  # start with the first state
         whiggle = 1
     elif case == 2:
-        state_straight_init = 2 #1  # just move straight
+        state_straight_init = 1  # just move straight
         color = 1  # orange
         state = 1  # start with the first state
         whiggle = 0
@@ -423,7 +425,7 @@ def drive2ball(case: int):
             print("DB: State 1") #try to maybe only do the backwards thing when its blue!!! 
             # move straight to the ball
             if xy == []:
-                drive.driveXMeters(x=-0.07, vel=0.2)  # move back a little bit
+                drive.driveXMeters(x=-0.05, vel=0.2)  # move back a little bit
             distance, status_d = distance_calc(xy, color)
             print("DB: Distance to ball:", distance)
             if status_d != -1:

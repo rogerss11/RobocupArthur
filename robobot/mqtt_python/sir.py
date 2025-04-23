@@ -167,7 +167,7 @@ class SIr:
             if distance > 1.1 and self.passedAxe:  # if the object is not detected anymore and the axe has at least once passed
                 print("# Object not detected anymore, accelerate to pass the gate.")
                 self.axeState = 100
-                t.sleep(0.35)
+                t.sleep(0.35) #! remove if the axe is a lot faster again 
                 self.timeout = t.time()
                 edge.lineControl(0.45, 0.0)
                 self.axeState = 6
