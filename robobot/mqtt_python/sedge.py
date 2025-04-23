@@ -38,7 +38,7 @@ import time as t
 from threading import Thread
 import cv2 as cv
 from ulog import flog
-import matplotlib.pyplot as plt # graph for Ziegler-Nichols method
+#import matplotlib.pyplot as plt # graph for Ziegler-Nichols method
 
 class SEdge:
     # raw AD values 
@@ -752,20 +752,20 @@ class SEdge:
     
     ##########################################################
     
-    def plot_error(self, filename="pid_error_plot.png"):
-      # Plot error over time
-      plt.figure(figsize=(10, 5))
-      plt.plot(self.time_list, self.error_list, label="Error")
-      plt.axhline(y=0, color='black', linestyle='--')  # Reference line at zero
-      plt.xlabel("Time (s)")
-      plt.ylabel("Error")
-      plt.title("PID Error Over Time")
-      plt.legend()
-      plt.grid()
-      
-      # Save plot to file
-      plt.savefig(filename, dpi=300, bbox_inches="tight")
-      plt.close()  # Close the figure to free memory
+    #def plot_error(self, filename="pid_error_plot.png"):
+    #  # Plot error over time
+    #  plt.figure(figsize=(10, 5))
+    #  plt.plot(self.time_list, self.error_list, label="Error")
+    #  plt.axhline(y=0, color='black', linestyle='--')  # Reference line at zero
+    #  plt.xlabel("Time (s)")
+    #  plt.ylabel("Error")
+    #  plt.title("PID Error Over Time")
+    #  plt.legend()
+    #  plt.grid()
+    #  
+    #  # Save plot to file
+    #  plt.savefig(filename, dpi=300, bbox_inches="tight")
+    #  plt.close()  # Close the figure to free memory
     
    ##########################################################
 
