@@ -140,7 +140,7 @@ def loop():
                 service.send(service.topicCmd + "ti/rc", "0.0 0.0")
                 # (forward m/s, turn-rate rad/sec)
 
-                state = 100  # ========== START STATE ===============
+                state = 300  # ========== START STATE ===============
                 # should be 100 for final run
                 # CP1 (checkpoint 1)
                 # use trip counter/timer B
@@ -421,7 +421,7 @@ def loop():
             state = 330
 
         elif state == 330:  # move to hole
-            edge.setDriveUntilLine(-0.1, 300)
+            edge.setDriveUntilLine(-0.07, 300)
             state = 331
 
         elif state == 331: # drive until line
@@ -434,7 +434,7 @@ def loop():
                 t.sleep(1.5)
                 edge.lineControl(0.0, 0.0)
 
-                driveXMeters(x=0.275)
+                driveXMeters(x=0.26)
                 print("Wiggle")
                 speed = 0.5
                 turnInPlace(20, dir=1, ang_speed=speed)
@@ -469,14 +469,25 @@ def loop():
 
         elif state == 400:  # Arnau + Roger
             service.send(service.topicCmd + "T0/servo", "1 -800 200")
-            edge.lineControl(0.05, 0) #0.05/0.075
-            t.sleep(3.1) #try 4/5 
+            edge.lineControl(0.1, 0) #0.05/0.075
+            t.sleep(1.95) #try 4/5 
             edge.lineControl(0.0, 0.0)
             edge.setIgnoreIntersections(True)
             service.send(service.topicCmd + "ti/rc", "0.0 0.0")
-            turnInPlace(4,1)
+            #turnInPlace(4,1)
+            state = 401
+        
+        elif state == 401:
+            sum_values = sum(edge.edge_n)
+            pos_sum = sum((i + 1) * v for i, v in enumerate(edge.edge_n))
+            position = (pos_sum / sum_values - 4.4) # middle is 4.5 but the sensor seems to be more on the left side of the robot
+
+            direction = 1 if position > 0 else 0
+
+            print("position: ", position, " -> turn ", abs(position), " to ", "left" if direction == 0 else "right") 
+            
+            turnInPlace(abs(position)*2, direction) 
             state = 405
-              
 
         elif state == 405:  # Roger + Arnau
             # ------------- GO DOWN STAIRS -------------------------------------------
@@ -519,6 +530,7 @@ def loop():
             t.sleep(0.1)
             edge.lineControl(0, 0)
             if edge.lineValidCnt <= 3:
+                driveXMeters(0.15, 0.2) # move forward befor looking for the line
                 print("not on line -> look for line on the left side first")
                 turnInPlace(50, dir=0)  # turn to the left
                 edge.setDriveUntilLine(0.3, 300)
