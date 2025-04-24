@@ -284,6 +284,7 @@ def loop():
 
 
         elif state == 260:  # Climb the ramp, keep this 
+            service.send(service.topicCmd + "T0/servo", "1 -180 1")
             edge.lineControl(0.06, 0)
             state = 2601
 
@@ -447,6 +448,7 @@ def loop():
             edge.setDriveUntilLine(-0.15, 400)
             state = 350
 
+
         elif state == 350: # drive until line
             if edge.reachedLine():
                 driveXMeters(x=-0.075)
@@ -468,12 +470,12 @@ def loop():
 
         elif state == 400:  # Arnau + Roger
             service.send(service.topicCmd + "T0/servo", "1 -800 200")
-            edge.lineControl(0.1, 0) #0.05/0.075
-            t.sleep(1.9) #try 4/5 #1.95
+            edge.lineControl(0.075, 0) #0.05/0.075
+            t.sleep(3) #try 4/5 #1.95 1.9 
             edge.lineControl(0.0, 0.0)
             edge.setIgnoreIntersections(True)
             service.send(service.topicCmd + "ti/rc", "0.0 0.0")
-            #turnInPlace(4,1)
+            turnInPlace(3,1)
             state = 401
         
         elif state == 401:
@@ -732,7 +734,7 @@ def loop():
                 pose.tripBreset()
                 while ir.ir[1] > 1 or pose.tripBtimePassed() > 4:
                     pass
-                t.sleep(4)
+                t.sleep(3.5) #changed from 4
                 driveXMeters(0.9, vel=0.3)
                 state = 703
 
@@ -757,7 +759,7 @@ def loop():
                     driveXMeters(0.55, vel=0.3)
 
 
-        elif state == 705:
+        elif state == 705: #this can be changed 
             # ------------- CLIMB CIRCLE MISSION -------------------------------------------
             gate_dist = driveUntilWall_measure_gate_dist(0.30, ir_id=1)
             print(f"% gate_dist = {gate_dist:.2f}")
@@ -785,7 +787,7 @@ def loop():
             state = 720  # go to blue ball sorting section
 
         elif state == 720:
-            driveUntilWall(0.25, ir_id=1, vel=0.0) # waiting for birtle
+            driveUntilWall(0.25, ir_id=1, vel=0.0) # waiting for birtle - he failed here, crashed 
             t.sleep(5) # wait for birtle to pass
             edge.setDriveUntilLine(0.2, 450)
             #t.sleep(0.5)
